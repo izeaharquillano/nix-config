@@ -6,6 +6,7 @@
 
   imports = [
     inputs.zen-browser.homeModules.beta
+    inputs.niri.homeModules.niri
   ];
 
   # programs.niri.settings = {

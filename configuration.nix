@@ -8,6 +8,7 @@
 
   boot.loader = {
     efi.canTouchEfiVariables = true;
+    timeout = 10;
 
     systemd-boot = {
       enable = true;
@@ -68,7 +69,7 @@
       settings = {
         default_session = {
           # command = "${config.programs.niri.package}/bin/niri-session";
-          command = "${pkgs.greetd.tuigreet}/bin/tuigreet --time --remember --remember-session";
+          command = "${pkgs.tuigreet}/bin/tuigreet --time --remember --remember-session";
           user = "ize";
         };
       };

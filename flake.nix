@@ -1,14 +1,13 @@
 {
-  description = "NixOS Epic Configuration";
+  description = "An Epic NixOS Configuration";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
-    # nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
-    # nixpkgs.url = "git+https://github.com/NixOS/nixpkgs?ref=nixos-unstable";
+    # nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
 
     home-manager = {
-      # url = "github:nix-community/home-manager/release-26.05";
-      url = "github:nix-community/home-manager";
+      url = "github:nix-community/home-manager/release-26.05";
+      # url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -22,12 +21,20 @@
     };
   };
 
-  outputs = inputs@{ self, nixpkgs, home-manager, niri, hyprland, zen-browser, ... }: {
+  outputs = inputs@{
+    self,
+    nixpkgs,
+    home-manager,
+    niri,
+    hyprland,
+    zen-browser,
+    ...
+  }: {
     nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
       modules = [
         ./configuration.nix
-        niri.nixosModules.niri
+        # niri.nixosModules.niri
         hyprland.nixosModules.default
         home-manager.nixosModules.home-manager
         {
