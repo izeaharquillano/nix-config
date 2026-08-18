@@ -56,8 +56,21 @@
 
   xdg.configFile = {
     "niri/config.kdl".source = ./modules/niri/config.kdl;
+    "ghostty/config".source = ./modules/niri/config;
     "nvim" = {
       source = ./modules/nvim;
+      recursive = true;
+    };
+    "hypr" = {
+      source = ./modules/hypr;
+      recursive = true;
+    };
+    "rofi" = {
+      source = ./modules/rofi;
+      recursive = true;
+    };
+    "waybar" = {
+      source = ./modules/waybar;
       recursive = true;
     };
   };
