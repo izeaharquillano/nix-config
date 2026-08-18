@@ -45,5 +45,9 @@
 
   xdg.configFile = {
     "niri/config.kdl".source = ./modules/niri/config.kdl;
+    "nvim" = {
+      source = ./modules/nvim;
+      recursive = true;
+    };
   };
 }
