@@ -14,17 +14,25 @@
   # };
 
   home.packages = with pkgs; [
+    fd
+    fzf
     gcc
+    curl
+    unzip
     zoxide
     waybar
     fuzzel
+    lazygit
     ghostty
+    ripgrep
     brightnessctl
     nerd-fonts.jetbrains-mono
   ];
 
   programs = {
+    npm.enable = true;
     zen-browser.enable = true;
+
     bash = {
       enable = true;
       shellAliases = {
