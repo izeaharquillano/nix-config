@@ -69,8 +69,8 @@
       settings = {
         default_session = {
           # command = "${config.programs.niri.package}/bin/niri-session";
+          # user = "ize";
           command = "${pkgs.tuigreet}/bin/tuigreet --time --remember --remember-session";
-          user = "ize";
         };
       };
     };
