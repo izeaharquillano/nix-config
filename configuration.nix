@@ -85,7 +85,6 @@
   nixpkgs.config.allowUnfree = true;
 
   environment.systemPackages = with pkgs; [
-    git
     wget
     btop
     tmux
@@ -94,15 +93,20 @@
   ];
 
   programs = {
+    git = {
+      enable = true;
+      config = {
+        user.name = "Izeah Arquillano";
+	user.email = "izeaharquillano@gmail.com";
+      };
+    };
     bash.shellAliases = {
       svim = "sudoedit";
     };
-
     neovim = {
       enable = true;
       defaultEditor = true;
     };
-
     niri.enable = true;
   };
 

@@ -37,11 +37,6 @@
       enable = true;
       enableBashIntegration = true;
     };
-    git = {
-      enable = true;
-      userName = "Izeah Arquillano";
-      userEmail = "izeaharquillano@gmail.com";
-    };
   };
 
   xdg.configFile = {
