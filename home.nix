@@ -14,6 +14,7 @@
   # };
 
   home.packages = with pkgs; [
+    gcc
     zoxide
     waybar
     fuzzel
@@ -28,16 +29,16 @@
       enable = true;
       shellAliases = {
         svim = "sudoedit";
-	bldswc = "sudo nixos-rebuild switch";
-	bldflk = "sudo nixos-rebuild switch --flake /etc/nixos#nixos";
-	nixgarb = "sudo nix-collect-garbage";
+        bldswc = "sudo nixos-rebuild switch";
+        bldflk = "sudo nixos-rebuild switch --flake /etc/nixos#nixos";
+        nixgarb = "sudo nix-collect-garbage";
       };
     };
     zoxide = {
       enable = true;
       enableBashIntegration = true;
     };
-    git = {
+    git.settings = {
       userName = "Izeah Arquillano";
       userEmail = "izeaharquillano@gmail.com";
     };
