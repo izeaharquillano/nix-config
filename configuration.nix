@@ -96,8 +96,8 @@
     git = {
       enable = true;
       config = {
-        user.name = "Izeah Arquillano";
-	user.email = "izeaharquillano@gmail.com";
+        # user.name = "";
+	# user.email = "";
       };
     };
     bash.shellAliases = {
