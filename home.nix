@@ -4,9 +4,9 @@
   home.username = "ize";
   home.homeDirectory = "/home/ize";
 
-  # imports = [
-  #   inputs.zen-browser.homeModules.beta
-  # ];
+  imports = [
+    inputs.zen-browser.homeModules.beta
+  ];
 
   # programs.niri.settings = {
   #   input.keyboard.xkb.layout = "us";
@@ -23,7 +23,7 @@
   ];
 
   programs = {
-    # zen-browser.enable = true;
+    zen-browser.enable = true;
     bash = {
       enable = true;
       shellAliases = {
@@ -36,6 +36,11 @@
     zoxide = {
       enable = true;
       enableBashIntegration = true;
+    };
+    git = {
+      enable = true;
+      userName = "Izeah Arquillano";
+      userEmail = "izeaharquillano@gmail.com";
     };
   };
 
