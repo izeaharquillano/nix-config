@@ -26,6 +26,7 @@
     ghostty
     ripgrep
     brightnessctl
+    xwayland-satellite
     nerd-fonts.jetbrains-mono
   ];
 

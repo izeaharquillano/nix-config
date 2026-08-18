@@ -3,29 +3,30 @@
 {
   imports =
     [
-      ./hardware-configuration.nix
+    ./hardware-configuration.nix
     ];
 
   boot.loader = {
     efi.canTouchEfiVariables = true;
-    
+
     systemd-boot = {
       enable = true;
-      
+
       windows = {
         "windows" =
-         let
-           boot-drive = "HD0b";
-         in
-         {
-           title = "Windows Boot Manager";
-           efiDeviceHandle = boot-drive;
-           sortKey = "y_windows";
-         };
+          let
+          boot-drive = "HD0b";
+        in
+        {
+          title = "Windows Boot Manager";
+          efiDeviceHandle = boot-drive;
+          sortKey = "y_windows";
+        };
       };
 
       edk2-uefi-shell.enable = true;
       edk2-uefi-shell.sortKey = "z_edk2";  
+      configurationLimit = 5;
     };
   };
 
@@ -66,9 +67,10 @@
       enable = true;
       settings = {
         default_session = {
-	  command = "${config.programs.niri.package}/bin/niri-session";
-	  user = "ize";
-	};
+          # command = "${config.programs.niri.package}/bin/niri-session";
+          command = "${pkgs.greetd.tuigreet}/bin/tuigreet --time --remember --remember-session"
+          user = "ize";
+        };
       };
     };
   };
@@ -86,10 +88,10 @@
 
   environment.systemPackages = with pkgs; [
     wget
-    btop
-    tmux
-    fastfetch
-    xdg-user-dirs
+      btop
+      tmux
+      fastfetch
+      xdg-user-dirs
   ];
 
   programs = {
@@ -108,10 +110,15 @@
       defaultEditor = true;
     };
     niri.enable = true;
+    hyprland.enable = true;
     nix-ld.enable = true;
   };
 
   nix.settings.experimental-features = ["nix-command" "flakes" ];
+
+  nix.extraOptions = ''
+    netrc-file = /etc/nix/netrc
+  '';
 
   system.stateVersion = "26.05";
 }
