@@ -60,6 +60,7 @@ hl.config({
   },
 })
 
+hl.env("XCURSOR_THEME", "default")
 hl.env("XCURSOR_SIZE", "20")
 hl.env("HYPRCURSOR_SIZE", "20")
 hl.env("GDK_SCALE", "1")

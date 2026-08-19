@@ -4,5 +4,5 @@ gtk-titlebar = false
 
 theme = Gruvbox Dark
 
-window-padding-x = 16
-window-padding-y = 16
+window-padding-x = 10
+window-padding-y = 10

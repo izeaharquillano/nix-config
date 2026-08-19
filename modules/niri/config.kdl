@@ -45,7 +45,7 @@ input {
 
 cursor {
   xcursor-theme "default"
-  xcursor-size 48
+  xcursor-size 72
 }
 
 output "eDP-1" {
