@@ -59,6 +59,8 @@
   };
 
   services = {
+    blueman.enable = true;
+
     xserver.xkb = {
       layout = "us";
       variant = "";
@@ -95,6 +97,11 @@
   };
 
   systemd.user.services.niri.enableDefaultPath = false;
+
+  hardware.bluetooth = {
+    enable = true;
+    powerOnBoot = false;
+  };
 
   users.users."ize" = {
     isNormalUser = true;

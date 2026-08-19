@@ -31,7 +31,6 @@
     # DE packages
     waybar
     fuzzel
-    blueman
     pavucontrol
     brightnessctl
     xwayland-satellite
