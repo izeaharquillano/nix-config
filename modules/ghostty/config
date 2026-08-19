@@ -1,80 +1,8 @@
-# This is the configuration file for Ghostty.
-#
-# This template file has been automatically created at the following
-# path since Ghostty couldn't find any existing config files on your system:
-#
-#   /home/ize/.config/ghostty/config
-#
-# The template does not set any default options, since Ghostty ships
-# with sensible defaults for all options. Users should only need to set
-# options that they want to change from the default.
-#
-# Run `ghostty +show-config --default --docs` to view a list of
-# all available config options and their default values.
-#
-# Additionally, each config option is also explained in detail
-# on Ghostty's website, at https://ghostty.org/docs/config.
-#
-# Ghostty can reload the configuration while running by using the menu
-# options or the bound key (default: Command + Shift + comma on macOS and
-# Control + Shift + comma on other platforms). Not all config options can be
-# reloaded while running; some only apply to new windows and others may require
-# a full restart to take effect.
-
-# Config syntax crash course
-# ==========================
-# # The config file consists of simple key-value pairs,
-# # separated by equals signs.
-# font-family = Iosevka
-# window-padding-x = 2
-#
-# # Spacing around the equals sign does not matter.
-# # All of these are identical:
-# key=value
-# key= value
-# key =value
-# key = value
-#
-# # Any line beginning with a # is a comment. It's not possible to put
-# # a comment after a config option, since it would be interpreted as a
-# # part of the value. For example, this will have a value of "#123abc":
-# background = #123abc
-#
-# # Empty values are used to reset config keys to default.
-# key =
-#
-# # Some config options have unique syntaxes for their value,
-# # which is explained in the docs for that config option.
-# # Just for example:
-# resize-overlay-duration = 4s 200ms
-
-# default font
 font-family = "JetBrainsMono Nerd Font"
 
-# Theme: Iceberg
-background = #161821
-foreground = #c6c8d1
-selection-background = #272c42
-selection-foreground = #c6c8d1
-cursor-color = #c6c8d1
-cursor-text = #161821
-palette = 0=#1e2132
-palette = 1=#e27878
-palette = 2=#b4be82
-palette = 3=#e2a478
-palette = 4=#84a0c6
-palette = 5=#a093c7
-palette = 6=#89b8c2
-palette = 7=#c6c8d1
-palette = 8=#6b7089
-palette = 9=#e98989
-palette = 10=#c0ca8e
-palette = 11=#e9b189
-palette = 12=#91acd1
-palette = 13=#ada0d3
-palette = 14=#95c4ce
-palette = 15=#d2d4de
+gtk-titlebar = false
 
-# others
+theme = Gruvbox Dark
+
 window-padding-x = 16
 window-padding-y = 16

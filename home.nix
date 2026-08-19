@@ -15,20 +15,30 @@
   # };
 
   home.packages = with pkgs; [
+    # utils
     fd
     fzf
     gcc
     curl
     unzip
+
+    # terminal tools
     zoxide
+    lazygit
+    ripgrep
+    opencode
+
+    # DE packages
     waybar
     fuzzel
-    lazygit
-    ghostty
-    ripgrep
     brightnessctl
     xwayland-satellite
+
+    # fonts
     nerd-fonts.jetbrains-mono
+
+    # apps
+    ghostty
   ];
 
   programs = {
