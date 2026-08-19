@@ -104,6 +104,7 @@ layout {
 
 // spawn-at-startup "waybar"
 spawn-sh-at-startup "waybar -c ~/.config/waybar/config-niri"
+spawn-sh-at-startup "echo 0 > /sys/class/leds/platform::micmute/brightness"
 
 hotkey-overlay {
     skip-at-startup
