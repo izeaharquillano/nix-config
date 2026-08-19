@@ -74,6 +74,10 @@
         };
       };
     };
+    udev.extraRules = ''
+      ACTION=="add", SUBSYSTEM=="leds", KERNEL=="platform::micmute", \
+      RUN+="${pkgs.coreutils}/bin/chmod 0666 /sys/class/leds/%k/brightness"
+      '';
   };
 
   systemd.user.services.niri.enableDefaultPath = false;
