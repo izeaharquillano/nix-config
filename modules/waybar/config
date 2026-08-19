@@ -1,6 +1,7 @@
 {
   "layer": "top",
   "position": "top",
+  "margin-bottom": -5,
   "exclusive": true,
   "spacing" : 0,
   "modules-left": [

@@ -12,9 +12,10 @@ input {
         // dwtp
         // drag false
         // drag-lock
+        scroll-factor 0.5
         natural-scroll
-        accel-speed 0
-        accel-profile "flat"
+        // accel-speed 0
+        // accel-profile "flat"
         // scroll-method "two-finger"
         // disabled-on-external-mouse
     }
@@ -42,16 +43,21 @@ input {
     focus-follows-mouse
 }
 
-/-output "eDP-1" {
+cursor {
+  xcursor-theme "default"
+  xcursor-size 48
+}
+
+output "eDP-1" {
     // off
     mode "1920x1080@60"
-    scale 1.50
+    scale 1.20
     transform "normal"
-    position x=1280 y=0
+    position x=1600 y=0
 }
 
 layout {
-    gaps 5
+    gaps 7
     center-focused-column "never"
 
     preset-column-widths {
@@ -62,7 +68,6 @@ layout {
     }
 
     // preset-window-heights { }
-
     default-column-width { proportion 0.5; }
     // default-column-width {}
 
@@ -83,7 +88,7 @@ layout {
 
     shadow {
         on
-        softness 30
+        softness 20
         spread 2
         offset x=0 y=5
         color "#0007"

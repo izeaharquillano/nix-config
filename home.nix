@@ -67,6 +67,7 @@
   xdg.configFile = {
     "niri/config.kdl".source = ./modules/niri/config.kdl;
     "ghostty/config".source = ./modules/ghostty/config;
+    "tmux/tmux.conf".source = ./modules/tmux/tmux.conf;
     "nvim" = {
       source = ./modules/nvim;
       recursive = true;
