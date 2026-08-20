@@ -103,8 +103,8 @@ layout {
 }
 
 // spawn-at-startup "waybar"
-spawn-sh-at-startup "waybar -c ~/.config/waybar/config-niri"
-spawn-sh-at-startup "echo 0 > /sys/class/leds/platform::micmute/brightness"
+// spawn-sh-at-startup "waybar -c ~/.config/waybar/config-niri"
+// spawn-sh-at-startup "echo 0 > /sys/class/leds/platform::micmute/brightness"
 
 hotkey-overlay {
     skip-at-startup
@@ -146,8 +146,8 @@ binds {
     XF86AudioRaiseVolume allow-when-locked=true { spawn-sh "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.1+"; }
     XF86AudioLowerVolume allow-when-locked=true { spawn-sh "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.1-"; }
     XF86AudioMute        allow-when-locked=true { spawn-sh "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"; }
-    XF86AudioMicMute     allow-when-locked=true { spawn-sh "micmute"; }
-    // XF86AudioMicMute     allow-when-locked=true { spawn-sh "wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"; }
+    // XF86AudioMicMute     allow-when-locked=true { spawn-sh "micmute"; }
+    XF86AudioMicMute     allow-when-locked=true { spawn-sh "wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"; }
 
     XF86MonBrightnessUp allow-when-locked=true { spawn "brightnessctl" "--class=backlight" "set" "+5%"; }
     XF86MonBrightnessDown allow-when-locked=true { spawn "brightnessctl" "--class=backlight" "set" "5%-"; }

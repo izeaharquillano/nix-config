@@ -70,8 +70,6 @@
       enable = true;
       settings = {
         default_session = {
-          # command = "${config.programs.niri.package}/bin/niri-session";
-          # user = "ize";
           command = "${pkgs.tuigreet}/bin/tuigreet --time --remember --remember-session";
         };
       };
@@ -96,7 +94,35 @@
       '';
   };
 
-  systemd.user.services.niri.enableDefaultPath = false;
+  systemd.user.services = {
+    niri.enableDefaultPath = false;
+
+    mic-mute-led-sync = {
+      description = "Mic Mute LED Sync";
+      wantedBy = [ "graphical-session.target" ];
+      partOf = [ "graphical-session.target" ];
+      after = [ "pipewire.service" "wireplumber.service" ];
+
+      path = with pkgs; [ wireplumber pulseaudio gnugrep coreutils ];
+
+      script = ''
+        readonly LED_PATH="/sys/class/leds/platform::micmute/brightness"
+
+        update_led() {
+          if wpctl get-volume @DEFAULT_AUDIO_SOURCE@ | grep -q MUTED; then
+            echo "1" > "$LED_PATH" 2>/dev/null || true
+          else
+            echo "0" > "$LED_PATH" 2>/dev/null || true
+              fi
+        }
+        update_led
+
+        pactl subscribe | grep --line-buffered "Event 'change' on source" | while read -r _; do
+        update_led
+        done
+        '';
+    };
+  };
 
   hardware.bluetooth = {
     enable = true;
@@ -118,15 +144,6 @@
     tmux
     fastfetch
     xdg-user-dirs
-    (pkgs.writeShellScriptBin "micmute" ''
-      wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle
-
-      if wpctl get-volume @DEFAULT_AUDIO_SOURCE@ | grep -q MUTED; then
-      echo 1 > /sys/class/leds/platform::micmute/brightness
-      else
-      echo 0 > /sys/class/leds/platform::micmute/brightness
-      fi
-    '')
   ];
 
   programs = {
