@@ -26,7 +26,7 @@
       };
 
       edk2-uefi-shell.enable = true;
-      edk2-uefi-shell.sortKey = "z_edk2";  
+      edk2-uefi-shell.sortKey = "z_edk2";
       configurationLimit = 5;
     };
   };
