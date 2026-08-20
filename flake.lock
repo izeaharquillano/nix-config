@@ -56,16 +56,15 @@
         ]
       },
       "locked": {
-        "lastModified": 1786924861,
-        "narHash": "sha256-hftabkb+73OcGzvwFAjCiQorAhprs9TnU1+FkGO5CIw=",
+        "lastModified": 1787176219,
+        "narHash": "sha256-djoRr6jBpe35q/0JwAvXpFXg1Ktf+X54NU2RLR7wnHw=",
         "owner": "nix-community",
         "repo": "home-manager",
-        "rev": "09ae1b85a6db412d841d60f924b23f881f0d0a38",
+        "rev": "c53d643b3737e2fcd04e6cb3b3580ef50b2087a0",
         "type": "github"
       },
       "original": {
         "owner": "nix-community",
-        "ref": "release-26.05",
         "repo": "home-manager",
         "type": "github"
       }
@@ -495,33 +494,37 @@
     },
     "nixpkgs_3": {
       "locked": {
-        "lastModified": 1786943417,
-        "narHash": "sha256-b4qgjdFtlz5TAZ1Hi7DFJeqX3sjaDUnrwr9OO+O1rM0=",
+        "lastModified": 1787172299,
+        "narHash": "sha256-PShzS87awOlE5XWkxUGBd/58/F+AtE2ZMgFffKj4r8s=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "0dd31db7e6dbf9ce05697c4545f6fe01accec994",
+        "rev": "07e1d92cdc0ed416cfa11ff3ca40d17e61cfba7a",
         "type": "github"
       },
       "original": {
         "owner": "nixos",
-        "ref": "nixos-26.05",
+        "ref": "nixpkgs-unstable",
         "repo": "nixpkgs",
         "type": "github"
       }
     },
-    "nixpkgs_4": {
+    "noctalia": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
       "locked": {
-        "lastModified": 1787001381,
-        "narHash": "sha256-Ue1Yo8gfHdD4TMtNewhA4tkSYeFqXThju0nCyJc3ALo=",
-        "owner": "nixos",
-        "repo": "nixpkgs",
-        "rev": "ec2d622de0773551768cf98f3fc50cbcc003b9c5",
+        "lastModified": 1787196493,
+        "narHash": "sha256-vlpv5X3qOzoTGtJxejXkIdivgnJ3jI+3Gn1neD6y/mI=",
+        "owner": "noctalia-dev",
+        "repo": "noctalia",
+        "rev": "02286bbdcfa81dc3675c9de1d7203a466fcaf0eb",
         "type": "github"
       },
       "original": {
-        "owner": "nixos",
-        "ref": "nixos-unstable",
-        "repo": "nixpkgs",
+        "owner": "noctalia-dev",
+        "repo": "noctalia",
         "type": "github"
       }
     },
@@ -553,6 +556,7 @@
         "hyprland": "hyprland",
         "niri": "niri",
         "nixpkgs": "nixpkgs_3",
+        "noctalia": "noctalia",
         "zen-browser": "zen-browser"
       }
     },
@@ -650,7 +654,9 @@
         "home-manager": [
           "home-manager"
         ],
-        "nixpkgs": "nixpkgs_4"
+        "nixpkgs": [
+          "nixpkgs"
+        ]
       },
       "locked": {
         "lastModified": 1787021741,

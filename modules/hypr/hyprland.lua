@@ -69,8 +69,7 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("awww-daemon & waybar & nm-applet --indicator &")
     hl.exec_cmd("awww img " .. os.getenv("HOME") .. "/Pictures/wallpapers/nord.png")
     hl.exec_cmd("syncthing --no-browser")
-    -- hl.exec_cmd("netbird up")
-    hl.exec_cmd("echo 0 > /sys/class/leds/platform::micmute/brightness")
+    hl.exec_cmd("noctalia")
 end)
 
 hl.gesture({

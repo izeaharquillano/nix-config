@@ -7,12 +7,8 @@
   imports = [
     inputs.zen-browser.homeModules.beta
     inputs.niri.homeModules.niri
+    inputs.noctalia.homeModules.default
   ];
-
-  # programs.niri.settings = {
-  #   input.keyboard.xkb.layout = "us";
-  #   outputs."eDP-1".scale = 1.0;
-  # };
 
   home.packages = with pkgs; [
     # utils
@@ -55,13 +51,21 @@
         nixgarb = "sudo nix-collect-garbage";
       };
     };
+
     zoxide = {
       enable = true;
       enableBashIntegration = true;
     };
+
     git.settings = {
       userName = "Izeah Arquillano";
       userEmail = "izeaharquillano@gmail.com";
+    };
+
+    noctalia = {
+      enable = true;
+      settings = {
+      };
     };
   };
 
@@ -77,13 +81,13 @@
       source = ./modules/hypr;
       recursive = true;
     };
-    "rofi" = {
-      source = ./modules/rofi;
-      recursive = true;
-    };
-    "waybar" = {
-      source = ./modules/waybar;
-      recursive = true;
-    };
+    # "rofi" = {
+    #   source = ./modules/rofi;
+    #   recursive = true;
+    # };
+    # "waybar" = {
+    #   source = ./modules/waybar;
+    #   recursive = true;
+    # };
   };
 }
