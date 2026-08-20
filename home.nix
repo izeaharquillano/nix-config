@@ -19,6 +19,8 @@
     unzip
 
     # terminal tools
+    btop
+    fastfetch
     zoxide
     lazygit
     ripgrep
@@ -26,7 +28,6 @@
 
     # DE packages
     waybar
-    fuzzel
     pavucontrol
     brightnessctl
     xwayland-satellite
@@ -62,6 +63,14 @@
       userEmail = "izeaharquillano@gmail.com";
     };
 
+    niri = {
+      settings = {
+        spawn-at-startup = [
+          { command = [ "noctalia" ]; }
+        ];
+      };
+    };
+
     noctalia = {
       enable = true;
       settings = {
@@ -81,13 +90,5 @@
       source = ./modules/hypr;
       recursive = true;
     };
-    # "rofi" = {
-    #   source = ./modules/rofi;
-    #   recursive = true;
-    # };
-    # "waybar" = {
-    #   source = ./modules/waybar;
-    #   recursive = true;
-    # };
   };
 }

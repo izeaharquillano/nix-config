@@ -75,11 +75,6 @@
       };
     };
 
-    displayManager.sessionPackages = [
-      pkgs.hyprland
-      pkgs.niri
-    ];
-
     power-profiles-daemon.enable = false;
     tlp = {
       enable = true;
@@ -145,9 +140,7 @@
 
   environment.systemPackages = with pkgs; [
     wget
-    btop
     tmux
-    fastfetch
     xdg-user-dirs
   ];
 

@@ -40,7 +40,7 @@ input {
     }
 
     warp-mouse-to-focus
-    focus-follows-mouse
+    // focus-follows-mouse
 }
 
 cursor {
@@ -74,7 +74,7 @@ layout {
     focus-ring {
         on
         width 1.5
-        active-color "#7fc8ff"
+        active-color "#458588"
         inactive-color "#505050"
     }
 
@@ -102,8 +102,7 @@ layout {
     }
 }
 
-spawn-at-startup "noctalia"
-// spawn-sh-at-startup "waybar -c ~/.config/waybar/config-niri"
+// spawn-at-startup "noctalia"
 
 hotkey-overlay {
     skip-at-startup
@@ -139,7 +138,7 @@ binds {
     Mod+Shift+Slash { show-hotkey-overlay; }
 
     Mod+Return hotkey-overlay-title="Open a Terminal: ghostty" { spawn "ghostty"; }
-    Mod+Space hotkey-overlay-title="Run an Application: fuzzel" { spawn "fuzzel"; }
+    Mod+Space hotkey-overlay-title="Run an Application: launcher" { spawn-sh "noctalia msg panel-toggle launcher"; }
     Super+Alt+L hotkey-overlay-title="Lock the Screen: swaylock" { spawn "swaylock"; }
 
     XF86AudioRaiseVolume allow-when-locked=true { spawn-sh "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.1+"; }
@@ -149,6 +148,9 @@ binds {
 
     XF86MonBrightnessUp allow-when-locked=true { spawn "brightnessctl" "--class=backlight" "set" "+5%"; }
     XF86MonBrightnessDown allow-when-locked=true { spawn "brightnessctl" "--class=backlight" "set" "5%-"; }
+
+    Mod+Backspace allow-when-locked=true { spawn-sh "noctalia msg panel-toggle session"; }
+    Mod+S allow-when-locked=true { spawn-sh "noctalia msg panel-toggle control-center"; }
 
     Mod+O repeat=false { toggle-overview; }
     Mod+Q repeat=false { close-window; }
