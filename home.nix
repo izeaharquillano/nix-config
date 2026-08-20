@@ -63,13 +63,13 @@
       userEmail = "izeaharquillano@gmail.com";
     };
 
-    niri = {
-      settings = {
-        spawn-at-startup = [
-          { command = [ "noctalia" ]; }
-        ];
-      };
-    };
+    # niri = {
+    #   settings = {
+    #     spawn-at-startup = [
+    #       { command = [ "noctalia" ]; }
+    #     ];
+    #   };
+    # };
 
     noctalia = {
       enable = true;
