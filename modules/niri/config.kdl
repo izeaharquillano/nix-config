@@ -140,6 +140,8 @@ binds {
     Mod+Return hotkey-overlay-title="Open a Terminal: ghostty" { spawn "ghostty"; }
     Mod+Space hotkey-overlay-title="Run an Application: launcher" { spawn-sh "noctalia msg panel-toggle launcher"; }
     Super+Alt+L hotkey-overlay-title="Lock the Screen: swaylock" { spawn "swaylock"; }
+    Mod+B { spawn "zen-browser"; }
+    Mod+E { spawn-sh "ghostty -e yazi"; }
 
     XF86AudioRaiseVolume allow-when-locked=true { spawn-sh "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.1+"; }
     XF86AudioLowerVolume allow-when-locked=true { spawn-sh "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.1-"; }
@@ -149,8 +151,8 @@ binds {
     XF86MonBrightnessUp allow-when-locked=true { spawn "brightnessctl" "--class=backlight" "set" "+5%"; }
     XF86MonBrightnessDown allow-when-locked=true { spawn "brightnessctl" "--class=backlight" "set" "5%-"; }
 
-    Mod+Backspace allow-when-locked=true { spawn-sh "noctalia msg panel-toggle session"; }
-    Mod+S allow-when-locked=true { spawn-sh "noctalia msg panel-toggle control-center"; }
+    Mod+Backspace { spawn-sh "noctalia msg panel-toggle session"; }
+    Mod+S { spawn-sh "noctalia msg panel-toggle control-center"; }
 
     Mod+O repeat=false { toggle-overview; }
     Mod+Q repeat=false { close-window; }

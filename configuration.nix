@@ -88,6 +88,14 @@
       };
     };
 
+    upower = {
+      enable = true;
+      percentageLow = 20;
+      percentageCritical = 5;
+      percentageAction = 2;
+      criticalPowerAction = "PowerOff";
+    };
+
     udev.extraRules = ''
       ACTION=="add", SUBSYSTEM=="leds", KERNEL=="platform::micmute", \
       RUN+="${pkgs.coreutils}/bin/chmod 0666 /sys/class/leds/%k/brightness"

@@ -27,6 +27,7 @@
     opencode
 
     # DE packages
+    fuzzel
     waybar
     pavucontrol
     brightnessctl
@@ -76,12 +77,31 @@
       settings = {
       };
     };
+
+    yazi = {
+      enable = true;
+      enableBashIntegration = true;
+      shellWrapperName = "y";
+      flavors = {
+        gruvbox-material = pkgs.fetchFromGitHub {
+          owner = "matt-dong-123";
+          repo = "gruvbox-material.yazi";
+          rev = "main";
+          hash = "sha256-mfIdFIe++jRDbTQBcLlpAq91JzmgL2SvqPxkYuCnKdQ=";
+        };
+      };
+      theme.flavor = {
+        dark = "gruvbox-material";
+        light = "gruvbox-material";
+      };
+    };
   };
 
   xdg.configFile = {
     "niri/config.kdl".source = ./modules/niri/config.kdl;
     "ghostty/config".source = ./modules/ghostty/config;
     "tmux/tmux.conf".source = ./modules/tmux/tmux.conf;
+    "fuzzel/fuzzel.ini".source = ./modules/fuzzel/fuzzel.ini;
     "nvim" = {
       source = ./modules/nvim;
       recursive = true;
