@@ -27,7 +27,6 @@
     opencode
 
     # DE packages
-    fuzzel
     waybar
     pavucontrol
     brightnessctl
@@ -101,7 +100,6 @@
     "niri/config.kdl".source = ./modules/niri/config.kdl;
     "ghostty/config".source = ./modules/ghostty/config;
     "tmux/tmux.conf".source = ./modules/tmux/tmux.conf;
-    "fuzzel/fuzzel.ini".source = ./modules/fuzzel/fuzzel.ini;
     "nvim" = {
       source = ./modules/nvim;
       recursive = true;
