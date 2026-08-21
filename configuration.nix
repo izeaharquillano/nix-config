@@ -10,24 +10,15 @@
     efi.canTouchEfiVariables = true;
     timeout = 10;
 
-    systemd-boot = {
+    limine = {
       enable = true;
-
-      windows = {
-        "windows" =
-          let
-          boot-drive = "HD0b";
-        in
-        {
-          title = "Windows Boot Manager";
-          efiDeviceHandle = boot-drive;
-          sortKey = "y_windows";
-        };
-      };
-
-      edk2-uefi-shell.enable = true;
-      edk2-uefi-shell.sortKey = "z_edk2";
-      configurationLimit = 5;
+      maxGenerations = 5;
+      style.wallpapers = [ ];
+      extraEntries = ''
+        /Windows Boot Manager
+          protocol: efi
+          path: uuid(edb3db8a-7534-4f6d-a60a-13bc8f37a3c9):/EFI/Microsoft/Boot/bootmgfw.efi
+      '';
     };
   };
 
