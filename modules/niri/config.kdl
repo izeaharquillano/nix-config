@@ -140,6 +140,7 @@ binds {
     Mod+Return hotkey-overlay-title="Open a Terminal: ghostty" { spawn "ghostty"; }
     Mod+Space hotkey-overlay-title="Run an Application: launcher" { spawn-sh "noctalia msg panel-toggle launcher"; }
     Super+Alt+L hotkey-overlay-title="Lock the Screen: lock!" { spawn-sh "noctalia msg session lock"; }
+    Super+Alt+S hotkey-overlay-title="Lock the Screen: lock!" { spawn-sh "noctalia msg session lock-and-suspend"; }
     Mod+B { spawn "zen-beta"; }
     Mod+E { spawn-sh "ghostty -e yazi"; }
 
