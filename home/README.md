@@ -14,8 +14,8 @@ home/
 ├── desktop/                 # Desktop/GUI app configs
 │   ├── default.nix          # Aggregator
 │   ├── ghostty.nix          # Ghostty terminal (xdg.configFile)
-│   ├── hyprland.nix         # Hyprland config files
-│   ├── niri.nix             # Niri config files
+│   ├── hyprland.nix         # Hyprland config (generates monitors.lua from osConfig)
+│   ├── niri.nix             # Niri config (generates output blocks from osConfig)
 │   ├── noctalia.nix         # Noctalia bar/shell
 │   ├── nvim.nix             # Neovim LazyVim config (xdg.configFile)
 │   ├── yazi.nix             # Yazi file manager + gruvbox theme
@@ -37,7 +37,7 @@ home/
 
 The host's HM entry point (`home/hosts/<name>.nix`) imports `core/` and `desktop/`, plus any flake module inputs (niri, noctalia, zen-browser).
 
-Raw dotfiles in `config/` are consumed via `xdg.configFile` in the desktop modules.
+Raw dotfiles in `config/` are consumed via `xdg.configFile` in the desktop modules. Monitor configs for hyprland and niri are generated from `osConfig.host.monitors` (defined in each host's NixOS config) rather than static dotfiles.
 
 ## Adding a Module
 

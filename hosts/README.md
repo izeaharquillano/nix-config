@@ -41,12 +41,43 @@ Or copy from an existing host and modify.
 
   networking.hostName = "<name>";
 
+  # Monitor configuration for window managers (niri, hyprland).
+  # Each host MUST define its monitors. The WM configs are generated from these values.
+  host.monitors = [
+    {
+      name = "eDP-1";               # Output name (run `wlr-randr` or `niri msg outputs` to find)
+      mode = "1920x1080@60";        # Resolution and refresh rate
+      scale = "1.20";               # Display scale factor
+      position = "auto";            # "auto" or "x=0 y=0" for explicit placement
+      transform = "normal";         # "normal", "90", "180", "270", "flipped", etc.
+    }
+  ];
+
   # Host-specific overrides
   # e.g. disable laptop services on a desktop:
   # services.tlp.enable = lib.mkForce false;
 
   system.stateVersion = "26.05";
 }
+```
+
+#### Monitor options
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `name` | string | *(required)* | Output name (`eDP-1`, `DP-1`, `HDMI-A-1`, etc.) |
+| `mode` | string | *(required)* | Resolution@RefreshRate (`2560x1440@144`) |
+| `scale` | string | `"1"` | Scale factor (`1`, `1.20`, `1.5`, `2`, etc.) |
+| `position` | string | `"auto"` | `"auto"` or `"x=0 y=0"` for fixed position |
+| `transform` | string | `"normal"` | Output rotation/transformation |
+
+#### Multi-monitor example
+
+```nix
+host.monitors = [
+  { name = "DP-1"; mode = "2560x1440@144"; scale = "1"; position = "0x0"; }
+  { name = "HDMI-A-1"; mode = "1920x1080@60"; scale = "1"; position = "2560x0"; }
+];
 ```
 
 ### 4. Add Home Manager config (optional)
