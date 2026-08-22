@@ -102,6 +102,7 @@
     "niri/config.kdl".source = ./modules/niri/config.kdl;
     "ghostty/config".source = ./modules/ghostty/config;
     "tmux/tmux.conf".source = ./modules/tmux/tmux.conf;
+    "noctalia/config.toml".source = ./modules/noctalia/config.toml;
     "nvim" = {
       source = ./modules/nvim;
       recursive = true;
