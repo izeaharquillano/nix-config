@@ -30,17 +30,17 @@
   };
 
   outputs = inputs@{ self, nixpkgs, home-manager, lanzaboote, ... }: {
-    nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
+    nixosConfigurations.padrick = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
       modules = [
-        ./configuration.nix
+        ./hosts/padrick
         lanzaboote.nixosModules.lanzaboote
         home-manager.nixosModules.home-manager
         {
           home-manager = {
             useGlobalPkgs = true;
             useUserPackages = true;
-            users.ize = import ./home.nix;
+            users.ize = import ./home/hosts/padrick.nix;
             extraSpecialArgs = { inherit inputs; };
           };
         }

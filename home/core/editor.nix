@@ -1,0 +1,7 @@
+{ ... }:
+
+{
+  programs = {
+    npm.enable = true;
+  };
+}
