@@ -10,6 +10,7 @@
     gcc
     curl
     unzip
+    tealdeer
 
     # terminal tools
     btop
