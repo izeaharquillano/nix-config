@@ -10,14 +10,14 @@ home/
 │   ├── default.nix          # Aggregator + stateVersion, username
 │   ├── shell.nix            # Bash, zoxide, cursor theme, aliases
 │   ├── git.nix              # Git user name/email
-│   ├── packages.nix         # CLI tools (fd, fzf, btop, ripgrep, etc.)
-│   └── editor.nix           # npm
+│   └── packages.nix         # CLI tools (fd, fzf, btop, ripgrep, etc.) + npm
 ├── desktop/                 # Desktop/GUI app configs
 │   ├── default.nix          # Aggregator
 │   ├── ghostty.nix          # Ghostty terminal (xdg.configFile)
 │   ├── hyprland.nix         # Hyprland config files
 │   ├── niri.nix             # Niri config files
 │   ├── noctalia.nix         # Noctalia bar/shell
+│   ├── nvim.nix             # Neovim LazyVim config (xdg.configFile)
 │   ├── yazi.nix             # Yazi file manager + gruvbox theme
 │   ├── tmux.nix             # Tmux config
 │   ├── waybar.nix           # Waybar + desktop packages
