@@ -122,7 +122,22 @@ nixosConfigurations.<name> = nixpkgs.lib.nixosSystem {
 };
 ```
 
-### 6. Deploy
+### 6. Set up Secure Boot (first-time only)
+
+On a new machine, enroll Secure Boot keys before the first deploy:
+
+```bash
+# Create and enroll keys (interactive, requires physical presence)
+sudo sbctl create-keys
+sudo sbctl enroll-keys --microsoft
+
+# Verify enrollment
+sbctl status
+```
+
+This only needs to be done once per machine. The keys are stored in `/var/lib/sbctl`.
+
+### 7. Deploy
 
 ```bash
 sudo nixos-rebuild switch --flake .#<name>
