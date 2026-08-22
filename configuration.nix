@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ config, pkgs, lib, ... }:
 
 {
   imports =
@@ -6,27 +6,18 @@
     ./hardware-configuration.nix
     ];
 
-  boot.loader = {
-    efi.canTouchEfiVariables = true;
-    timeout = 10;
+  boot = {
+    kernelPackages = pkgs.linuxPackages_latest;
 
-    systemd-boot = {
+    loader = {
+      efi.canTouchEfiVariables = true;
+      timeout = 10;
+      systemd-boot.enable = lib.mkForce false;
+    };
+
+    lanzaboote = {
       enable = true;
-
-      windows = {
-        "windows" =
-          let
-          boot-drive = "HD0b";
-        in
-        {
-          title = "Windows Boot Manager";
-          efiDeviceHandle = boot-drive;
-          sortKey = "y_windows";
-        };
-      };
-
-      edk2-uefi-shell.enable = true;
-      edk2-uefi-shell.sortKey = "z_edk2";
+      pkiBundle = "/var/lib/sbctl";
       configurationLimit = 5;
     };
   };
@@ -35,8 +26,6 @@
     device = "/var/lib/swapfile";
     size = 8 * 1024;
   }];
-
-  boot.kernelPackages = pkgs.linuxPackages_latest;
 
   networking.hostName = "nixos";
 
