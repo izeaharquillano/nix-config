@@ -1,9 +1,10 @@
 local mainMod     = "SUPER"
 local terminal    = "ghostty"
-local fileManager = "dolphin"
-local menu        = os.getenv("HOME") .. "/.config/rofi/scripts/launcher_t1"
+local fileManager = "yazi"
+local menu        = "noctalia msg panel-toggle launcher"
 
 hl.bind(mainMod .. " + RETURN", hl.dsp.exec_cmd(terminal))
+hl.bind(mainMod .. " + B", hl.dsp.exec_cmd("zen-beta"))
 hl.bind(mainMod .. " + Q",      hl.dsp.window.close())
 hl.bind(mainMod .. " + E",      hl.dsp.exec_cmd(fileManager))
 hl.bind(mainMod .. " + F",  hl.dsp.window.float({ action = "toggle" }))
@@ -63,4 +64,4 @@ hl.bind(mainMod .. " + SHIFT + Print", hl.dsp.exec_cmd("hyprshot -m output --out
 hl.bind(mainMod .. " + Y",         hl.dsp.exec_cmd("hyprctl plugin load /var/cache/hyprpm/izeah/hyprland-plugins/hyprbars.so"))
 hl.bind(mainMod .. " + SHIFT + Y", hl.dsp.exec_cmd("hyprctl plugin unload /var/cache/hyprpm/izeah/hyprland-plugins/hyprbars.so"))
 
-hl.bind(mainMod .. " + backspace", hl.dsp.exec_cmd(os.getenv("HOME") .. "/.config/rofi/scripts/powermenu_t1"))
+hl.bind(mainMod .. " + backspace", hl.dsp.exec_cmd("noctalia msg panel-toggle session"))

@@ -3,6 +3,16 @@
   home.stateVersion = "26.05";
   home.username = "ize";
   home.homeDirectory = "/home/ize";
+  home.pointerCursor = {
+    enable = true;
+    package = pkgs.adwaita-icon-theme;
+    name = "Adwaita";
+    size = 24;
+  };
+  gtk.cursorTheme = {
+    package = pkgs.adwaita-icon-theme;
+    name = "Adwaita";
+  };
 
   imports = [
     inputs.zen-browser.homeModules.beta
@@ -62,14 +72,6 @@
       userName = "Izeah Arquillano";
       userEmail = "izeaharquillano@gmail.com";
     };
-
-    # niri = {
-    #   settings = {
-    #     spawn-at-startup = [
-    #       { command = [ "noctalia" ]; }
-    #     ];
-    #   };
-    # };
 
     noctalia = {
       enable = true;

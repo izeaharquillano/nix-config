@@ -43,7 +43,7 @@ input {
     // focus-follows-mouse
 }
 
-cursor {
+/-cursor {
   xcursor-theme "default"
   xcursor-size 72
 }
@@ -72,18 +72,19 @@ layout {
     // default-column-width {}
 
     focus-ring {
-        on
+        off
         width 1.5
         active-color "#458588"
-        inactive-color "#505050"
+        inactive-color "#595959"
+        // inactive-color "#505050"
     }
 
     border {
-        off
-        width 2
-        active-color "#7fc8ff"
-        inactive-color "#505050"
-        urgent-color "#9b0000"
+        on
+        width 1.5
+        active-color "#458588"
+        inactive-color "#595959"
+        urgent-color "#d79921"
     }
 
     shadow {

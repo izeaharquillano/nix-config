@@ -5,10 +5,10 @@ local menu        = os.getenv("HOME") .. "/.config/rofi/scripts/launcher_t1"
 hl.config({
     general = {
         gaps_in  = 3,
-        gaps_out = 10,
+        gaps_out = 6,
         border_size = 2,
         col = {
-            active_border   = "rgba(99d1dbff)",
+            active_border   = "rgba(458588ff)",
             inactive_border = "rgba(595959aa)",
         },
         resize_on_border = false,
@@ -60,14 +60,9 @@ hl.config({
   },
 })
 
-hl.env("XCURSOR_THEME", "default")
-hl.env("XCURSOR_SIZE", "20")
-hl.env("HYPRCURSOR_SIZE", "20")
 hl.env("GDK_SCALE", "1")
 
 hl.on("hyprland.start", function()
-    -- hl.exec_cmd("awww-daemon & waybar & nm-applet --indicator &")
-    -- hl.exec_cmd("awww img " .. os.getenv("HOME") .. "/Pictures/wallpapers/nord.png")
     hl.exec_cmd("syncthing --no-browser")
     hl.exec_cmd("noctalia")
 end)
