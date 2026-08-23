@@ -6,7 +6,7 @@ Raw application configuration files (dotfiles) consumed by Home Manager via `xdg
 
 ```
 config/
-├── ghostty/config       # Ghostty terminal config
+├── kitty/kitty.conf     # kitty terminal config
 ├── hypr/                # Hyprland Lua config (keybinds, rules, plugins)
 │   ├── hyprland.lua     # Main config (requires monitors, animations, etc.)
 │   ├── keybindings.lua  # Key bindings
@@ -26,11 +26,11 @@ config/
 In `home/desktop/*.nix`, each module symlinks its config into `~/.config/`:
 
 ```nix
-# Example from home/desktop/ghostty.nix
-xdg.configFile."ghostty/config".source = ../../config/ghostty/config;
+# Example from home/desktop/kitty.nix
+xdg.configFile."kitty/kitty.conf".source = ../../config/kitty/kitty.conf;
 ```
 
-This creates a symlink at `~/.config/ghostty/config` pointing to this file.
+This creates a symlink at `~/.config/kitty/kitty.conf` pointing to this file.
 
 ## Monitor Configs
 

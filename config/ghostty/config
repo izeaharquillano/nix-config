@@ -1,8 +1,0 @@
-font-family = "JetBrainsMono Nerd Font"
-
-gtk-titlebar = false
-
-theme = Gruvbox Dark
-
-window-padding-x = 10
-window-padding-y = 10

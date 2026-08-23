@@ -132,12 +132,12 @@ window-rule {
 binds {
     Mod+Shift+Slash { show-hotkey-overlay; }
 
-    Mod+Return hotkey-overlay-title="Open a Terminal: ghostty" { spawn "ghostty"; }
+    Mod+Return hotkey-overlay-title="Open a Terminal: kitty" { spawn "kitty"; }
     Mod+Space hotkey-overlay-title="Run an Application: launcher" { spawn-sh "noctalia msg panel-toggle launcher"; }
     Super+Alt+L hotkey-overlay-title="Lock the Screen: lock!" { spawn-sh "noctalia msg session lock"; }
     Super+Alt+S hotkey-overlay-title="Lock the Screen: lock!" { spawn-sh "noctalia msg session lock-and-suspend"; }
     Mod+B { spawn "zen-beta"; }
-    Mod+E { spawn-sh "ghostty -e yazi"; }
+    Mod+E { spawn-sh "kitty yazi"; }
 
     XF86AudioRaiseVolume allow-when-locked=true { spawn-sh "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.1+"; }
     XF86AudioLowerVolume allow-when-locked=true { spawn-sh "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.1-"; }

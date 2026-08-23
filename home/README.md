@@ -13,7 +13,7 @@ home/
 │   └── packages.nix         # CLI tools (fd, fzf, btop, ripgrep, etc.) + npm
 ├── desktop/                 # Desktop/GUI app configs
 │   ├── default.nix          # Aggregator
-│   ├── ghostty.nix          # Ghostty terminal (xdg.configFile)
+│   ├── kitty.nix            # kitty terminal (xdg.configFile)
 │   ├── hyprland.nix         # Hyprland config (symlinks config/hypr/)
 │   ├── niri.nix             # Niri config (symlinks config/niri/)
 │   ├── noctalia.nix         # Noctalia bar/shell

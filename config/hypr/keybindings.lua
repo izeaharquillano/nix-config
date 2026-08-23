@@ -1,5 +1,5 @@
 local mainMod     = "SUPER"
-local terminal    = "ghostty"
+local terminal    = "kitty"
 local fileManager = "yazi"
 local menu        = "noctalia msg panel-toggle launcher"
 

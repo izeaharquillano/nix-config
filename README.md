@@ -20,7 +20,7 @@ Modular NixOS configuration using flakes and Home Manager.
 │   ├── core/                  # Shell, git, packages, editor
 │   ├── desktop/               # GUI app configs (symlinks WM configs)
 │   └── hosts/                 # Host-specific HM overrides
-└── config/                    # Raw dotfiles (nvim, hypr, niri, ghostty, tmux)
+└── config/                    # Raw dotfiles (nvim, hypr, niri, kitty, tmux)
 ```
 
 ## Quick Start
@@ -60,5 +60,5 @@ nix build .#nixosConfigurations.padrick.config.system.build.toplevel
 
 ## Theme
 
-- **Colors:** Gruvbox (dark) across neovim, ghostty, noctalia, niri, hyprland
+- **Colors:** Gruvbox (dark) across neovim, kitty, noctalia, niri, hyprland
 - **Font:** JetBrainsMono Nerd Font

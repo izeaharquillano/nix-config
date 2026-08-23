@@ -1,4 +1,4 @@
-local terminal    = "ghostty"
+local terminal    = "kitty"
 local fileManager = "dolphin"
 local menu        = os.getenv("HOME") .. "/.config/rofi/scripts/launcher_t1"
 
