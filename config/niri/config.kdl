@@ -2,6 +2,7 @@ include "./niri-hardware.kdl"
 
 input {
     keyboard {
+        xkb {
         }
         // numlock
     }
