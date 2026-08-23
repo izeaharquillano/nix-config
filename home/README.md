@@ -8,12 +8,13 @@ User-level configuration managed by Home Manager.
 home/
 ├── core/                    # Shared across all hosts
 │   ├── default.nix          # Aggregator + stateVersion, username
-│   ├── shell.nix            # Bash, zoxide, cursor theme, aliases
+│   ├── shell.nix            # Bash, zoxide, aliases
 │   ├── git.nix              # Git user name/email
 │   └── packages.nix         # CLI tools (fd, fzf, btop, ripgrep, etc.) + npm
 ├── desktop/                 # Desktop/GUI app configs
 │   ├── default.nix          # Aggregator
-│   ├── kitty.nix            # kitty terminal (xdg.configFile)
+│   ├── gtk.nix              # GTK theme, cursor
+│   ├── ghostty.nix          # Ghostty terminal
 │   ├── hyprland.nix         # Hyprland config (symlinks config/hypr/)
 │   ├── niri.nix             # Niri config (symlinks config/niri/)
 │   ├── noctalia.nix         # Noctalia bar/shell
@@ -22,20 +23,22 @@ home/
 │   ├── tmux.nix             # Tmux config
 │   ├── waybar.nix           # Waybar + desktop packages
 │   ├── zen-browser.nix      # Zen Browser
-│   └── terminal.nix         # Ghostty package
+│   └── terminal.nix         # Terminal packages
 └── hosts/
-    └── padrick.nix          # Host-specific HM: imports core + desktop, symlinks hardware configs
+    └── padrick/
+        ├── default.nix      # Host-specific HM: imports core + desktop, symlinks hardware configs
+        └── packages.nix     # Host-specific user packages
 ```
 
 ## Module Types
 
 - **`core/`** - Essential user config (shell, git, packages). Always imported.
 - **`desktop/`** - GUI applications and dotfiles. Only for desktop hosts.
-- **`hosts/<name>.nix`** - Host-specific overrides, flake input imports, and hardware config symlinks.
+- **`hosts/<name>/`** - Host-specific overrides, flake input imports, and hardware config symlinks.
 
 ## How It Works
 
-The host's HM entry point (`home/hosts/<name>.nix`) imports `core/` and `desktop/`, plus any flake module inputs (niri, noctalia, zen-browser).
+The host's HM entry point (`home/hosts/<name>/default.nix`) imports `core/` and `desktop/`, plus any flake module inputs (niri, noctalia, zen-browser).
 
 Raw dotfiles in `config/` are symlinked into `~/.config/` via `xdg.configFile`. Monitor/window-manager hardware configs live in `hosts/<name>/` and are symlinked by the host-specific HM file using `mkOutOfStoreSymlink`.
 
@@ -44,7 +47,7 @@ For niri, the main `config.kdl` uses `include "./niri-hardware.kdl"` to pull in 
 ## Adding a Module
 
 1. Create a `.nix` file in `home/core/` or `home/desktop/`
-2. Add it to the corresponding `default.nix` imports list
+2. It will be auto-imported by `scanPaths` in `default.nix`
 3. Follow the Home Manager module pattern:
 
 ```nix
@@ -82,7 +85,7 @@ xdg.configFile."app" = {
 
 ## Host-Specific Overrides
 
-In `home/hosts/<name>.nix`, add host-specific settings after the imports. Use `mkOutOfStoreSymlink` for hardware config files that live in `hosts/<name>/`:
+In `home/hosts/<name>/default.nix`, add host-specific settings after the imports. Use `mkOutOfStoreSymlink` for hardware config files that live in `hosts/<name>/`:
 
 ```nix
 { config, inputs, ... }:
@@ -91,8 +94,9 @@ let
 in
 {
   imports = [
-    ../../home/core
-    ../../home/desktop
+    ../../core
+    ../../desktop
+    ./packages.nix
     inputs.niri.homeModules.niri
     inputs.noctalia.homeModules.default
   ];
@@ -102,5 +106,17 @@ in
 
   xdg.configFile."hypr/monitors.lua".source =
     mkSymlink "${config.home.homeDirectory}/nixos-conf/hosts/<name>/monitors.lua";
+}
+```
+
+Add host-specific user packages in `home/hosts/<name>/packages.nix`:
+
+```nix
+{ pkgs, ... }:
+
+{
+  home.packages = with pkgs; [
+    # user packages only needed on this host
+  ];
 }
 ```

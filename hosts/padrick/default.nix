@@ -6,6 +6,7 @@
     ../../modules/desktop
     ../../modules/security.nix
     ./hardware-configuration.nix
+    ./packages.nix
   ];
 
   networking.hostName = "padrick";

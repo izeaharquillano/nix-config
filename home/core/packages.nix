@@ -19,5 +19,8 @@
     lazygit
     ripgrep
     opencode
+
+    # gui apps
+    discord-ptb
   ];
 }

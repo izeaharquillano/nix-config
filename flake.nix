@@ -45,7 +45,7 @@
           home-manager = {
             useGlobalPkgs = true;
             useUserPackages = true;
-            users.ize = import ./home/hosts/padrick.nix;
+            users.ize = import ./home/hosts/padrick;
             extraSpecialArgs = { inherit inputs mylib; };
           };
         }

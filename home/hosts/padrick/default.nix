@@ -4,8 +4,9 @@ let
 in
 {
   imports = [
-    ../../home/core
-    ../../home/desktop
+    ../../core
+    ../../desktop
+    ./packages.nix
     inputs.niri.homeModules.niri
     inputs.noctalia.homeModules.default
   ];

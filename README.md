@@ -20,6 +20,9 @@ Modular NixOS configuration using flakes and Home Manager.
 │   ├── core/                  # Shell, git, packages, editor
 │   ├── desktop/               # GUI app configs (symlinks WM configs)
 │   └── hosts/                 # Host-specific HM overrides
+│       └── padrick/
+│           ├── default.nix    # Host HM config
+│           └── packages.nix   # Host-specific user packages
 └── config/                    # Raw dotfiles (nvim, hypr, niri, kitty, tmux)
 ```
 
@@ -40,11 +43,41 @@ nix build .#nixosConfigurations.padrick.config.system.build.toplevel
 ## Adding a New Host
 
 1. Create `hosts/<name>/default.nix` and `hardware-configuration.nix`
-2. Create `hosts/<name>/niri-hardware.kdl` with your monitor outputs (see [hosts/README.md](hosts/README.md))
-3. Create `hosts/<name>/monitors.lua` with hyprland monitor config
-4. Create `home/hosts/<name>.nix` for host-specific HM config (symlink hardware files)
-5. Add a new `nixosConfigurations.<name>` entry in `flake.nix`
-6. See [hosts/README.md](hosts/README.md) for details
+2. Create `hosts/<name>/packages.nix` for host-specific system packages
+3. Create `hosts/<name>/niri-hardware.kdl` with your monitor outputs (see [hosts/README.md](hosts/README.md))
+4. Create `hosts/<name>/monitors.lua` with hyprland monitor config
+5. Create `home/hosts/<name>/default.nix` for host-specific HM config (symlink hardware files)
+6. Create `home/hosts/<name>/packages.nix` for host-specific user packages
+7. Add a new `nixosConfigurations.<name>` entry in `flake.nix`
+8. See [hosts/README.md](hosts/README.md) for details
+
+## Host-Specific Packages
+
+Add host-specific system packages in `hosts/<name>/packages.nix`:
+
+```nix
+{ pkgs, ... }:
+
+{
+  environment.systemPackages = with pkgs; [
+    # packages only needed on this host
+  ];
+}
+```
+
+Add host-specific user packages in `home/hosts/<name>/packages.nix`:
+
+```nix
+{ pkgs, ... }:
+
+{
+  home.packages = with pkgs; [
+    # user packages only needed on this host
+  ];
+}
+```
+
+Shared packages are in `modules/core/packages.nix` (system) and `home/core/packages.nix` (user).
 
 ## Flake Inputs
 
