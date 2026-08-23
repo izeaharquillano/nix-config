@@ -1,5 +1,7 @@
-{ pkgs, inputs, ... }:
-
+{ config, inputs, ... }:
+let
+  mkSymlink = config.lib.file.mkOutOfStoreSymlink;
+in
 {
   imports = [
     ../../home/core
@@ -7,4 +9,10 @@
     inputs.niri.homeModules.niri
     inputs.noctalia.homeModules.default
   ];
+
+  xdg.configFile."niri/niri-hardware.kdl".source =
+    mkSymlink "${config.home.homeDirectory}/nixos-conf/hosts/padrick/niri-hardware.kdl";
+
+  xdg.configFile."hypr/monitors.lua".source =
+    mkSymlink "${config.home.homeDirectory}/nixos-conf/hosts/padrick/monitors.lua";
 }

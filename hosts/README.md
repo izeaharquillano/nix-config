@@ -8,6 +8,61 @@ Each subdirectory here represents a NixOS machine. The host's `default.nix` is t
 |---|---|---|---|
 | `padrick` | Laptop | AMD, BTRFS, Wayland | Daily use |
 
+## Hardware Config Pattern
+
+Each host directory contains hardware-specific config files:
+
+```
+hosts/padrick/
+├── default.nix                 # Host NixOS config (imports modules)
+├── hardware-configuration.nix  # Auto-generated hardware scan
+├── niri-hardware.kdl           # Niri monitor/output config (KDL format)
+└── monitors.lua                # Hyprland monitor config (Lua format)
+```
+
+### niri-hardware.kdl
+
+Plain KDL file with `output` blocks defining monitor settings. Niri's `config.kdl` uses `include "./niri-hardware.kdl"` to pull this in. Run `niri msg outputs` to find output names.
+
+```kdl
+output "eDP-1" {
+    mode "1920x1080@60"
+    scale 1.20
+    transform "normal"
+}
+
+output "DP-1" {
+    mode "2560x1440@144"
+    scale 1
+    transform "normal"
+    position x=1920 y=0
+}
+
+// Optional: pin workspaces to specific outputs
+workspace "1terminal" { open-on-output "eDP-1"; }
+workspace "2browser" { open-on-output "DP-1"; }
+```
+
+### monitors.lua
+
+Lua file defining monitor configs for Hyprland. Used via `require("monitors")` in the main Hyprland config.
+
+```lua
+hl.monitor({
+    output   = "eDP-1",
+    mode     = "1920x1080@60",
+    position = "auto",
+    scale    = "1.20",
+})
+
+hl.monitor({
+    output   = "DP-1",
+    mode     = "2560x1440@144",
+    position = "0x0",
+    scale    = "1",
+})
+```
+
 ## Adding a New Host
 
 ### 1. Create the host directory
@@ -41,18 +96,6 @@ Or copy from an existing host and modify.
 
   networking.hostName = "<name>";
 
-  # Monitor configuration for window managers (niri, hyprland).
-  # Each host MUST define its monitors. The WM configs are generated from these values.
-  host.monitors = [
-    {
-      name = "eDP-1";               # Output name (run `wlr-randr` or `niri msg outputs` to find)
-      mode = "1920x1080@60";        # Resolution and refresh rate
-      scale = "1.20";               # Display scale factor
-      position = "auto";            # "auto" or "x=0 y=0" for explicit placement
-      transform = "normal";         # "normal", "90", "180", "270", "flipped", etc.
-    }
-  ];
-
   # Host-specific overrides
   # e.g. disable laptop services on a desktop:
   # services.tlp.enable = lib.mkForce false;
@@ -61,32 +104,38 @@ Or copy from an existing host and modify.
 }
 ```
 
-#### Monitor options
+### 4. Create monitor config files
 
-| Option | Type | Default | Description |
-|---|---|---|---|
-| `name` | string | *(required)* | Output name (`eDP-1`, `DP-1`, `HDMI-A-1`, etc.) |
-| `mode` | string | *(required)* | Resolution@RefreshRate (`2560x1440@144`) |
-| `scale` | string | `"1"` | Scale factor (`1`, `1.20`, `1.5`, `2`, etc.) |
-| `position` | string | `"auto"` | `"auto"` or `"x=0 y=0"` for fixed position |
-| `transform` | string | `"normal"` | Output rotation/transformation |
+Create `hosts/<name>/niri-hardware.kdl` with your display outputs:
 
-#### Multi-monitor example
-
-```nix
-host.monitors = [
-  { name = "DP-1"; mode = "2560x1440@144"; scale = "1"; position = "0x0"; }
-  { name = "HDMI-A-1"; mode = "1920x1080@60"; scale = "1"; position = "2560x0"; }
-];
+```kdl
+output "eDP-1" {
+    mode "1920x1080@60"
+    scale 1.20
+    transform "normal"
+}
 ```
 
-### 4. Add Home Manager config (optional)
+Create `hosts/<name>/monitors.lua` for Hyprland:
+
+```lua
+hl.monitor({
+    output   = "eDP-1",
+    mode     = "1920x1080@60",
+    position = "auto",
+    scale    = "1.20",
+})
+```
+
+### 5. Add Home Manager config
 
 Create `home/hosts/<name>.nix`:
 
 ```nix
-{ pkgs, inputs, ... }:
-
+{ config, inputs, ... }:
+let
+  mkSymlink = config.lib.file.mkOutOfStoreSymlink;
+in
 {
   imports = [
     ../../home/core
@@ -95,11 +144,16 @@ Create `home/hosts/<name>.nix`:
     inputs.noctalia.homeModules.default
   ];
 
-  # Host-specific HM overrides
+  # Symlink host-specific hardware configs into ~/.config/
+  xdg.configFile."niri/niri-hardware.kdl".source =
+    mkSymlink "${config.home.homeDirectory}/nixos-conf/hosts/<name>/niri-hardware.kdl";
+
+  xdg.configFile."hypr/monitors.lua".source =
+    mkSymlink "${config.home.homeDirectory}/nixos-conf/hosts/<name>/monitors.lua";
 }
 ```
 
-### 5. Register in `flake.nix`
+### 6. Register in `flake.nix`
 
 Add a new entry in the `outputs` attrset:
 
@@ -122,7 +176,7 @@ nixosConfigurations.<name> = nixpkgs.lib.nixosSystem {
 };
 ```
 
-### 6. Set up Secure Boot (first-time only)
+### 7. Set up Secure Boot (first-time only)
 
 On a new machine, enroll Secure Boot keys before the first deploy:
 
@@ -137,7 +191,7 @@ sbctl status
 
 This only needs to be done once per machine. The keys are stored in `/var/lib/sbctl`.
 
-### 7. Deploy
+### 8. Deploy
 
 ```bash
 sudo nixos-rebuild switch --flake .#<name>

@@ -8,6 +8,5 @@
     ./fonts.nix
     ./services.nix
     ./hardware.nix
-    ./monitors.nix
   ];
 }

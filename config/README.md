@@ -7,8 +7,15 @@ Raw application configuration files (dotfiles) consumed by Home Manager via `xdg
 ```
 config/
 ├── ghostty/config       # Ghostty terminal config
-├── hypr/                # Hyprland Lua config (keybinds, monitors, rules, plugins)
-├── niri/config.kdl      # Niri column-based tiling WM config
+├── hypr/                # Hyprland Lua config (keybinds, rules, plugins)
+│   ├── hyprland.lua     # Main config (requires monitors, animations, etc.)
+│   ├── keybindings.lua  # Key bindings
+│   ├── windowrules.lua  # Window rules
+│   ├── animations.lua   # Animation config
+│   └── plugins/         # Hyprland plugins (hyprbars)
+├── niri/
+│   ├── config.kdl       # Niri config (includes niri-hardware.kdl)
+│   └── config.kdl.old   # Old reference config
 ├── noctalia/config.toml # Noctalia Wayland bar/shell
 ├── nvim/                # Neovim LazyVim config (Lua)
 └── tmux/tmux.conf       # Tmux config
@@ -16,7 +23,7 @@ config/
 
 ## How Dotfiles Are Consumed
 
-In `home/desktop/*.nix`, each module links its config into `~/.config/`:
+In `home/desktop/*.nix`, each module symlinks its config into `~/.config/`:
 
 ```nix
 # Example from home/desktop/ghostty.nix
@@ -24,6 +31,13 @@ xdg.configFile."ghostty/config".source = ../../config/ghostty/config;
 ```
 
 This creates a symlink at `~/.config/ghostty/config` pointing to this file.
+
+## Monitor Configs
+
+Monitor-specific configs (niri outputs, hyprland monitors) live in `hosts/<name>/` rather than here. They are symlinked by the host-specific HM file (`home/hosts/<name>.nix`).
+
+- **Niri**: `hosts/<name>/niri-hardware.kdl` is symlinked to `~/.config/niri/niri-hardware.kdl` and included by `config.kdl` via `include "./niri-hardware.kdl"`.
+- **Hyprland**: `hosts/<name>/monitors.lua` is symlinked to `~/.config/hypr/monitors.lua` and loaded via `require("monitors")`.
 
 ## Adding a New Dotfile
 

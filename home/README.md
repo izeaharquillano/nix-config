@@ -14,8 +14,8 @@ home/
 ├── desktop/                 # Desktop/GUI app configs
 │   ├── default.nix          # Aggregator
 │   ├── ghostty.nix          # Ghostty terminal (xdg.configFile)
-│   ├── hyprland.nix         # Hyprland config (generates monitors.lua from osConfig)
-│   ├── niri.nix             # Niri config (generates output blocks from osConfig)
+│   ├── hyprland.nix         # Hyprland config (symlinks config/hypr/)
+│   ├── niri.nix             # Niri config (symlinks config/niri/)
 │   ├── noctalia.nix         # Noctalia bar/shell
 │   ├── nvim.nix             # Neovim LazyVim config (xdg.configFile)
 │   ├── yazi.nix             # Yazi file manager + gruvbox theme
@@ -24,20 +24,22 @@ home/
 │   ├── zen-browser.nix      # Zen Browser
 │   └── terminal.nix         # Ghostty package
 └── hosts/
-    └── padrick.nix          # Host-specific HM: imports core + desktop
+    └── padrick.nix          # Host-specific HM: imports core + desktop, symlinks hardware configs
 ```
 
 ## Module Types
 
 - **`core/`** - Essential user config (shell, git, packages). Always imported.
 - **`desktop/`** - GUI applications and dotfiles. Only for desktop hosts.
-- **`hosts/<name>.nix`** - Host-specific overrides and flake input imports.
+- **`hosts/<name>.nix`** - Host-specific overrides, flake input imports, and hardware config symlinks.
 
 ## How It Works
 
 The host's HM entry point (`home/hosts/<name>.nix`) imports `core/` and `desktop/`, plus any flake module inputs (niri, noctalia, zen-browser).
 
-Raw dotfiles in `config/` are consumed via `xdg.configFile` in the desktop modules. Monitor configs for hyprland and niri are generated from `osConfig.host.monitors` (defined in each host's NixOS config) rather than static dotfiles.
+Raw dotfiles in `config/` are symlinked into `~/.config/` via `xdg.configFile`. Monitor/window-manager hardware configs live in `hosts/<name>/` and are symlinked by the host-specific HM file using `mkOutOfStoreSymlink`.
+
+For niri, the main `config.kdl` uses `include "./niri-hardware.kdl"` to pull in the host-specific hardware file. For hyprland, `require("monitors")` loads the host-specific `monitors.lua`.
 
 ## Adding a Module
 
@@ -80,20 +82,25 @@ xdg.configFile."app" = {
 
 ## Host-Specific Overrides
 
-In `home/hosts/<name>.nix`, add or override settings after the imports:
+In `home/hosts/<name>.nix`, add host-specific settings after the imports. Use `mkOutOfStoreSymlink` for hardware config files that live in `hosts/<name>/`:
 
 ```nix
-{ pkgs, inputs, ... }:
-
+{ config, inputs, ... }:
+let
+  mkSymlink = config.lib.file.mkOutOfStoreSymlink;
+in
 {
   imports = [
     ../../home/core
     ../../home/desktop
+    inputs.niri.homeModules.niri
+    inputs.noctalia.homeModules.default
   ];
 
-  # Host-specific overrides
-  home.packages = with pkgs; [
-    extra-package-only-for-this-host
-  ];
+  xdg.configFile."niri/niri-hardware.kdl".source =
+    mkSymlink "${config.home.homeDirectory}/nixos-conf/hosts/<name>/niri-hardware.kdl";
+
+  xdg.configFile."hypr/monitors.lua".source =
+    mkSymlink "${config.home.homeDirectory}/nixos-conf/hosts/<name>/monitors.lua";
 }
 ```
