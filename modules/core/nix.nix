@@ -5,6 +5,13 @@
 
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
+  nix.gc = {
+    automatic = true;
+    persistent = true;
+    dates = "weekly";
+    options = "--delete-older-than 30d";
+  };
+
   nix.extraOptions = ''
     netrc-file = /etc/nix/netrc
   '';
