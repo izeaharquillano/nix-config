@@ -1,11 +1,7 @@
-{ ... }:
+{ mylib, ... }:
 
 {
-  imports = [
-    ./shell.nix
-    ./git.nix
-    ./packages.nix
-  ];
+  imports = mylib.scanPaths ./.;
 
   home.stateVersion = "26.05";
   home.username = "ize";

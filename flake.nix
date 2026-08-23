@@ -29,9 +29,14 @@
     };
   };
 
-  outputs = inputs@{ self, nixpkgs, home-manager, lanzaboote, ... }: {
+  outputs = inputs@{ self, nixpkgs, home-manager, lanzaboote, ... }:
+  let
+    mylib = import ./lib { lib = nixpkgs.lib; };
+  in
+  {
     nixosConfigurations.padrick = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
+      specialArgs = { inherit inputs mylib; };
       modules = [
         ./hosts/padrick
         lanzaboote.nixosModules.lanzaboote
@@ -41,7 +46,7 @@
             useGlobalPkgs = true;
             useUserPackages = true;
             users.ize = import ./home/hosts/padrick.nix;
-            extraSpecialArgs = { inherit inputs; };
+            extraSpecialArgs = { inherit inputs mylib; };
           };
         }
       ];
