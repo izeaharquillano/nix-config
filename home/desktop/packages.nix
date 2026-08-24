@@ -2,11 +2,15 @@
 
 {
   home.packages = with pkgs; [
-    mpv
-    qimgv
+    # utils
     waybar
-    pavucontrol
     brightnessctl
     xwayland-satellite
+
+    # gui apps
+    mpv
+    qimgv
+    discord-ptb
+    pavucontrol
   ];
 }

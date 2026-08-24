@@ -8,6 +8,7 @@
     fd
     fzf
     gcc
+    eza
     curl
     unzip
     starship
@@ -21,8 +22,5 @@
     lazygit
     ripgrep
     opencode
-
-    # gui apps
-    discord-ptb
   ];
 }
