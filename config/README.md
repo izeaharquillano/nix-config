@@ -18,6 +18,7 @@ config/
 │   └── config.kdl.old   # Old reference config
 ├── noctalia/config.toml # Noctalia Wayland bar/shell
 ├── nvim/                # Neovim LazyVim config (Lua)
+├── starship.toml        # Starship prompt config
 └── tmux/tmux.conf       # Tmux config
 ```
 

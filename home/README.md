@@ -10,18 +10,21 @@ home/
 │   ├── default.nix          # Aggregator + stateVersion, username
 │   ├── shell.nix            # Bash, zoxide, aliases
 │   ├── git.nix              # Git user name/email
-│   └── packages.nix         # CLI tools (fd, fzf, btop, ripgrep, etc.) + npm
+│   ├── packages.nix         # CLI tools (fd, fzf, btop, ripgrep, etc.) + npm
+│   └── xdg.nix              # XDG user directories
 ├── desktop/                 # Desktop/GUI app configs
 │   ├── default.nix          # Aggregator
 │   ├── gtk.nix              # GTK theme, cursor
-│   ├── ghostty.nix          # Ghostty terminal
+│   ├── kitty.nix            # Kitty terminal
 │   ├── hyprland.nix         # Hyprland config (symlinks config/hypr/)
 │   ├── niri.nix             # Niri config (symlinks config/niri/)
 │   ├── noctalia.nix         # Noctalia bar/shell
 │   ├── nvim.nix             # Neovim LazyVim config (xdg.configFile)
+│   ├── obsidian.nix         # Obsidian
+│   ├── starship.nix         # Starship prompt
 │   ├── yazi.nix             # Yazi file manager + gruvbox theme
 │   ├── tmux.nix             # Tmux config
-│   ├── waybar.nix           # Waybar + desktop packages
+│   ├── desktop-pkgs.nix     # Desktop packages
 │   ├── zen-browser.nix      # Zen Browser
 │   └── terminal.nix         # Terminal packages
 └── hosts/

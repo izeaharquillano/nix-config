@@ -21,7 +21,8 @@ modules/
 │   ├── hyprland.nix     # Hyprland Wayland compositor
 │   ├── fonts.nix        # System fonts (JetBrainsMono NF)
 │   ├── services.nix     # blueman, tlp, upower, bluetooth, mic-mute-led
-│   └── hardware.nix     # Laptop-specific (battery, power management)
+│   ├── hardware.nix     # Laptop-specific (battery, power management)
+│   └── zsh.nix          # Zsh system-level config
 └── security.nix         # Git, neovim, nix-ld, shell aliases
 ```
 
