@@ -34,8 +34,8 @@ modules/
 
 ## Adding a Module
 
-1. Create a `.nix` file in the appropriate directory
-2. Add it to the corresponding `default.nix` imports list
+1. Create a `.nix` file in the appropriate directory (`core/` or `desktop/`)
+2. It will be auto-imported by `scanPaths` in the directory's `default.nix`
 3. Follow the standard NixOS module pattern:
 
 ```nix
@@ -65,11 +65,4 @@ In `hosts/<name>/default.nix`, use `lib.mkForce` or `lib.mkDefault` to override:
 ## Adding a New Desktop Module
 
 1. Create `modules/desktop/<name>.nix`
-2. Add the import to `modules/desktop/default.nix`:
-
-```nix
-imports = [
-  # ... existing imports
-  ./.<name>.nix
-];
-```
+2. It will be auto-imported by `scanPaths` in `modules/desktop/default.nix`

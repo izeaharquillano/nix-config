@@ -6,19 +6,21 @@ Modular NixOS configuration using flakes and Home Manager.
 
 ```
 ├── flake.nix                  # Flake entry point
+├── lib/                       # Custom Nix library helpers (scanPaths, etc.)
 ├── hosts/                     # Per-host configurations
 │   └── padrick/               # Laptop (AMD, Wayland)
 │       ├── default.nix        # Host NixOS config
 │       ├── hardware-configuration.nix
+│       ├── packages.nix       # Host-specific system packages
 │       ├── niri-hardware.kdl  # Niri monitor/output config
 │       └── monitors.lua       # Hyprland monitor config
 ├── modules/                   # NixOS system modules
-│   ├── core/                  # Shared by all hosts
-│   ├── desktop/               # Desktop environment (WMs, greetd, fonts, services)
+│   ├── core/                  # Shared by all hosts (auto-imported via scanPaths)
+│   ├── desktop/               # Desktop environment (auto-imported via scanPaths)
 │   └── security.nix           # Git, neovim, nix-ld
 ├── home/                      # Home Manager modules
-│   ├── core/                  # Shell, git, packages, editor
-│   ├── desktop/               # GUI app configs (symlinks WM configs)
+│   ├── core/                  # Shell, git, packages, editor (auto-imported via scanPaths)
+│   ├── desktop/               # GUI app configs (auto-imported via scanPaths)
 │   └── hosts/                 # Host-specific HM overrides
 │       └── padrick/
 │           ├── default.nix    # Host HM config
@@ -46,10 +48,10 @@ nix build .#nixosConfigurations.padrick.config.system.build.toplevel
 2. Create `hosts/<name>/packages.nix` for host-specific system packages
 3. Create `hosts/<name>/niri-hardware.kdl` with your monitor outputs (see [hosts/README.md](hosts/README.md))
 4. Create `hosts/<name>/monitors.lua` with hyprland monitor config
-5. Create `home/hosts/<name>/default.nix` for host-specific HM config (symlink hardware files)
+5. Create `home/hosts/<name>/default.nix` for host-specific HM config (imports core + desktop, symlinks hardware files)
 6. Create `home/hosts/<name>/packages.nix` for host-specific user packages
 7. Add a new `nixosConfigurations.<name>` entry in `flake.nix`
-8. See [hosts/README.md](hosts/README.md) for details
+8. See [hosts/README.md](hosts/README.md) for a detailed walkthrough
 
 ## Host-Specific Packages
 
@@ -90,6 +92,10 @@ Shared packages are in `modules/core/packages.nix` (system) and `home/core/packa
 | `hyprland` | Hyprland Wayland compositor |
 | `noctalia` | Wayland shell/bar |
 | `zen-browser` | Zen Browser (Firefox-based) |
+
+## Custom Library
+
+The `lib/` directory contains helper functions used throughout the config. The key helper is `scanPaths`, which auto-imports all `.nix` files in a directory. This means adding a new module to `modules/core/`, `modules/desktop/`, `home/core/`, or `home/desktop/` only requires creating the file -- no manual import needed.
 
 ## Theme
 

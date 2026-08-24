@@ -16,6 +16,7 @@ Each host directory contains hardware-specific config files:
 hosts/padrick/
 ├── default.nix                 # Host NixOS config (imports modules)
 ├── hardware-configuration.nix  # Auto-generated hardware scan
+├── packages.nix                # Host-specific system packages
 ├── niri-hardware.kdl           # Niri monitor/output config (KDL format)
 └── monitors.lua                # Hyprland monitor config (Lua format)
 ```
@@ -104,6 +105,25 @@ Or copy from an existing host and modify.
 }
 ```
 
+### Disabling Services Per Host
+
+Services enabled in `modules/core/` or `modules/desktop/` apply to all hosts via `scanPaths`. To disable a service on a specific host, use `lib.mkForce` in the host's `default.nix`:
+
+```nix
+{ lib, ... }:
+
+{
+  # Disable netbird (modules/core/netbird.nix)
+  services.netbird.enable = lib.mkForce false;
+
+  # Disable syncthing (modules/desktop/services.nix)
+  services.syncthing.enable = lib.mkForce false;
+
+  # Disable laptop services on a desktop
+  services.tlp.enable = lib.mkForce false;
+}
+```
+
 ### 4. Create monitor config files
 
 Create `hosts/<name>/niri-hardware.kdl` with your display outputs:
@@ -129,7 +149,7 @@ hl.monitor({
 
 ### 5. Add Home Manager config
 
-Create `home/hosts/<name>.nix`:
+Create `home/hosts/<name>/default.nix`:
 
 ```nix
 { config, inputs, ... }:
@@ -138,8 +158,9 @@ let
 in
 {
   imports = [
-    ../../home/core
-    ../../home/desktop
+    ../../core
+    ../../desktop
+    ./packages.nix
     inputs.niri.homeModules.niri
     inputs.noctalia.homeModules.default
   ];
@@ -160,6 +181,7 @@ Add a new entry in the `outputs` attrset:
 ```nix
 nixosConfigurations.<name> = nixpkgs.lib.nixosSystem {
   system = "x86_64-linux";
+  specialArgs = { inherit inputs mylib; };
   modules = [
     ./hosts/<name>
     lanzaboote.nixosModules.lanzaboote
@@ -168,8 +190,8 @@ nixosConfigurations.<name> = nixpkgs.lib.nixosSystem {
       home-manager = {
         useGlobalPkgs = true;
         useUserPackages = true;
-        users.ize = import ./home/hosts/<name>.nix;
-        extraSpecialArgs = { inherit inputs; };
+        users.ize = import ./home/hosts/<name>;
+        extraSpecialArgs = { inherit inputs mylib; };
       };
     }
   ];

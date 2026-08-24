@@ -53,7 +53,7 @@ Monitor-specific configs (niri outputs, hyprland monitors) live in `hosts/<name>
 }
 ```
 
-3. Import the module in `home/desktop/default.nix`
+3. It will be auto-imported by `scanPaths` in `home/desktop/default.nix`
 
 ## Notes
 
