@@ -28,6 +28,25 @@
       criticalPowerAction = "PowerOff";
     };
 
+    syncthing = {
+      enable = true;
+      openDefaultPorts = true;
+      user = "ize";
+      dataDir = "/home/ize/Documents";
+      configDir = "/home/ize/.config/syncthing";
+      settings = {
+        devices = {
+          "Server" = { id = "JDJRA5Z-2BXVR3Z-GTHRJND-AIJLXZW-TAMJRXF-CYYTJMM-6LKWWT7-QCD32AA"; };
+        };
+        folders = {
+          "Obsidian" = {
+            path = "/home/ize/Documents/obsidian";
+            devices = [ "Server" ];
+          };
+        };
+      };
+    };
+
     udev.extraRules = ''
       ACTION=="add", SUBSYSTEM=="leds", KERNEL=="platform::micmute", \
       RUN+="${pkgs.coreutils}/bin/chmod 0666 /sys/class/leds/%k/brightness"

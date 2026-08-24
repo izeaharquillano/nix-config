@@ -5,6 +5,5 @@
     wget
     tmux
     sbctl
-    xdg-user-dirs
   ];
 }

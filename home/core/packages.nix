@@ -12,6 +12,7 @@
     unzip
     starship
     tealdeer
+    xdg-user-dirs
 
     # terminal tools
     btop
