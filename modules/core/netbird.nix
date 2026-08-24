@@ -1,16 +1,28 @@
 { ... }:
 
 {
-  services.netbird.clients.default = {
-    port = 51820;
-    ui.enable = true;
+  services.netbird = {
+    enable = true;
 
-    login = {
-      enable = true;
-      setupKeyFile = "/etc/netbird/setup-key";
+    clients.default = {
+      port = 51820;
+      ui.enable = true;
+
+      login = {
+        enable = true;
+        setupKeyFile = "/etc/netbird/setup-key";
+      };
+
+      openFirewall = true;
+      openInternalFirewall = true;
     };
+  };
 
-    openFirewall = true;
-    openInternalFirewall = true;
+  systemd.services.netbird-login = {
+    serviceConfig = {
+      StandardOutput = "null";
+      StandardError = "null";
+      LogLevelMax = "warning";
+    };
   };
 }

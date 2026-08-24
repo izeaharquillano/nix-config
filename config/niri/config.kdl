@@ -99,6 +99,7 @@ layout {
 
 spawn-at-startup "noctalia"
 spawn-at-startup "xwayland-satellite"
+spawn-at-startup "netbird-ui"
 
 hotkey-overlay {
     skip-at-startup

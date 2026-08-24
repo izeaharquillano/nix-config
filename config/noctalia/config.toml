@@ -43,6 +43,19 @@ widget_order = [ "lockscreen-login-box@eDP-1" ]
         show_unlock_hint = true
         show_weather = true
 
+[notification]
+filter_order = [ "filter" ]
+
+    [notification.filter.filter]
+    allow_permanent = false
+    allowed_urgencies = [ "critical" ]
+    bypass_dnd = false
+    enabled = true
+    match = "netbird"
+    play_sound = false
+    save_history = false
+    show_toast = false
+
 [osd.kinds]
 lock_keys = false
 media = false
