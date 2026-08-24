@@ -2,6 +2,7 @@
 
 {
   home.packages = with pkgs; [
+    mpv
     waybar
     pavucontrol
     brightnessctl
