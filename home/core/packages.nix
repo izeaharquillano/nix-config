@@ -10,6 +10,7 @@
     gcc
     curl
     unzip
+    starship
     tealdeer
 
     # terminal tools
