@@ -213,7 +213,15 @@ sbctl status
 
 This only needs to be done once per machine. The keys are stored in `/var/lib/sbctl`.
 
-### 8. Deploy
+### 8. Symlink repo to /etc/nixos
+
+Required for shell aliases (`bldflk`, `bldswc`, etc.) to work:
+
+```bash
+sudo ln -s /path/to/nixos-conf /etc/nixos
+```
+
+### 9. Deploy
 
 ```bash
 sudo nixos-rebuild switch --flake .#<name>

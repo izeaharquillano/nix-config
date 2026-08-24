@@ -30,6 +30,12 @@ Modular NixOS configuration using flakes and Home Manager.
 
 ## Quick Start
 
+Symlink this repo to `/etc/nixos` (required for shell aliases like `bldflk`):
+
+```bash
+sudo ln -s /path/to/nixos-conf /etc/nixos
+```
+
 Deploy for padrick:
 
 ```bash
@@ -51,7 +57,8 @@ nix build .#nixosConfigurations.padrick.config.system.build.toplevel
 5. Create `home/hosts/<name>/default.nix` for host-specific HM config (imports core + desktop, symlinks hardware files)
 6. Create `home/hosts/<name>/packages.nix` for host-specific user packages
 7. Add a new `nixosConfigurations.<name>` entry in `flake.nix`
-8. See [hosts/README.md](hosts/README.md) for a detailed walkthrough
+8. Symlink repo to `/etc/nixos` if not already done (required for shell aliases)
+9. See [hosts/README.md](hosts/README.md) for a detailed walkthrough
 
 ## Host-Specific Packages
 
