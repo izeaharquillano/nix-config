@@ -24,7 +24,7 @@ home/
 │   ├── starship.nix         # Starship prompt
 │   ├── yazi.nix             # Yazi file manager + gruvbox theme
 │   ├── tmux.nix             # Tmux config
-│   ├── desktop-pkgs.nix     # Desktop packages
+│   ├── packages.nix         # Desktop packages
 │   ├── zen-browser.nix      # Zen Browser
 │   └── terminal.nix         # Terminal packages
 └── hosts/
