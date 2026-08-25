@@ -13,6 +13,6 @@
   };
 
   nix.extraOptions = ''
-    netrc-file = /etc/nix/netrc
+    !include /etc/nix/github-token.conf
   '';
 }
