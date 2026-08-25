@@ -4,6 +4,7 @@
   home.packages = with pkgs; [
     # utils
     waybar
+    wl-clipboard
     brightnessctl
     xwayland-satellite
 
