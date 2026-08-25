@@ -2,10 +2,17 @@
 
 {
   services.blueman.enable = true;
+  services.fwupd.enable = true;
 
   services.xserver.xkb = {
     layout = "us";
     variant = "";
+  };
+
+  services.pipewire = {
+    enable = true;
+    alsa.enable = true;
+    pulse.enable = true;
   };
 
   services.syncthing = {
