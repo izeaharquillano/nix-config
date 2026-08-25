@@ -51,12 +51,22 @@
     };
   };
 
-  systemd.services.netbird-login = {
-    serviceConfig = {
-      StandardOutput = "null";
-      StandardError = "null";
-      LogLevelMax = "warning";
-    };
+  # systemd.services.netbird-login = {
+  #   serviceConfig = {
+  #     StandardOutput = "null";
+  #     StandardError = "null";
+  #     LogLevelMax = "warning";
+  #   };
+  # };
+
+  systemd.services.greetd.serviceConfig = {
+    Type = "idle";
+    StandardInput = "tty";
+    StandardOutput = "tty";
+    StandardError = "journal";
+    TTYReset = true;
+    TTYVHangup = true;
+    TTYVTDisallocate = true;
   };
 
   hardware.bluetooth = {
