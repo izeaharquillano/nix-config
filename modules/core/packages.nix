@@ -5,5 +5,6 @@
     wget
     tmux
     sbctl
+    efibootmgr
   ];
 }
