@@ -22,8 +22,6 @@
     };
   };
 
-  powerManagement.powertop.enable = true;
-
   services.upower = {
     enable = true;
     percentageLow = 20;
