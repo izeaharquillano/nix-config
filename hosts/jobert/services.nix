@@ -1,6 +1,7 @@
-{ pkgs, ... }:
+{ pkgs, lib, ... }:
 
 {
+  services.tlp.enable = lib.mkForce false;
   zramSwap = {
     enable = true;
     memoryPercent = 50;
