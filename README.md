@@ -40,6 +40,17 @@ echo "access-tokens = github.com=ghp_GithubTokenHere" | sudo tee /etc/nix/github
 
 Nix reads this automatically via `nix.extraOptions` in `modules/core/nix.nix`.
 
+## NetBird Access Token (Optional)
+
+To connect to a NetBird network, create a setup key file:
+
+```bash
+sudo mkdir -p /etc/netbird
+echo "your-netbird-setup-key" | sudo tee /etc/netbird/setup-key
+```
+
+The setup key is used by `services.netbird` in `modules/desktop/services.nix` for automatic login.
+
 ## Quick Start
 
 Symlink this repo to `/etc/nixos` (required for shell aliases like `bldflk`):
