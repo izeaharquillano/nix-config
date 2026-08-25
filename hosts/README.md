@@ -226,3 +226,13 @@ sudo ln -s /path/to/nixos-conf /etc/nixos
 ```bash
 sudo nixos-rebuild switch --flake .#<name>
 ```
+
+## GitHub Access Token (Optional)
+
+If you use private flakes or want to avoid GitHub rate limits, create a token file before building:
+
+```bash
+echo "access-tokens = github.com=ghp_GithubTokenHere" | sudo tee /etc/nix/github-token.conf
+```
+
+Nix reads this automatically via `nix.extraOptions` in `modules/core/nix.nix`.

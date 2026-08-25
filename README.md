@@ -28,6 +28,16 @@ Modular NixOS configuration using flakes and Home Manager.
 └── config/                    # Raw dotfiles (nvim, hypr, niri, kitty, tmux)
 ```
 
+## GitHub Access Token (Optional)
+
+If you use private flakes or want to avoid GitHub rate limits, create a token file:
+
+```bash
+echo "access-tokens = github.com=ghp_GithubTokenHere" | sudo tee /etc/nix/github-token.conf
+```
+
+Nix reads this automatically via `nix.extraOptions` in `modules/core/nix.nix`.
+
 ## Quick Start
 
 Symlink this repo to `/etc/nixos` (required for shell aliases like `bldflk`):
