@@ -16,7 +16,9 @@ Each host directory contains hardware-specific config files:
 hosts/padrick/
 ├── default.nix                 # Host NixOS config (imports modules)
 ├── hardware-configuration.nix  # Auto-generated hardware scan
+├── hardware.nix                # Host-specific hardware (CPU microcode, graphics)
 ├── packages.nix                # Host-specific system packages
+├── services.nix                # Host-specific services (TLP, UPower, etc.)
 ├── niri-hardware.kdl           # Niri monitor/output config (KDL format)
 └── monitors.lua                # Hyprland monitor config (Lua format)
 ```
@@ -93,6 +95,8 @@ Or copy from an existing host and modify.
     ../../modules/desktop           # Desktop environment (skip for servers)
     ../../modules/security.nix      # Git, neovim, nix-ld
     ./hardware-configuration.nix
+    ./packages.nix                  # Host-specific system packages
+    ./services.nix                  # Host-specific services
   ];
 
   networking.hostName = "<name>";
@@ -104,6 +108,40 @@ Or copy from an existing host and modify.
   system.stateVersion = "26.05";
 }
 ```
+
+### 4. Create `hosts/<name>/services.nix`
+
+Host-specific services that differ from the shared desktop modules. For laptops, include power management and hardware-specific services:
+
+```nix
+{ pkgs, ... }:
+
+{
+  # Power management (disable power-profiles-daemon when using TLP)
+  services.power-profiles-daemon.enable = false;
+  services.tlp = {
+    enable = true;
+    settings = {
+      CPU_SCALING_GOVERNOR_ON_AC = "performance";
+      CPU_SCALING_GOVERNOR_ON_BAT = "powersave";
+      CPU_ENERGY_PERF_POLICY_ON_AC = "performance";
+      CPU_ENERGY_PERF_POLICY_ON_BAT = "power";
+    };
+  };
+
+  services.upower = {
+    enable = true;
+    percentageLow = 20;
+    percentageCritical = 5;
+    percentageAction = 2;
+    criticalPowerAction = "PowerOff";
+  };
+
+  # Add host-specific udev rules, systemd services, etc.
+}
+```
+
+For desktops, this file can be minimal or omitted entirely.
 
 ### Disabling Services Per Host
 
@@ -124,7 +162,7 @@ Services enabled in `modules/core/` or `modules/desktop/` apply to all hosts via
 }
 ```
 
-### 4. Create monitor config files
+### 5. Create monitor config files
 
 Create `hosts/<name>/niri-hardware.kdl` with your display outputs:
 
@@ -147,7 +185,7 @@ hl.monitor({
 })
 ```
 
-### 5. Add Home Manager config
+### 6. Add Home Manager config
 
 Create `home/hosts/<name>/default.nix`:
 
@@ -174,7 +212,7 @@ in
 }
 ```
 
-### 6. Register in `flake.nix`
+### 7. Register in `flake.nix`
 
 Add a new entry in the `outputs` attrset:
 
@@ -198,7 +236,7 @@ nixosConfigurations.<name> = nixpkgs.lib.nixosSystem {
 };
 ```
 
-### 7. Set up Secure Boot (first-time only)
+### 8. Set up Secure Boot (first-time only)
 
 On a new machine, enroll Secure Boot keys before the first deploy:
 
@@ -213,7 +251,7 @@ sbctl status
 
 This only needs to be done once per machine. The keys are stored in `/var/lib/sbctl`.
 
-### 8. Symlink repo to /etc/nixos
+### 9. Symlink repo to /etc/nixos
 
 Required for shell aliases (`bldflk`, `bldswc`, etc.) to work:
 
@@ -221,7 +259,7 @@ Required for shell aliases (`bldflk`, `bldswc`, etc.) to work:
 sudo ln -s /path/to/nixos-conf /etc/nixos
 ```
 
-### 9. Deploy
+### 10. Deploy
 
 ```bash
 sudo nixos-rebuild switch --flake .#<name>

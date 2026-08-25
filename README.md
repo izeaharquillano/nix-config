@@ -11,7 +11,9 @@ Modular NixOS configuration using flakes and Home Manager.
 │   └── padrick/               # Laptop (AMD, Wayland)
 │       ├── default.nix        # Host NixOS config
 │       ├── hardware-configuration.nix
+│       ├── hardware.nix       # Host-specific hardware (CPU, graphics)
 │       ├── packages.nix       # Host-specific system packages
+│       ├── services.nix       # Host-specific services (TLP, UPower, etc.)
 │       ├── niri-hardware.kdl  # Niri monitor/output config
 │       └── monitors.lua       # Hyprland monitor config
 ├── modules/                   # NixOS system modules

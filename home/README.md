@@ -11,7 +11,7 @@ home/
 │   ├── shell.nix            # Bash, zoxide, aliases
 │   ├── git.nix              # Git user name/email
 │   ├── packages.nix         # CLI tools (fd, fzf, btop, ripgrep, etc.) + npm
-│   └── xdg.nix              # XDG user directories
+│   └── xdg.nix              # XDG user directories + portal config
 ├── desktop/                 # Desktop/GUI app configs
 │   ├── default.nix          # Aggregator
 │   ├── gtk.nix              # GTK theme, cursor
