@@ -56,5 +56,23 @@
         }
       ];
     };
+
+    nixosConfigurations.jobert = nixpkgs.lib.nixosSystem {
+      system = "x86_64-linux";
+      specialArgs = { inherit inputs mylib; };
+      modules = [
+        ./hosts/jobert
+        lanzaboote.nixosModules.lanzaboote
+        home-manager.nixosModules.home-manager
+        {
+          home-manager = {
+            useGlobalPkgs = true;
+            useUserPackages = true;
+            users.ize = import ./home/hosts/jobert;
+            extraSpecialArgs = { inherit inputs mylib; };
+          };
+        }
+      ];
+    };
   };
 }
