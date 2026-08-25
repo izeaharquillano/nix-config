@@ -2,9 +2,16 @@
 
 Modular NixOS configuration using flakes and Home Manager.
 
+## Desktops
+
+| | |
+|---|---|
+| ![desktop1](_img/desktop1.png) | ![desktop2](_img/desktop2.png) |
+
 ## Structure
 
 ```
+.
 ├── flake.nix                  # Flake entry point
 ├── lib/                       # Custom Nix library helpers (scanPaths, etc.)
 ├── hosts/                     # Per-host configurations
@@ -19,7 +26,7 @@ Modular NixOS configuration using flakes and Home Manager.
 ├── modules/                   # NixOS system modules
 │   ├── core/                  # Shared by all hosts (auto-imported via scanPaths)
 │   ├── desktop/               # Desktop environment (auto-imported via scanPaths)
-│   └── security.nix           # Git, neovim, nix-ld
+│   └── security.nix
 ├── home/                      # Home Manager modules
 │   ├── core/                  # Shell, git, packages, editor (auto-imported via scanPaths)
 │   ├── desktop/               # GUI app configs (auto-imported via scanPaths)
@@ -30,44 +37,16 @@ Modular NixOS configuration using flakes and Home Manager.
 └── config/                    # Raw dotfiles (nvim, hypr, niri, kitty, tmux)
 ```
 
-## GitHub Access Token (Optional)
-
-If you use private flakes or want to avoid GitHub rate limits, create a token file:
-
-```bash
-echo "access-tokens = github.com=ghp_GithubTokenHere" | sudo tee /etc/nix/github-token.conf
-```
-
-Nix reads this automatically via `nix.extraOptions` in `modules/core/nix.nix`.
-
-## NetBird Access Token (Optional)
-
-To connect to a NetBird network, create a setup key file:
-
-```bash
-sudo mkdir -p /etc/netbird
-echo "your-netbird-setup-key" | sudo tee /etc/netbird/setup-key
-```
-
-The setup key is used by `services.netbird` in `modules/desktop/services.nix` for automatic login.
-
 ## Quick Start
 
-Symlink this repo to `/etc/nixos` (required for shell aliases like `bldflk`):
-
 ```bash
+# Symlink this repo to /etc/nixos (required for shell aliases like bldflk)
 sudo ln -s /path/to/nixos-conf /etc/nixos
-```
 
-Deploy for padrick:
-
-```bash
+# Deploy for padrick
 sudo nixos-rebuild switch --flake .#padrick
-```
 
-Build without switching:
-
-```bash
+# Build without switching
 nix build .#nixosConfigurations.padrick.config.system.build.toplevel
 ```
 
@@ -76,16 +55,16 @@ nix build .#nixosConfigurations.padrick.config.system.build.toplevel
 1. Create `hosts/<name>/default.nix` and `hardware-configuration.nix`
 2. Create `hosts/<name>/packages.nix` for host-specific system packages
 3. Create `hosts/<name>/niri-hardware.kdl` with your monitor outputs (see [hosts/README.md](hosts/README.md))
-4. Create `hosts/<name>/monitors.lua` with hyprland monitor config
+4. Create `hosts/<name>/monitors.lua` with Hyprland monitor config
 5. Create `home/hosts/<name>/default.nix` for host-specific HM config (imports core + desktop, symlinks hardware files)
 6. Create `home/hosts/<name>/packages.nix` for host-specific user packages
 7. Add a new `nixosConfigurations.<name>` entry in `flake.nix`
-8. Symlink repo to `/etc/nixos` if not already done (required for shell aliases)
+8. Symlink repo to `/etc/nixos` if not already done
 9. See [hosts/README.md](hosts/README.md) for a detailed walkthrough
 
 ## Host-Specific Packages
 
-Add host-specific system packages in `hosts/<name>/packages.nix`:
+**System packages** in `hosts/<name>/packages.nix`:
 
 ```nix
 { pkgs, ... }:
@@ -97,7 +76,7 @@ Add host-specific system packages in `hosts/<name>/packages.nix`:
 }
 ```
 
-Add host-specific user packages in `home/hosts/<name>/packages.nix`:
+**User packages** in `home/hosts/<name>/packages.nix`:
 
 ```nix
 { pkgs, ... }:
@@ -109,7 +88,30 @@ Add host-specific user packages in `home/hosts/<name>/packages.nix`:
 }
 ```
 
-Shared packages are in `modules/core/packages.nix` (system) and `home/core/packages.nix` (user).
+Shared packages live in `modules/core/packages.nix` (system) and `home/core/packages.nix` (user).
+
+## Optional Setup
+
+### GitHub Access Token
+
+If you use private flakes or want to avoid GitHub rate limits:
+
+```bash
+echo "access-tokens = github.com=ghp_GithubTokenHere" | sudo tee /etc/nix/github-token.conf
+```
+
+Read automatically via `nix.extraOptions` in `modules/core/nix.nix`.
+
+### NetBird Access Token
+
+To connect to a NetBird network:
+
+```bash
+sudo mkdir -p /etc/netbird
+echo "your-netbird-setup-key" | sudo tee /etc/netbird/setup-key
+```
+
+Used by `services.netbird` in `modules/desktop/services.nix` for automatic login.
 
 ## Flake Inputs
 
@@ -125,7 +127,7 @@ Shared packages are in `modules/core/packages.nix` (system) and `home/core/packa
 
 ## Custom Library
 
-The `lib/` directory contains helper functions used throughout the config. The key helper is `scanPaths`, which auto-imports all `.nix` files in a directory. This means adding a new module to `modules/core/`, `modules/desktop/`, `home/core/`, or `home/desktop/` only requires creating the file -- no manual import needed.
+The `lib/` directory contains helper functions used throughout the config. The key helper is `scanPaths`, which auto-imports all `.nix` files in a directory. Adding a new module to `modules/core/`, `modules/desktop/`, `home/core/`, or `home/desktop/` only requires creating the file -- no manual import needed.
 
 ## Theme
 
