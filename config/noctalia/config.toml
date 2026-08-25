@@ -72,13 +72,13 @@ mode = "dark"
 source = "builtin"
 
 [wallpaper.default]
-path = "../../_img/gruv-abstract-maze.png"
+path = "../../_img/wallpapers/gruv-abstract-maze.png"
 
 [wallpaper.last]
-path = "../../_img/gruv-abstract-maze.png"
+path = "../../_img/wallpapers/gruv-abstract-maze.png"
 
 [wallpaper.monitors.eDP-1]
-path = "../../_img/gruv-abstract-maze.png"
+path = "../../_img/wallpapers/gruv-abstract-maze.png"
 
 [widget.clock]
 format = "{:%I:%M %p}"
