@@ -51,14 +51,6 @@
     };
   };
 
-  # systemd.services.netbird-login = {
-  #   serviceConfig = {
-  #     StandardOutput = "null";
-  #     StandardError = "null";
-  #     LogLevelMax = "warning";
-  #   };
-  # };
-
   systemd.services.greetd.serviceConfig = {
     Type = "idle";
     StandardInput = "tty";
