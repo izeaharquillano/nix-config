@@ -1,7 +1,27 @@
 { pkgs, ... }:
 
 {
-  services.power-profiles-daemon.enable = true;
+  zramSwap = {
+    enable = true;
+    memoryPercent = 50;
+    algorithm = "zstd";
+  };
+
+  services.auto-cpufreq = {
+    enable = true;
+    settings = {
+      battery = {
+        governor = "powersave";
+        turbo = "auto";
+      };
+      charger = {
+        governor = "performance";
+        turbo = "auto";
+      };
+    };
+  };
+
+  powerManagement.powertop.enable = true;
 
   services.upower = {
     enable = true;
