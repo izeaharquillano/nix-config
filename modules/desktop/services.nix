@@ -1,56 +1,79 @@
 { pkgs, ... }:
 
 {
-  services = {
-    blueman.enable = true;
+  services.blueman.enable = true;
 
-    xserver.xkb = {
-      layout = "us";
-      variant = "";
+  services.xserver.xkb = {
+    layout = "us";
+    variant = "";
+  };
+
+  services.power-profiles-daemon.enable = false;
+  services.tlp = {
+    enable = true;
+    settings = {
+      CPU_SCALING_GOVERNOR_ON_AC = "performance";
+      CPU_SCALING_GOVERNOR_ON_BAT = "powersave";
+      CPU_ENERGY_PERF_POLICY_ON_AC = "performance";
+      CPU_ENERGY_PERF_POLICY_ON_BAT = "power";
     };
+  };
 
-    power-profiles-daemon.enable = false;
-    tlp = {
-      enable = true;
-      settings = {
-        CPU_SCALING_GOVERNOR_ON_AC = "performance";
-        CPU_SCALING_GOVERNOR_ON_BAT = "powersave";
-        CPU_ENERGY_PERF_POLICY_ON_AC = "performance";
-        CPU_ENERGY_PERF_POLICY_ON_BAT = "power";
+  services.upower = {
+    enable = true;
+    percentageLow = 20;
+    percentageCritical = 5;
+    percentageAction = 2;
+    criticalPowerAction = "PowerOff";
+  };
+
+  services.syncthing = {
+    enable = true;
+    openDefaultPorts = true;
+    user = "ize";
+    dataDir = "/home/ize/Documents";
+    configDir = "/home/ize/.config/syncthing";
+    settings = {
+      devices = {
+        "Server" = { id = "JDJRA5Z-2BXVR3Z-GTHRJND-AIJLXZW-TAMJRXF-CYYTJMM-6LKWWT7-QCD32AA"; };
       };
-    };
-
-    upower = {
-      enable = true;
-      percentageLow = 20;
-      percentageCritical = 5;
-      percentageAction = 2;
-      criticalPowerAction = "PowerOff";
-    };
-
-    syncthing = {
-      enable = true;
-      openDefaultPorts = true;
-      user = "ize";
-      dataDir = "/home/ize/Documents";
-      configDir = "/home/ize/.config/syncthing";
-      settings = {
-        devices = {
-          "Server" = { id = "JDJRA5Z-2BXVR3Z-GTHRJND-AIJLXZW-TAMJRXF-CYYTJMM-6LKWWT7-QCD32AA"; };
-        };
-        folders = {
-          "Obsidian" = {
-            path = "/home/ize/Documents/obsidian";
-            devices = [ "Server" ];
-          };
+      folders = {
+        "Obsidian" = {
+          path = "/home/ize/Documents/obsidian";
+          devices = [ "Server" ];
         };
       };
     };
+  };
 
-    udev.extraRules = ''
-      ACTION=="add", SUBSYSTEM=="leds", KERNEL=="platform::micmute", \
-      RUN+="${pkgs.coreutils}/bin/chmod 0666 /sys/class/leds/%k/brightness"
+  services.netbird = {
+    enable = true;
+
+    clients.default = {
+      port = 51820;
+      ui.enable = true;
+
+      login = {
+        enable = true;
+        setupKeyFile = "/etc/netbird/setup-key";
+      };
+
+      openFirewall = true;
+      openInternalFirewall = true;
+    };
+  };
+
+  services.udev.extraRules = ''
+    ACTION=="add", SUBSYSTEM=="leds", KERNEL=="platform::micmute", \
+    RUN+="${pkgs.coreutils}/bin/chmod 0666 /sys/class/leds/%k/brightness"
     '';
+
+  systemd.services.netbird-login = {
+    serviceConfig = {
+      StandardOutput = "null";
+      StandardError = "null";
+      LogLevelMax = "warning";
+    };
   };
 
   systemd.user.services.mic-mute-led-sync = {
