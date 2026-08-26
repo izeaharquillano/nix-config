@@ -25,4 +25,6 @@
     percentageAction = 2;
     criticalPowerAction = "PowerOff";
   };
+
+  services.resolved.enable = true;
 }
