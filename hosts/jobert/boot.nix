@@ -5,8 +5,10 @@
     "amd_pstate=active"
     "amd_pmc.suspend_delay=1"
     # "pcie_aspm=off"
-    # "usbcore.autosuspend=-1"
+    "usbcore.autosuspend=-1"
   ];
+
+  boot.kernel.sysctl."vm.swappiness" = 10;
 
   boot.zswap = {
     enable = true;
@@ -16,8 +18,6 @@
     acceptThresholdPercent = 90;
     shrinkerEnabled = true;
   };
-
-  boot.kernel.sysctl."vm.swappiness" = 10;
 
   system.activationScripts.fedoraBootEntry = {
     text = ''
