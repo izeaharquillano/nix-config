@@ -1,11 +1,6 @@
 { pkgs, ... }:
 
 {
-  swapDevices = [{
-    device = "/var/lib/swapfile";
-    size = 8 * 1024;
-  }];
-
   services.power-profiles-daemon.enable = false;
   services.tlp = {
     enable = true;
