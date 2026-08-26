@@ -21,12 +21,12 @@
   };
 
   boot.extraModprobeConfig = ''
-    options nvidia NVreg_RegistryDwords="RMForcePstate=5"
     options nvidia_drm fbdev=1
   '';
+  # options nvidia NVreg_RegistryDwords="RMForcePstate=5"
 
   environment.sessionVariables = {
-    WLR_NO_HARDWARE_CURSORS = "1";
+    # WLR_NO_HARDWARE_CURSORS = "1";
     MOZ_DISABLE_RDD_SANDBOX = "1";
     MOZ_ENABLE_WAYLAND = "1";
     LIBVA_DRIVER_NAME = "nvidia";
