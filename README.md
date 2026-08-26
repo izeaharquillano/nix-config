@@ -111,6 +111,16 @@ Shared packages live in `modules/core/packages.nix` (system) and `home/core/pack
 
 ## Optional Setup
 
+### BTRFS: Disable COW for Steam
+
+If you're using BTRFS, you may want to disable Copy-on-Write (COW) on the Steam downloads folder to avoid performance issues and excessive disk usage:
+
+```bash
+sudo chattr +C ~/.local/share/steam
+```
+
+This must be done before any files are written to the directory. If Steam is already installed, you'll need to move the folder, create a fresh one, apply the attribute, then move files back.
+
 ### GitHub Access Token
 
 If you use private flakes or want to avoid GitHub rate limits:

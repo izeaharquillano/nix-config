@@ -271,6 +271,16 @@ sudo ln -s /path/to/nixos-conf /etc/nixos
 sudo nixos-rebuild switch --flake .#<name>
 ```
 
+## BTRFS: Disable COW for Steam
+
+If your host uses BTRFS (both `padrick` and `jobert` do), you may want to disable Copy-on-Write (COW) on the Steam downloads folder to avoid performance issues and excessive disk usage:
+
+```bash
+sudo chattr +C ~/.local/share/steam
+```
+
+This must be done before any files are written to the directory. If Steam is already installed, you'll need to move the folder, create a fresh one, apply the attribute, then move files back.
+
 ## GitHub Access Token (Optional)
 
 If you use private flakes or want to avoid GitHub rate limits, create a token file before building:
