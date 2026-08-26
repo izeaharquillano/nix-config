@@ -2,21 +2,6 @@
 
 {
   services.tlp.enable = lib.mkForce false;
-  swapDevices = [{
-    device = "/dev/nvme0n1p4";
-    options = [ "discard" ];
-  }];
-
-  boot.zswap = {
-    enable = true;
-    compressor = "zstd";
-    zpool = "zsmalloc";
-    maxPoolPercent = 25;
-    acceptThresholdPercent = 90;
-    shrinkerEnabled = true;
-  };
-
-  boot.kernel.sysctl."vm.swappiness" = 10;
 
   services.auto-cpufreq = {
     enable = true;
