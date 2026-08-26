@@ -14,9 +14,9 @@
     shrinkerEnabled = true;
   };
 
-  boot.kernel.sysctl."vm.swappiness" = 10;
+  boot.kernelParams = [ "acpi.ec_no_wakeup=1" ];
 
-  hardware.cpu.amd.updateMicrocode = true;
+  boot.kernel.sysctl."vm.swappiness" = 10;
 
   hardware.graphics = {
     enable = true;
