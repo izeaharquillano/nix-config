@@ -16,4 +16,6 @@
     LC_TELEPHONE = "en_PH.UTF-8";
     LC_TIME = "en_PH.UTF-8";
   };
+
+  time.hardwareClockInLocalTime = true;
 }
