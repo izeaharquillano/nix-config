@@ -8,6 +8,7 @@
     max-jobs = "auto";
     cores = 0;
     http-connections = 50;
+    auto-optimise-store = true;
   };
 
   nix.gc = {
@@ -15,6 +16,11 @@
     persistent = true;
     dates = "weekly";
     options = "--delete-older-than 14d";
+  };
+
+  nix.optimise = {
+    automatic = true;
+    dates = [ "weekly" ];
   };
 
   nix.extraOptions = ''
