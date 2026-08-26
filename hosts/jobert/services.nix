@@ -2,6 +2,7 @@
 
 {
   services.tlp.enable = lib.mkForce false;
+  services.hdapsd.enable = false;
 
   services.auto-cpufreq = {
     enable = true;

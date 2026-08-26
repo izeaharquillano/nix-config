@@ -1,7 +1,7 @@
 { config, pkgs, lib, ... }:
 
 {
-  boot.kernelParams = [ "amd_pstate=active" ];
+  boot.kernelParams = [ "amd_pstate=active" "amd_pmc.suspend_delay=1" ];
 
   boot.zswap = {
     enable = true;
