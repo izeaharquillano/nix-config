@@ -1,6 +1,6 @@
 local mainMod     = "SUPER"
 local terminal    = "kitty"
-local fileManager = "yazi"
+local fileManager = "kitty yazi"
 local menu        = "noctalia msg panel-toggle launcher"
 
 hl.bind(mainMod .. " + RETURN", hl.dsp.exec_cmd(terminal))
