@@ -12,9 +12,5 @@ output "DP-1" {
 }
 
 debug {
-    // render-drm-device "/dev/dri/renderD128"
-    // ignore-drm-device "/dev/dri/renderD129"
-    // disable-direct-scanout false
-    // wait-for-frame-completion-before-queueing
-    emulate-zero-presentation-time
+    // emulate-zero-presentation-time
 }
