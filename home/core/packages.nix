@@ -16,7 +16,7 @@
     xdg-user-dirs
 
     # terminal tools
-    btop
+    btop-cuda
     fastfetch
     zoxide
     lazygit
