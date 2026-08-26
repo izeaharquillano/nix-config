@@ -21,6 +21,7 @@ Modular NixOS configuration using flakes and Home Manager.
 │   │   ├── hardware.nix       # Host-specific hardware (CPU, graphics)
 │   │   ├── packages.nix       # Host-specific system packages
 │   │   ├── services.nix       # Host-specific services (TLP, UPower, etc.)
+│   │   ├── secureboot.nix     # Optional: UEFI Secure Boot (Lanzaboote)
 │   │   └── config/
 │   │       ├── niri-hardware.kdl  # Niri monitor/output config
 │   │       └── monitors.lua       # Hyprland monitor config
@@ -30,6 +31,7 @@ Modular NixOS configuration using flakes and Home Manager.
 │       ├── hardware.nix
 │       ├── packages.nix
 │       ├── services.nix
+│       ├── secureboot.nix     # Optional: UEFI Secure Boot (Lanzaboote)
 │       └── config/
 │           ├── niri-hardware.kdl
 │           └── monitors.lua
@@ -70,13 +72,14 @@ nix build .#nixosConfigurations.padrick.config.system.build.toplevel
 
 1. Create `hosts/<name>/default.nix` and `hardware-configuration.nix`
 2. Create `hosts/<name>/packages.nix` for host-specific system packages
-3. Create `hosts/<name>/config/niri-hardware.kdl` with your monitor outputs (see [hosts/README.md](hosts/README.md))
-4. Create `hosts/<name>/config/monitors.lua` with Hyprland monitor config
-5. Create `home/hosts/<name>/default.nix` for host-specific HM config (imports core + desktop, symlinks hardware files)
-6. Create `home/hosts/<name>/packages.nix` for host-specific user packages
-7. Add a new `nixosConfigurations.<name>` entry in `flake.nix`
-8. Symlink repo to `/etc/nixos` if not already done
-9. See [hosts/README.md](hosts/README.md) for a detailed walkthrough
+3. Create `hosts/<name>/secureboot.nix` for UEFI Secure Boot (optional, see [hosts/README.md](hosts/README.md))
+4. Create `hosts/<name>/config/niri-hardware.kdl` with your monitor outputs (see [hosts/README.md](hosts/README.md))
+5. Create `hosts/<name>/config/monitors.lua` with Hyprland monitor config
+6. Create `home/hosts/<name>/default.nix` for host-specific HM config (imports core + desktop, symlinks hardware files)
+7. Create `home/hosts/<name>/packages.nix` for host-specific user packages
+8. Add a new `nixosConfigurations.<name>` entry in `flake.nix`
+9. Symlink repo to `/etc/nixos` if not already done
+10. See [hosts/README.md](hosts/README.md) for a detailed walkthrough
 
 ## Host-Specific Packages
 
@@ -135,7 +138,7 @@ Used by `services.netbird` in `modules/desktop/services.nix` for automatic login
 |---|---|
 | `nixpkgs` | NixOS packages (unstable) |
 | `home-manager` | User environment management |
-| `lanzaboote` | Secure Boot (UEFI) |
+| `lanzaboote` | Secure Boot (UEFI), opt-in per host via `hosts/<name>/secureboot.nix` |
 | `nixos-hardware` | NixOS hardware modules (AMD, laptop, SSD, etc.) |
 | `niri` | Niri Wayland compositor |
 | `hyprland` | Hyprland Wayland compositor |

@@ -20,6 +20,7 @@ hosts/padrick/
 ├── hardware.nix                # Host-specific hardware (CPU, graphics)
 ├── packages.nix                # Host-specific system packages
 ├── services.nix                # Host-specific services (TLP, UPower, etc.)
+├── secureboot.nix              # Optional: UEFI Secure Boot (Lanzaboote)
 └── config/
     ├── niri-hardware.kdl       # Niri monitor/output config (KDL format)
     └── monitors.lua            # Hyprland monitor config (Lua format)
@@ -100,6 +101,7 @@ Or copy from an existing host and modify.
     ./hardware-configuration.nix
     ./packages.nix                  # Host-specific system packages
     ./services.nix                  # Host-specific services
+    ./secureboot.nix                # Optional: UEFI Secure Boot (omit for plain systemd-boot)
   ];
 
   networking.hostName = "<name>";
@@ -225,7 +227,6 @@ nixosConfigurations.<name> = nixpkgs.lib.nixosSystem {
   specialArgs = { inherit inputs mylib; };
   modules = [
     ./hosts/<name>
-    lanzaboote.nixosModules.lanzaboote
     home-manager.nixosModules.home-manager
     {
       home-manager = {
@@ -239,9 +240,9 @@ nixosConfigurations.<name> = nixpkgs.lib.nixosSystem {
 };
 ```
 
-### 8. Set up Secure Boot (first-time only)
+### 8. Set up Secure Boot (optional, first-time only)
 
-On a new machine, enroll Secure Boot keys before the first deploy:
+If you created `hosts/<name>/secureboot.nix`, enroll Secure Boot keys before the first deploy:
 
 ```bash
 # Create and enroll keys (interactive, requires physical presence)
@@ -253,6 +254,8 @@ sbctl status
 ```
 
 This only needs to be done once per machine. The keys are stored in `/var/lib/sbctl`.
+
+To skip Secure Boot, simply omit `./secureboot.nix` from your host's imports. The host will use plain systemd-boot.
 
 ### 9. Symlink repo to /etc/nixos
 

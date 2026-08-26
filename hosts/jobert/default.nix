@@ -11,6 +11,7 @@
     ./boot.nix
     ./disk.nix
     ./graphics.nix
+    ./secureboot.nix
     inputs.nixos-hardware.nixosModules.common-cpu-amd
     inputs.nixos-hardware.nixosModules.common-pc-laptop
     inputs.nixos-hardware.nixosModules.common-pc-ssd

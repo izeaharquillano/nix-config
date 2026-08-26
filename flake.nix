@@ -34,7 +34,7 @@
     hyprland.url = "github:hyprwm/Hyprland";
   };
 
-  outputs = inputs@{ self, nixpkgs, home-manager, lanzaboote, ... }:
+  outputs = inputs@{ self, nixpkgs, home-manager, ... }:
   let
     mylib = import ./lib { lib = nixpkgs.lib; };
   in
@@ -44,7 +44,6 @@
       specialArgs = { inherit inputs mylib; };
       modules = [
         ./hosts/padrick
-        lanzaboote.nixosModules.lanzaboote
         home-manager.nixosModules.home-manager
         {
           home-manager = {
@@ -62,7 +61,6 @@
       specialArgs = { inherit inputs mylib; };
       modules = [
         ./hosts/jobert
-        lanzaboote.nixosModules.lanzaboote
         home-manager.nixosModules.home-manager
         {
           home-manager = {

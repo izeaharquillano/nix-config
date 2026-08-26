@@ -8,7 +8,7 @@ System-level NixOS configuration split into reusable modules.
 modules/
 ├── core/                # Shared by ALL hosts
 │   ├── default.nix      # Aggregator (imports all core modules)
-│   ├── boot.nix         # Bootloader (lanzaboote), kernel, swap
+│   ├── boot.nix         # Bootloader (systemd-boot), kernel
 │   ├── networking.nix   # NetworkManager
 │   ├── locale.nix       # Timezone, i18n/locale settings
 │   ├── nix.nix          # Nix settings (flakes, netrc)
