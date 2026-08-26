@@ -3,6 +3,7 @@
 {
   home.packages = with pkgs; [
     # utils
+    ncdu
     waybar
     wl-clipboard
     brightnessctl
