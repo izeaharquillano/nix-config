@@ -1,31 +1,6 @@
 { config, pkgs, lib, ... }:
 
-let
-  btrfsOpts = [ "compress=zstd:3" "noatime" "ssd" "discard=async" ];
-in
 {
-  boot.kernelParams = [ "amd_pstate=active" ];
-
-  fileSystems."/".options = btrfsOpts;
-  fileSystems."/home".options = [ "subvol=home" ] ++ btrfsOpts;
-  fileSystems."/nix".options = [ "subvol=nix" ] ++ btrfsOpts;
-
-  swapDevices = [{
-    device = "/dev/nvme0n1p4";
-    options = [ "discard" ];
-  }];
-
-  boot.zswap = {
-    enable = true;
-    compressor = "zstd";
-    zpool = "zsmalloc";
-    maxPoolPercent = 25;
-    acceptThresholdPercent = 90;
-    shrinkerEnabled = true;
-  };
-
-  boot.kernel.sysctl."vm.swappiness" = 10;
-
   hardware.graphics = {
     enable = true;
     enable32Bit = true;

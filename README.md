@@ -15,14 +15,24 @@ Modular NixOS configuration using flakes and Home Manager.
 ├── flake.nix                  # Flake entry point
 ├── lib/                       # Custom Nix library helpers (scanPaths, etc.)
 ├── hosts/                     # Per-host configurations
-│   └── padrick/               # Laptop (AMD, Wayland)
-│       ├── default.nix        # Host NixOS config
+│   ├── padrick/               # Laptop (AMD, Wayland)
+│   │   ├── default.nix        # Host NixOS config
+│   │   ├── hardware-configuration.nix
+│   │   ├── hardware.nix       # Host-specific hardware (CPU, graphics)
+│   │   ├── packages.nix       # Host-specific system packages
+│   │   ├── services.nix       # Host-specific services (TLP, UPower, etc.)
+│   │   └── config/
+│   │       ├── niri-hardware.kdl  # Niri monitor/output config
+│   │       └── monitors.lua       # Hyprland monitor config
+│   └── jobert/                # Desktop (AMD, Wayland)
+│       ├── default.nix
 │       ├── hardware-configuration.nix
-│       ├── hardware.nix       # Host-specific hardware (CPU, graphics)
-│       ├── packages.nix       # Host-specific system packages
-│       ├── services.nix       # Host-specific services (TLP, UPower, etc.)
-│       ├── niri-hardware.kdl  # Niri monitor/output config
-│       └── monitors.lua       # Hyprland monitor config
+│       ├── hardware.nix
+│       ├── packages.nix
+│       ├── services.nix
+│       └── config/
+│           ├── niri-hardware.kdl
+│           └── monitors.lua
 ├── modules/                   # NixOS system modules
 │   ├── core/                  # Shared by all hosts (auto-imported via scanPaths)
 │   ├── desktop/               # Desktop environment (auto-imported via scanPaths)
@@ -31,9 +41,12 @@ Modular NixOS configuration using flakes and Home Manager.
 │   ├── core/                  # Shell, git, packages, editor (auto-imported via scanPaths)
 │   ├── desktop/               # GUI app configs (auto-imported via scanPaths)
 │   └── hosts/                 # Host-specific HM overrides
-│       └── padrick/
-│           ├── default.nix    # Host HM config
-│           └── packages.nix   # Host-specific user packages
+│       ├── padrick/
+│       │   ├── default.nix    # Host HM config
+│       │   └── packages.nix   # Host-specific user packages
+│       └── jobert/
+│           ├── default.nix
+│           └── packages.nix
 └── config/                    # Raw dotfiles (nvim, hypr, niri, kitty, tmux)
 ```
 
@@ -46,6 +59,9 @@ sudo ln -s /path/to/nixos-conf /etc/nixos
 # Deploy for padrick
 sudo nixos-rebuild switch --flake .#padrick
 
+# Deploy for jobert
+sudo nixos-rebuild switch --flake .#jobert
+
 # Build without switching
 nix build .#nixosConfigurations.padrick.config.system.build.toplevel
 ```
@@ -54,8 +70,8 @@ nix build .#nixosConfigurations.padrick.config.system.build.toplevel
 
 1. Create `hosts/<name>/default.nix` and `hardware-configuration.nix`
 2. Create `hosts/<name>/packages.nix` for host-specific system packages
-3. Create `hosts/<name>/niri-hardware.kdl` with your monitor outputs (see [hosts/README.md](hosts/README.md))
-4. Create `hosts/<name>/monitors.lua` with Hyprland monitor config
+3. Create `hosts/<name>/config/niri-hardware.kdl` with your monitor outputs (see [hosts/README.md](hosts/README.md))
+4. Create `hosts/<name>/config/monitors.lua` with Hyprland monitor config
 5. Create `home/hosts/<name>/default.nix` for host-specific HM config (imports core + desktop, symlinks hardware files)
 6. Create `home/hosts/<name>/packages.nix` for host-specific user packages
 7. Add a new `nixosConfigurations.<name>` entry in `flake.nix`
@@ -120,6 +136,7 @@ Used by `services.netbird` in `modules/desktop/services.nix` for automatic login
 | `nixpkgs` | NixOS packages (unstable) |
 | `home-manager` | User environment management |
 | `lanzaboote` | Secure Boot (UEFI) |
+| `nixos-hardware` | NixOS hardware modules (AMD, laptop, SSD, etc.) |
 | `niri` | Niri Wayland compositor |
 | `hyprland` | Hyprland Wayland compositor |
 | `noctalia` | Wayland shell/bar |

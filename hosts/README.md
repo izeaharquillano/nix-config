@@ -7,6 +7,7 @@ Each subdirectory here represents a NixOS machine. The host's `default.nix` is t
 | Host | Type | Hardware | Purpose |
 |---|---|---|---|
 | `padrick` | Laptop | AMD, BTRFS, Wayland | Daily use |
+| `jobert` | Desktop | AMD, BTRFS, Wayland | Work/gaming |
 
 ## Hardware Config Pattern
 
@@ -16,11 +17,12 @@ Each host directory contains hardware-specific config files:
 hosts/padrick/
 ├── default.nix                 # Host NixOS config (imports modules)
 ├── hardware-configuration.nix  # Auto-generated hardware scan
-├── hardware.nix                # Host-specific hardware (CPU microcode, graphics)
+├── hardware.nix                # Host-specific hardware (CPU, graphics)
 ├── packages.nix                # Host-specific system packages
 ├── services.nix                # Host-specific services (TLP, UPower, etc.)
-├── niri-hardware.kdl           # Niri monitor/output config (KDL format)
-└── monitors.lua                # Hyprland monitor config (Lua format)
+└── config/
+    ├── niri-hardware.kdl       # Niri monitor/output config (KDL format)
+    └── monitors.lua            # Hyprland monitor config (Lua format)
 ```
 
 ### niri-hardware.kdl
@@ -72,6 +74,7 @@ hl.monitor({
 
 ```bash
 mkdir hosts/<name>
+mkdir hosts/<name>/config
 ```
 
 ### 2. Add hardware configuration
@@ -151,7 +154,7 @@ Services enabled in `modules/core/` or `modules/desktop/` apply to all hosts via
 { lib, ... }:
 
 {
-  # Disable netbird (modules/core/netbird.nix)
+  # Disable netbird (modules/desktop/services.nix)
   services.netbird.enable = lib.mkForce false;
 
   # Disable syncthing (modules/desktop/services.nix)
@@ -164,7 +167,7 @@ Services enabled in `modules/core/` or `modules/desktop/` apply to all hosts via
 
 ### 5. Create monitor config files
 
-Create `hosts/<name>/niri-hardware.kdl` with your display outputs:
+Create `hosts/<name>/config/niri-hardware.kdl` with your display outputs:
 
 ```kdl
 output "eDP-1" {
@@ -174,7 +177,7 @@ output "eDP-1" {
 }
 ```
 
-Create `hosts/<name>/monitors.lua` for Hyprland:
+Create `hosts/<name>/config/monitors.lua` for Hyprland:
 
 ```lua
 hl.monitor({
@@ -205,10 +208,10 @@ in
 
   # Symlink host-specific hardware configs into ~/.config/
   xdg.configFile."niri/niri-hardware.kdl".source =
-    mkSymlink "${config.home.homeDirectory}/nixos-conf/hosts/<name>/niri-hardware.kdl";
+    mkSymlink "${config.home.homeDirectory}/nixos-conf/hosts/<name>/config/niri-hardware.kdl";
 
   xdg.configFile."hypr/monitors.lua".source =
-    mkSymlink "${config.home.homeDirectory}/nixos-conf/hosts/<name>/monitors.lua";
+    mkSymlink "${config.home.homeDirectory}/nixos-conf/hosts/<name>/config/monitors.lua";
 }
 ```
 

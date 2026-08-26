@@ -28,7 +28,10 @@ home/
 │   ├── zen-browser.nix      # Zen Browser
 │   └── terminal.nix         # Terminal packages
 └── hosts/
-    └── padrick/
+    ├── padrick/
+    │   ├── default.nix      # Host-specific HM: imports core + desktop, symlinks hardware configs
+    │   └── packages.nix     # Host-specific user packages
+    └── jobert/
         ├── default.nix      # Host-specific HM: imports core + desktop, symlinks hardware configs
         └── packages.nix     # Host-specific user packages
 ```
@@ -43,7 +46,7 @@ home/
 
 The host's HM entry point (`home/hosts/<name>/default.nix`) imports `core/` and `desktop/`, plus any flake module inputs (niri, noctalia, zen-browser).
 
-Raw dotfiles in `config/` are symlinked into `~/.config/` via `xdg.configFile`. Monitor/window-manager hardware configs live in `hosts/<name>/` and are symlinked by the host-specific HM file using `mkOutOfStoreSymlink`.
+Raw dotfiles in `config/` are symlinked into `~/.config/` via `xdg.configFile`. Monitor/window-manager hardware configs live in `hosts/<name>/config/` and are symlinked by the host-specific HM file using `mkOutOfStoreSymlink`.
 
 For niri, the main `config.kdl` uses `include "./niri-hardware.kdl"` to pull in the host-specific hardware file. For hyprland, `require("monitors")` loads the host-specific `monitors.lua`.
 
@@ -88,7 +91,7 @@ xdg.configFile."app" = {
 
 ## Host-Specific Overrides
 
-In `home/hosts/<name>/default.nix`, add host-specific settings after the imports. Use `mkOutOfStoreSymlink` for hardware config files that live in `hosts/<name>/`:
+In `home/hosts/<name>/default.nix`, add host-specific settings after the imports. Use `mkOutOfStoreSymlink` for hardware config files that live in `hosts/<name>/config/`:
 
 ```nix
 { config, inputs, ... }:
@@ -105,10 +108,10 @@ in
   ];
 
   xdg.configFile."niri/niri-hardware.kdl".source =
-    mkSymlink "${config.home.homeDirectory}/nixos-conf/hosts/<name>/niri-hardware.kdl";
+    mkSymlink "${config.home.homeDirectory}/nixos-conf/hosts/<name>/config/niri-hardware.kdl";
 
   xdg.configFile."hypr/monitors.lua".source =
-    mkSymlink "${config.home.homeDirectory}/nixos-conf/hosts/<name>/monitors.lua";
+    mkSymlink "${config.home.homeDirectory}/nixos-conf/hosts/<name>/config/monitors.lua";
 }
 ```
 

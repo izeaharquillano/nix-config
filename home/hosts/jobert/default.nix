@@ -12,8 +12,8 @@ in
   ];
 
   xdg.configFile."niri/niri-hardware.kdl".source =
-    mkSymlink "${config.home.homeDirectory}/nixos-conf/hosts/jobert/niri-hardware.kdl";
+    mkSymlink "${config.home.homeDirectory}/nixos-conf/hosts/jobert/config/niri-hardware.kdl";
 
   xdg.configFile."hypr/monitors.lua".source =
-    mkSymlink "${config.home.homeDirectory}/nixos-conf/hosts/jobert/monitors.lua";
+    mkSymlink "${config.home.homeDirectory}/nixos-conf/hosts/jobert/config/monitors.lua";
 }
