@@ -9,7 +9,7 @@ in
   fileSystems."/nix".options = [ "subvol=nix" ] ++ btrfsOpts;
 
   swapDevices = [{
-    device = "/dev/nvme0n1p4";
+    device = "/dev/nvme1n1p4";
     options = [ "discard" ];
   }];
 }
