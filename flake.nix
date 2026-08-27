@@ -50,7 +50,7 @@
             useGlobalPkgs = true;
             useUserPackages = true;
             users.ize = import ./home/hosts/padrick;
-            extraSpecialArgs = { inherit inputs mylib; };
+            extraSpecialArgs = { inherit inputs mylib; hostname = "padrick"; };
           };
         }
       ];
@@ -67,7 +67,7 @@
             useGlobalPkgs = true;
             useUserPackages = true;
             users.ize = import ./home/hosts/jobert;
-            extraSpecialArgs = { inherit inputs mylib; };
+            extraSpecialArgs = { inherit inputs mylib; hostname = "jobert"; };
           };
         }
       ];
