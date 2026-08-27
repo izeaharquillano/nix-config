@@ -20,11 +20,10 @@ hosts/padrick/
 ├── hardware.nix                # Host-specific hardware (CPU, graphics)
 ├── packages.nix                # Host-specific system packages
 ├── services.nix                # Host-specific services (TLP, UPower, etc.)
-├── secureboot.nix              # Optional: UEFI Secure Boot (Lanzaboote)
-└── config/
-    ├── niri-hardware.kdl       # Niri monitor/output config (KDL format)
-    └── monitors.lua            # Hyprland monitor config (Lua format)
+└── secureboot.nix              # Optional: UEFI Secure Boot (Lanzaboote)
 ```
+
+Host-specific dotfiles (monitor configs, noctalia settings) live in `home/hosts/<name>/config/` and are symlinked by the host-specific HM file.
 
 ### niri-hardware.kdl
 
@@ -74,8 +73,8 @@ hl.monitor({
 ### 1. Create the host directory
 
 ```bash
-mkdir hosts/<name>
-mkdir hosts/<name>/config
+mkdir -p hosts/<name>
+mkdir -p home/hosts/<name>/config
 ```
 
 ### 2. Add hardware configuration
@@ -169,7 +168,7 @@ Services enabled in `modules/core/` or `modules/desktop/` apply to all hosts via
 
 ### 5. Create monitor config files
 
-Create `hosts/<name>/config/niri-hardware.kdl` with your display outputs:
+Create `home/hosts/<name>/config/niri-hardware.kdl` with your display outputs:
 
 ```kdl
 output "eDP-1" {
@@ -179,7 +178,7 @@ output "eDP-1" {
 }
 ```
 
-Create `hosts/<name>/config/monitors.lua` for Hyprland:
+Create `home/hosts/<name>/config/monitors.lua` for Hyprland:
 
 ```lua
 hl.monitor({
@@ -190,15 +189,15 @@ hl.monitor({
 })
 ```
 
+Optionally, create `home/hosts/<name>/config/noctalia-host-settings.toml` for Noctalia lockscreen widget configuration. If present, it is automatically appended to the generated `settings.toml`.
+
 ### 6. Add Home Manager config
 
 Create `home/hosts/<name>/default.nix`:
 
 ```nix
 { config, inputs, ... }:
-let
-  mkSymlink = config.lib.file.mkOutOfStoreSymlink;
-in
+
 {
   imports = [
     ../../core
@@ -208,12 +207,9 @@ in
     inputs.noctalia.homeModules.default
   ];
 
-  # Symlink host-specific hardware configs into ~/.config/
-  xdg.configFile."niri/niri-hardware.kdl".source =
-    mkSymlink "${config.home.homeDirectory}/nixos-conf/hosts/<name>/config/niri-hardware.kdl";
+  xdg.configFile."niri/niri-hardware.kdl".source = ./config/niri-hardware.kdl;
 
-  xdg.configFile."hypr/monitors.lua".source =
-    mkSymlink "${config.home.homeDirectory}/nixos-conf/hosts/<name>/config/monitors.lua";
+  xdg.configFile."hypr/monitors.lua".source = ./config/monitors.lua;
 }
 ```
 
@@ -233,7 +229,7 @@ nixosConfigurations.<name> = nixpkgs.lib.nixosSystem {
         useGlobalPkgs = true;
         useUserPackages = true;
         users.ize = import ./home/hosts/<name>;
-        extraSpecialArgs = { inherit inputs mylib; };
+        extraSpecialArgs = { inherit inputs mylib; hostname = "<name>"; };
       };
     }
   ];

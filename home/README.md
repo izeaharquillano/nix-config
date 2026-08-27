@@ -10,7 +10,7 @@ home/
 │   ├── default.nix          # Aggregator + stateVersion, username
 │   ├── shell.nix            # Bash, zoxide, aliases
 │   ├── git.nix              # Git user name/email
-│   ├── packages.nix         # CLI tools (fd, fzf, btop, ripgrep, etc.) + npm
+│   ├── packages.nix         # CLI tools (fd, fzf, btop-cuda, ripgrep, opencode, etc.)
 │   └── xdg.nix              # XDG user directories + portal config
 ├── desktop/                 # Desktop/GUI app configs
 │   ├── default.nix          # Aggregator
@@ -18,22 +18,29 @@ home/
 │   ├── kitty.nix            # Kitty terminal
 │   ├── hyprland.nix         # Hyprland config (symlinks config/hypr/)
 │   ├── niri.nix             # Niri config (symlinks config/niri/)
-│   ├── noctalia.nix         # Noctalia bar/shell
+│   ├── noctalia.nix         # Noctalia lockscreen/bar (merges host settings into settings.toml)
 │   ├── nvim.nix             # Neovim LazyVim config (xdg.configFile)
 │   ├── obsidian.nix         # Obsidian
 │   ├── starship.nix         # Starship prompt
 │   ├── yazi.nix             # Yazi file manager + gruvbox theme
 │   ├── tmux.nix             # Tmux config
-│   ├── packages.nix         # Desktop packages
+│   ├── packages.nix         # Desktop packages (ncdu, waybar, mpv, discord-ptb, etc.)
 │   ├── zen-browser.nix      # Zen Browser
-│   └── terminal.nix         # Terminal packages
+│   └── terminal.nix         # Terminal packages (kitty)
 └── hosts/
     ├── padrick/
     │   ├── default.nix      # Host-specific HM: imports core + desktop, symlinks hardware configs
-    │   └── packages.nix     # Host-specific user packages
+    │   ├── packages.nix     # Host-specific user packages
+    │   └── config/          # Host-specific dotfiles (niri, hyprland, noctalia)
+    │       ├── niri-hardware.kdl
+    │       ├── monitors.lua
+    │       └── noctalia-host-settings.toml
     └── jobert/
-        ├── default.nix      # Host-specific HM: imports core + desktop, symlinks hardware configs
-        └── packages.nix     # Host-specific user packages
+        ├── default.nix
+        ├── packages.nix
+        └── config/
+            ├── niri-hardware.kdl
+            └── monitors.lua
 ```
 
 ## Module Types
@@ -46,9 +53,9 @@ home/
 
 The host's HM entry point (`home/hosts/<name>/default.nix`) imports `core/` and `desktop/`, plus any flake module inputs (niri, noctalia, zen-browser).
 
-Raw dotfiles in `config/` are symlinked into `~/.config/` via `xdg.configFile`. Monitor/window-manager hardware configs live in `hosts/<name>/config/` and are symlinked by the host-specific HM file using `mkOutOfStoreSymlink`.
+Raw dotfiles in `config/` are symlinked into `~/.config/` via `xdg.configFile`. Monitor/window-manager hardware configs and host-specific settings live in `home/hosts/<name>/config/` and are symlinked using relative paths. The `hostname` is passed via `extraSpecialArgs` in `flake.nix`, allowing shared modules like `noctalia.nix` to read host-specific settings.
 
-For niri, the main `config.kdl` uses `include "./niri-hardware.kdl"` to pull in the host-specific hardware file. For hyprland, `require("monitors")` loads the host-specific `monitors.lua`.
+For niri, the main `config.kdl` uses `include "./niri-hardware.kdl"` to pull in the host-specific hardware file. For hyprland, `require("monitors")` loads the host-specific `monitors.lua`. For noctalia, `noctalia-host-settings.toml` (if present) is appended to the generated `settings.toml`.
 
 ## Adding a Module
 
@@ -91,13 +98,11 @@ xdg.configFile."app" = {
 
 ## Host-Specific Overrides
 
-In `home/hosts/<name>/default.nix`, add host-specific settings after the imports. Use `mkOutOfStoreSymlink` for hardware config files that live in `hosts/<name>/config/`:
+In `home/hosts/<name>/default.nix`, add host-specific settings after the imports. Hardware config files in `home/hosts/<name>/config/` are symlinked using relative paths:
 
 ```nix
 { config, inputs, ... }:
-let
-  mkSymlink = config.lib.file.mkOutOfStoreSymlink;
-in
+
 {
   imports = [
     ../../core
@@ -107,13 +112,13 @@ in
     inputs.noctalia.homeModules.default
   ];
 
-  xdg.configFile."niri/niri-hardware.kdl".source =
-    mkSymlink "${config.home.homeDirectory}/nixos-conf/hosts/<name>/config/niri-hardware.kdl";
+  xdg.configFile."niri/niri-hardware.kdl".source = ./config/niri-hardware.kdl;
 
-  xdg.configFile."hypr/monitors.lua".source =
-    mkSymlink "${config.home.homeDirectory}/nixos-conf/hosts/<name>/config/monitors.lua";
+  xdg.configFile."hypr/monitors.lua".source = ./config/monitors.lua;
 }
 ```
+
+Noctalia lockscreen widget settings can be placed in `home/hosts/<name>/config/noctalia-host-settings.toml`. If present, they are automatically appended to the generated `settings.toml` by `home/desktop/noctalia.nix` (which uses the `hostname` arg passed from `flake.nix`).
 
 Add host-specific user packages in `home/hosts/<name>/packages.nix`:
 

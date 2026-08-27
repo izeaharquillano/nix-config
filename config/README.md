@@ -35,10 +35,11 @@ This creates a symlink at `~/.config/kitty/kitty.conf` pointing to this file.
 
 ## Monitor Configs
 
-Monitor-specific configs (niri outputs, hyprland monitors) live in `hosts/<name>/` rather than here. They are symlinked by the host-specific HM file (`home/hosts/<name>.nix`).
+Monitor-specific configs (niri outputs, hyprland monitors) and host-specific noctalia settings live in `home/hosts/<name>/config/` rather than here. They are symlinked by the host-specific HM file (`home/hosts/<name>/default.nix`).
 
-- **Niri**: `hosts/<name>/niri-hardware.kdl` is symlinked to `~/.config/niri/niri-hardware.kdl` and included by `config.kdl` via `include "./niri-hardware.kdl"`.
-- **Hyprland**: `hosts/<name>/monitors.lua` is symlinked to `~/.config/hypr/monitors.lua` and loaded via `require("monitors")`.
+- **Niri**: `home/hosts/<name>/config/niri-hardware.kdl` is symlinked to `~/.config/niri/niri-hardware.kdl` and included by `config.kdl` via `include "./niri-hardware.kdl"`.
+- **Hyprland**: `home/hosts/<name>/config/monitors.lua` is symlinked to `~/.config/hypr/monitors.lua` and loaded via `require("monitors")`.
+- **Noctalia**: `home/hosts/<name>/config/noctalia-host-settings.toml` (if present) is appended to the generated `settings.toml`.
 
 ## Adding a New Dotfile
 

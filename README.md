@@ -12,29 +12,25 @@ Modular NixOS configuration using flakes and Home Manager.
 
 ```
 .
-├── flake.nix                  # Flake entry point
+├── flake.nix                  # Flake entry point (passes hostname via extraSpecialArgs)
 ├── lib/                       # Custom Nix library helpers (scanPaths, etc.)
-├── hosts/                     # Per-host configurations
+├── hosts/                     # Per-host NixOS system configurations
 │   ├── padrick/               # Laptop (AMD, Wayland)
 │   │   ├── default.nix        # Host NixOS config
 │   │   ├── hardware-configuration.nix
 │   │   ├── hardware.nix       # Host-specific hardware (CPU, graphics)
 │   │   ├── packages.nix       # Host-specific system packages
 │   │   ├── services.nix       # Host-specific services (TLP, UPower, etc.)
-│   │   ├── secureboot.nix     # Optional: UEFI Secure Boot (Lanzaboote)
-│   │   └── config/
-│   │       ├── niri-hardware.kdl  # Niri monitor/output config
-│   │       └── monitors.lua       # Hyprland monitor config
+│   │   └── secureboot.nix     # Optional: UEFI Secure Boot (Lanzaboote)
 │   └── jobert/                # Desktop (AMD, Wayland)
 │       ├── default.nix
+│       ├── boot.nix           # Boot config (GRUB, systemd-boot)
+│       ├── disk.nix           # Disk/partition config
+│       ├── graphics.nix       # Graphics driver config
 │       ├── hardware-configuration.nix
-│       ├── hardware.nix
 │       ├── packages.nix
 │       ├── services.nix
-│       ├── secureboot.nix     # Optional: UEFI Secure Boot (Lanzaboote)
-│       └── config/
-│           ├── niri-hardware.kdl
-│           └── monitors.lua
+│       └── secureboot.nix
 ├── modules/                   # NixOS system modules
 │   ├── core/                  # Shared by all hosts (auto-imported via scanPaths)
 │   ├── desktop/               # Desktop environment (auto-imported via scanPaths)
@@ -42,14 +38,21 @@ Modular NixOS configuration using flakes and Home Manager.
 ├── home/                      # Home Manager modules
 │   ├── core/                  # Shell, git, packages, editor (auto-imported via scanPaths)
 │   ├── desktop/               # GUI app configs (auto-imported via scanPaths)
-│   └── hosts/                 # Host-specific HM overrides
+│   └── hosts/                 # Host-specific HM overrides + per-host configs
 │       ├── padrick/
-│       │   ├── default.nix    # Host HM config
-│       │   └── packages.nix   # Host-specific user packages
+│       │   ├── default.nix    # Host HM config (imports core + desktop, symlinks hardware)
+│       │   ├── packages.nix   # Host-specific user packages
+│       │   └── config/        # Host-specific dotfiles
+│       │       ├── niri-hardware.kdl
+│       │       ├── monitors.lua
+│       │       └── noctalia-host-settings.toml  # Noctalia lockscreen widget config
 │       └── jobert/
 │           ├── default.nix
-│           └── packages.nix
-└── config/                    # Raw dotfiles (nvim, hypr, niri, kitty, tmux)
+│           ├── packages.nix
+│           └── config/
+│               ├── niri-hardware.kdl
+│               └── monitors.lua
+└── config/                    # Shared raw dotfiles (nvim, hypr, niri, kitty, tmux, noctalia)
 ```
 
 ## Quick Start
@@ -73,13 +76,15 @@ nix build .#nixosConfigurations.padrick.config.system.build.toplevel
 1. Create `hosts/<name>/default.nix` and `hardware-configuration.nix`
 2. Create `hosts/<name>/packages.nix` for host-specific system packages
 3. Create `hosts/<name>/secureboot.nix` for UEFI Secure Boot (optional, see [hosts/README.md](hosts/README.md))
-4. Create `hosts/<name>/config/niri-hardware.kdl` with your monitor outputs (see [hosts/README.md](hosts/README.md))
-5. Create `hosts/<name>/config/monitors.lua` with Hyprland monitor config
-6. Create `home/hosts/<name>/default.nix` for host-specific HM config (imports core + desktop, symlinks hardware files)
-7. Create `home/hosts/<name>/packages.nix` for host-specific user packages
-8. Add a new `nixosConfigurations.<name>` entry in `flake.nix`
-9. Symlink repo to `/etc/nixos` if not already done
-10. See [hosts/README.md](hosts/README.md) for a detailed walkthrough
+4. Create `home/hosts/<name>/default.nix` for host-specific HM config (imports core + desktop, symlinks hardware files)
+5. Create `home/hosts/<name>/packages.nix` for host-specific user packages
+6. Create `home/hosts/<name>/config/` with monitor configs:
+   - `niri-hardware.kdl` with your monitor outputs
+   - `monitors.lua` for Hyprland monitor config
+   - `noctalia-host-settings.toml` for Noctalia lockscreen widget config (optional)
+7. Add a new `nixosConfigurations.<name>` entry in `flake.nix` with `hostname = "<name>"` in `extraSpecialArgs`
+8. Symlink repo to `/etc/nixos` if not already done
+9. See [hosts/README.md](hosts/README.md) for a detailed walkthrough
 
 ## Host-Specific Packages
 
