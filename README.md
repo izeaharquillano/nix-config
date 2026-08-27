@@ -51,7 +51,8 @@ Modular NixOS configuration using flakes and Home Manager.
 │           ├── packages.nix
 │           └── config/
 │               ├── niri-host-settings.kdl
-│               └── hypr-host-settings.lua
+│               ├── hypr-host-settings.lua
+│               └── noctalia-host-settings.toml  # Noctalia lockscreen widget config
 └── config/                    # Shared raw dotfiles (nvim, hypr, niri, kitty, tmux, noctalia)
 ```
 

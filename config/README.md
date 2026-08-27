@@ -16,7 +16,7 @@ config/
 ├── niri/
 │   ├── config.kdl       # Niri config (includes niri-host-settings.kdl)
 │   └── config.kdl.old   # Old reference config
-├── noctalia/config.toml # Noctalia Wayland bar/shell
+├── noctalia/config.toml # Noctalia Wayland bar/shell (symlinked, wallpaper in wallpaper.toml)
 ├── nvim/                # Neovim LazyVim config (Lua)
 ├── starship.toml        # Starship prompt config
 └── tmux/tmux.conf       # Tmux config
@@ -39,7 +39,7 @@ Monitor-specific configs (niri outputs, hyprland monitors) and host-specific noc
 
 - **Niri**: `home/hosts/<name>/config/niri-host-settings.kdl` is symlinked to `~/.config/niri/niri-host-settings.kdl` and included by `config.kdl` via `include "./niri-host-settings.kdl"`.
 - **Hyprland**: `home/hosts/<name>/config/hypr-host-settings.lua` is symlinked to `~/.config/hypr/hypr-host-settings.lua` and loaded via `require("hypr-host-settings")`.
-- **Noctalia**: `home/hosts/<name>/config/noctalia-host-settings.toml` (if present) is appended to the generated `settings.toml`.
+- **Noctalia**: `home/hosts/<name>/config/noctalia-host-settings.toml` (if present) is written to `host-settings.toml` in `~/.config/noctalia/` by `home/desktop/noctalia.nix`. Wallpaper settings are in a separate Nix-generated `wallpaper.toml`.
 
 ## Adding a New Dotfile
 

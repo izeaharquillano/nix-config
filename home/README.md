@@ -18,7 +18,7 @@ home/
 │   ├── kitty.nix            # Kitty terminal
 │   ├── hyprland.nix         # Hyprland config (symlinks config/hypr/)
 │   ├── niri.nix             # Niri config (symlinks config/niri/)
-│   ├── noctalia.nix         # Noctalia lockscreen/bar (merges host settings into settings.toml)
+│   ├── noctalia.nix         # Noctalia lockscreen/bar (config.toml + wallpaper.toml + host-settings.toml)
 │   ├── nvim.nix             # Neovim LazyVim config (xdg.configFile)
 │   ├── obsidian.nix         # Obsidian
 │   ├── starship.nix         # Starship prompt
@@ -40,7 +40,8 @@ home/
         ├── packages.nix
         └── config/
             ├── niri-host-settings.kdl
-            └── hypr-host-settings.lua
+            ├── hypr-host-settings.lua
+            └── noctalia-host-settings.toml
 ```
 
 ## Module Types
@@ -55,7 +56,7 @@ The host's HM entry point (`home/hosts/<name>/default.nix`) imports `core/` and 
 
 Raw dotfiles in `config/` are symlinked into `~/.config/` via `xdg.configFile`. Monitor/window-manager hardware configs and host-specific settings live in `home/hosts/<name>/config/` and are symlinked using relative paths. The `hostname` is passed via `extraSpecialArgs` in `flake.nix`, allowing shared modules like `noctalia.nix` to read host-specific settings.
 
-For niri, the main `config.kdl` uses `include "./niri-host-settings.kdl"` to pull in the host-specific hardware file. For hyprland, `require("hypr-host-settings")` loads the host-specific `hypr-host-settings.lua`. For noctalia, `noctalia-host-settings.toml` (if present) is appended to the generated `settings.toml`.
+For niri, the main `config.kdl` uses `include "./niri-host-settings.kdl"` to pull in the host-specific hardware file. For hyprland, `require("hypr-host-settings")` loads the host-specific `hypr-host-settings.lua`. For noctalia, `noctalia.nix` generates `config.toml` (merged with `wallpaper.toml` for interpolated paths) and appends `host-settings.toml` with lockscreen widgets from `home/hosts/<name>/config/noctalia-host-settings.toml`.
 
 ## Adding a Module
 
@@ -118,7 +119,7 @@ In `home/hosts/<name>/default.nix`, add host-specific settings after the imports
 }
 ```
 
-Noctalia lockscreen widget settings can be placed in `home/hosts/<name>/config/noctalia-host-settings.toml`. If present, they are automatically appended to the generated `settings.toml` by `home/desktop/noctalia.nix` (which uses the `hostname` arg passed from `flake.nix`).
+Noctalia lockscreen widget settings can be placed in `home/hosts/<name>/config/noctalia-host-settings.toml`. If present, they are written to `host-settings.toml` in `~/.config/noctalia/` by `home/desktop/noctalia.nix` (which uses the `hostname` arg passed from `flake.nix`). Noctalia merges all `*.toml` files alphabetically, so `config.toml` loads first, then `host-settings.toml`, then `wallpaper.toml`.
 
 Add host-specific user packages in `home/hosts/<name>/packages.nix`:
 

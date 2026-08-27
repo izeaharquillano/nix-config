@@ -189,7 +189,7 @@ hl.monitor({
 })
 ```
 
-Optionally, create `home/hosts/<name>/config/noctalia-host-settings.toml` for Noctalia host specific configurations. If present, it is automatically appended to the generated `settings.toml`.
+Optionally, create `home/hosts/<name>/config/noctalia-host-settings.toml` for Noctalia host specific configurations. If present, it is written to `host-settings.toml` in `~/.config/noctalia/` by `home/desktop/noctalia.nix`.
 
 ### 6. Add Home Manager config
 
