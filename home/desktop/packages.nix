@@ -10,6 +10,8 @@
     xwayland-satellite
 
     # gui apps
+    nemo-with-extensions
+    gvfs
     mpv
     qimgv
     discord-ptb
