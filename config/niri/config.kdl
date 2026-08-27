@@ -146,7 +146,7 @@ binds {
     Super+Alt+S hotkey-overlay-title="Lock the Screen: lock!" { spawn-sh "noctalia msg session lock-and-suspend"; }
     Mod+B { spawn "zen-beta"; }
     Mod+E { spawn "nemo"; }
-    // Mod+E { spawn-sh "kitty yazi"; }
+    Mod+Ctrl+E { spawn-sh "kitty yazi";}
 
     XF86AudioRaiseVolume allow-when-locked=true { spawn-sh "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.05+"; }
     XF86AudioLowerVolume allow-when-locked=true { spawn-sh "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.05-"; }
