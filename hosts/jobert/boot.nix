@@ -18,15 +18,4 @@
     acceptThresholdPercent = 90;
     shrinkerEnabled = true;
   };
-
-  system.activationScripts.fedoraBootEntry = {
-    text = ''
-      mkdir -p /boot/loader/entries
-      cat <<EOF > /boot/loader/entries/fedora.conf
-      title Fedora Linux (Secure Boot)
-      efi /EFI/fedora/shimx64.efi
-      sort-key fedora
-      EOF
-      '';
-  };
 }
