@@ -10,11 +10,12 @@
     xwayland-satellite
 
     # gui apps
-    nemo-with-extensions
     gvfs
     mpv
     qimgv
+    gparted
     discord-ptb
     pavucontrol
+    nemo-with-extensions
   ];
 }
