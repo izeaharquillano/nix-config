@@ -9,6 +9,7 @@
     ./packages.nix
     ./services.nix
     ./hardware.nix
+    ./disk.nix
     ./secureboot.nix
     inputs.nixos-hardware.nixosModules.lenovo-thinkpad-t14-amd-gen1
   ];
