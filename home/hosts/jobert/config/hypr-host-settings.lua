@@ -12,3 +12,8 @@ hl.monitor({
     position = "auto",
     scale    = "1.0",
 })
+
+hl.device({
+    name        = "elan06fa:00-04f3:327e-mouse",
+    sensitivity = -0.5,
+})
