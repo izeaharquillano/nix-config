@@ -1,3 +1,9 @@
+hl.config({
+    input = {
+        sensitivity = -0.5,
+    },
+})
+
 hl.monitor({
     output   = "eDP-1",
     mode     = "1920x1080@144",
@@ -12,8 +18,3 @@ hl.monitor({
     position = "auto",
     scale    = "1.0",
 })
-
--- hl.device({
---     name        = "elan06fa:00-04f3:327e-mouse",
---     sensitivity = -0.5,
--- })
