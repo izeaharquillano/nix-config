@@ -3,6 +3,7 @@
 {
   services.blueman.enable = true;
   services.fwupd.enable = true;
+  security.polkit.enable = true;
 
   services.xserver.xkb = {
     layout = "us";
