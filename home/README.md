@@ -32,15 +32,15 @@ home/
     │   ├── default.nix      # Host-specific HM: imports core + desktop, symlinks hardware configs
     │   ├── packages.nix     # Host-specific user packages
     │   └── config/          # Host-specific dotfiles (niri, hyprland, noctalia)
-    │       ├── niri-hardware.kdl
-    │       ├── monitors.lua
+    │       ├── niri-host-settings.kdl
+    │       ├── hypr-host-settings.lua
     │       └── noctalia-host-settings.toml
     └── jobert/
         ├── default.nix
         ├── packages.nix
         └── config/
-            ├── niri-hardware.kdl
-            └── monitors.lua
+            ├── niri-host-settings.kdl
+            └── hypr-host-settings.lua
 ```
 
 ## Module Types
@@ -55,7 +55,7 @@ The host's HM entry point (`home/hosts/<name>/default.nix`) imports `core/` and 
 
 Raw dotfiles in `config/` are symlinked into `~/.config/` via `xdg.configFile`. Monitor/window-manager hardware configs and host-specific settings live in `home/hosts/<name>/config/` and are symlinked using relative paths. The `hostname` is passed via `extraSpecialArgs` in `flake.nix`, allowing shared modules like `noctalia.nix` to read host-specific settings.
 
-For niri, the main `config.kdl` uses `include "./niri-hardware.kdl"` to pull in the host-specific hardware file. For hyprland, `require("monitors")` loads the host-specific `monitors.lua`. For noctalia, `noctalia-host-settings.toml` (if present) is appended to the generated `settings.toml`.
+For niri, the main `config.kdl` uses `include "./niri-host-settings.kdl"` to pull in the host-specific hardware file. For hyprland, `require("hypr-host-settings")` loads the host-specific `hypr-host-settings.lua`. For noctalia, `noctalia-host-settings.toml` (if present) is appended to the generated `settings.toml`.
 
 ## Adding a Module
 
@@ -112,9 +112,9 @@ In `home/hosts/<name>/default.nix`, add host-specific settings after the imports
     inputs.noctalia.homeModules.default
   ];
 
-  xdg.configFile."niri/niri-hardware.kdl".source = ./config/niri-hardware.kdl;
+  xdg.configFile."niri/niri-host-settings.kdl".source = ./config/niri-host-settings.kdl;
 
-  xdg.configFile."hypr/monitors.lua".source = ./config/monitors.lua;
+  xdg.configFile."hypr/hypr-host-settings.lua".source = ./config/hypr-host-settings.lua;
 }
 ```
 

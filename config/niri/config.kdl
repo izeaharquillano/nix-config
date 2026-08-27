@@ -1,4 +1,4 @@
-include "./niri-hardware.kdl"
+include "./niri-host-settings.kdl"
 
 input {
     keyboard {

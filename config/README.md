@@ -8,13 +8,13 @@ Raw application configuration files (dotfiles) consumed by Home Manager via `xdg
 config/
 ├── kitty/kitty.conf     # kitty terminal config
 ├── hypr/                # Hyprland Lua config (keybinds, rules, plugins)
-│   ├── hyprland.lua     # Main config (requires monitors, animations, etc.)
+│   ├── hyprland.lua     # Main config (requires hypr-host-settings, animations, etc.)
 │   ├── keybindings.lua  # Key bindings
 │   ├── windowrules.lua  # Window rules
 │   ├── animations.lua   # Animation config
 │   └── plugins/         # Hyprland plugins (hyprbars)
 ├── niri/
-│   ├── config.kdl       # Niri config (includes niri-hardware.kdl)
+│   ├── config.kdl       # Niri config (includes niri-host-settings.kdl)
 │   └── config.kdl.old   # Old reference config
 ├── noctalia/config.toml # Noctalia Wayland bar/shell
 ├── nvim/                # Neovim LazyVim config (Lua)
@@ -37,8 +37,8 @@ This creates a symlink at `~/.config/kitty/kitty.conf` pointing to this file.
 
 Monitor-specific configs (niri outputs, hyprland monitors) and host-specific noctalia settings live in `home/hosts/<name>/config/` rather than here. They are symlinked by the host-specific HM file (`home/hosts/<name>/default.nix`).
 
-- **Niri**: `home/hosts/<name>/config/niri-hardware.kdl` is symlinked to `~/.config/niri/niri-hardware.kdl` and included by `config.kdl` via `include "./niri-hardware.kdl"`.
-- **Hyprland**: `home/hosts/<name>/config/monitors.lua` is symlinked to `~/.config/hypr/monitors.lua` and loaded via `require("monitors")`.
+- **Niri**: `home/hosts/<name>/config/niri-host-settings.kdl` is symlinked to `~/.config/niri/niri-host-settings.kdl` and included by `config.kdl` via `include "./niri-host-settings.kdl"`.
+- **Hyprland**: `home/hosts/<name>/config/hypr-host-settings.lua` is symlinked to `~/.config/hypr/hypr-host-settings.lua` and loaded via `require("hypr-host-settings")`.
 - **Noctalia**: `home/hosts/<name>/config/noctalia-host-settings.toml` (if present) is appended to the generated `settings.toml`.
 
 ## Adding a New Dotfile

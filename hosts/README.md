@@ -25,9 +25,9 @@ hosts/padrick/
 
 Host-specific dotfiles (monitor configs, noctalia settings) live in `home/hosts/<name>/config/` and are symlinked by the host-specific HM file.
 
-### niri-hardware.kdl
+### niri-host-settings.kdl
 
-Plain KDL file with `output` blocks defining monitor settings. Niri's `config.kdl` uses `include "./niri-hardware.kdl"` to pull this in. Run `niri msg outputs` to find output names.
+Plain KDL file with `output` blocks defining monitor settings. Niri's `config.kdl` uses `include "./niri-host-settings.kdl"` to pull this in. Run `niri msg outputs` to find output names.
 
 ```kdl
 output "eDP-1" {
@@ -48,9 +48,9 @@ workspace "1terminal" { open-on-output "eDP-1"; }
 workspace "2browser" { open-on-output "DP-1"; }
 ```
 
-### monitors.lua
+### hypr-host-settings.lua
 
-Lua file defining monitor configs for Hyprland. Used via `require("monitors")` in the main Hyprland config.
+Lua file defining monitor configs for Hyprland. Used via `require("hypr-host-settings")` in the main Hyprland config.
 
 ```lua
 hl.monitor({
@@ -168,7 +168,7 @@ Services enabled in `modules/core/` or `modules/desktop/` apply to all hosts via
 
 ### 5. Create monitor config files
 
-Create `home/hosts/<name>/config/niri-hardware.kdl` with your display outputs:
+Create `home/hosts/<name>/config/niri-host-settings.kdl` with your display outputs:
 
 ```kdl
 output "eDP-1" {
@@ -178,7 +178,7 @@ output "eDP-1" {
 }
 ```
 
-Create `home/hosts/<name>/config/monitors.lua` for Hyprland:
+Create `home/hosts/<name>/config/hypr-host-settings.lua` for Hyprland:
 
 ```lua
 hl.monitor({
@@ -207,9 +207,9 @@ Create `home/hosts/<name>/default.nix`:
     inputs.noctalia.homeModules.default
   ];
 
-  xdg.configFile."niri/niri-hardware.kdl".source = ./config/niri-hardware.kdl;
+  xdg.configFile."niri/niri-host-settings.kdl".source = ./config/niri-host-settings.kdl;
 
-  xdg.configFile."hypr/monitors.lua".source = ./config/monitors.lua;
+  xdg.configFile."hypr/hypr-host-settings.lua".source = ./config/hypr-host-settings.lua;
 }
 ```
 

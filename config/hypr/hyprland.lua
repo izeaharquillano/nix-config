@@ -78,7 +78,7 @@ hl.device({
     sensitivity = -0.5,
 })
 
-require("monitors")
+require("hypr-host-settings")
 require("animations")
 require("keybindings")
 require("windowrules")

@@ -43,15 +43,15 @@ Modular NixOS configuration using flakes and Home Manager.
 │       │   ├── default.nix    # Host HM config (imports core + desktop, symlinks hardware)
 │       │   ├── packages.nix   # Host-specific user packages
 │       │   └── config/        # Host-specific dotfiles
-│       │       ├── niri-hardware.kdl
-│       │       ├── monitors.lua
+│       │       ├── niri-host-settings.kdl
+│       │       ├── hypr-host-settings.lua
 │       │       └── noctalia-host-settings.toml  # Noctalia lockscreen widget config
 │       └── jobert/
 │           ├── default.nix
 │           ├── packages.nix
 │           └── config/
-│               ├── niri-hardware.kdl
-│               └── monitors.lua
+│               ├── niri-host-settings.kdl
+│               └── hypr-host-settings.lua
 └── config/                    # Shared raw dotfiles (nvim, hypr, niri, kitty, tmux, noctalia)
 ```
 
@@ -79,8 +79,8 @@ nix build .#nixosConfigurations.padrick.config.system.build.toplevel
 4. Create `home/hosts/<name>/default.nix` for host-specific HM config (imports core + desktop, symlinks hardware files)
 5. Create `home/hosts/<name>/packages.nix` for host-specific user packages
 6. Create `home/hosts/<name>/config/` with monitor configs:
-   - `niri-hardware.kdl` with your monitor outputs
-   - `monitors.lua` for Hyprland monitor config
+   - `niri-host-settings.kdl` with your monitor outputs
+   - `hypr-host-settings.lua` for Hyprland monitor config
    - `noctalia-host-settings.toml` for Noctalia lockscreen widget config (optional)
 7. Add a new `nixosConfigurations.<name>` entry in `flake.nix` with `hostname = "<name>"` in `extraSpecialArgs`
 8. Symlink repo to `/etc/nixos` if not already done
