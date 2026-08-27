@@ -14,7 +14,7 @@ input {
         // dwtp
         // drag false
         // drag-lock
-        scroll-factor 0.2
+        scroll-factor 0.5
         natural-scroll
         // accel-speed 0
         // accel-profile "flat"
