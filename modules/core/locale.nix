@@ -17,5 +17,5 @@
     LC_TIME = "en_PH.UTF-8";
   };
 
-  time.hardwareClockInLocalTime = true;
+  time.hardwareClockInLocalTime = false;
 }
