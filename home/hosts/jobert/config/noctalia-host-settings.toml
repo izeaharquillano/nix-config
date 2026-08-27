@@ -1,7 +1,12 @@
 [lockscreen_widgets]
 enabled = true
 schema_version = 2
-widget_order = [ "lockscreen-login-box@DP-1", "lockscreen-login-box@eDP-1", "lockscreen-widget-0000000000000001" ]
+widget_order = [
+    "lockscreen-login-box@DP-1",
+    "lockscreen-login-box@eDP-1",
+    "lockscreen-widget-0000000000000001",
+    "lockscreen-widget-0000000000000002"
+]
 
     [lockscreen_widgets.grid]
     cell_size = 16
@@ -36,10 +41,10 @@ widget_order = [ "lockscreen-login-box@DP-1", "lockscreen-login-box@eDP-1", "loc
         show_weather = false
 
     [lockscreen_widgets.widget."lockscreen-login-box@eDP-1"]
-    box_height = 196.0
+    box_height = 128.0
     box_width = 810.0
-    cx = 800.00006103515625
-    cy = 718.0
+    cx = 800.0
+    cy = 690.0
     output = "eDP-1"
     placement_height = 900.0
     placement_width = 1600.0
@@ -57,10 +62,10 @@ widget_order = [ "lockscreen-login-box@DP-1", "lockscreen-login-box@eDP-1", "loc
         show_caps_lock = true
         show_keyboard_layout = true
         show_login_button = true
-        show_media = true
+        show_media = false
         show_session_buttons = true
         show_unlock_hint = true
-        show_weather = true
+        show_weather = false
 
     [lockscreen_widgets.widget.lockscreen-widget-0000000000000001]
     box_height = 0.0
@@ -74,5 +79,20 @@ widget_order = [ "lockscreen-login-box@DP-1", "lockscreen-login-box@eDP-1", "loc
     type = "clock"
 
         [lockscreen_widgets.widget.lockscreen-widget-0000000000000001.settings]
+        background = false
+        format = "{:%I:%M %p}"
+
+    [lockscreen_widgets.widget.lockscreen-widget-0000000000000002]
+    box_height = 0.0
+    box_width = 0.0
+    cx = 800.0
+    cy = 295.5
+    output = "eDP-1"
+    placement_height = 900.0
+    placement_width = 1600.0
+    rotation = 0.0
+    type = "clock"
+
+        [lockscreen_widgets.widget.lockscreen-widget-0000000000000002.settings]
         background = false
         format = "{:%I:%M %p}"
