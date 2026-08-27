@@ -10,3 +10,7 @@ hl.monitor({
     position = "auto",
     scale    = "1.20",
 })
+
+hl.on("hyprland.start", function()
+    hl.exec_cmd("systemctl --user start mic-mute-led-sync")
+end)
