@@ -11,6 +11,10 @@
   gtk = {
     enable = true;
     theme.name = "Adwaita";
+    iconTheme = {
+      package = pkgs.papirus-icon-theme;
+      name = "Papirus-Dark";
+    };
     gtk3.extraConfig = {
       gtk-application-prefer-dark-theme = true;
     };
@@ -25,6 +29,7 @@
     "org/gnome/desktop/interface" = {
       color-scheme = "prefer-dark";
       gtk-theme = "Adwaita";
+      icon-theme = "Papirus-Dark";
     };
   };
 }
