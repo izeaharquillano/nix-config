@@ -157,6 +157,7 @@ binds {
 
     Mod+Backspace { spawn-sh "noctalia msg panel-toggle session"; }
     Mod+S { spawn-sh "noctalia msg panel-toggle control-center"; }
+    Mod+Ctrl+C { spawn-sh "noctalia msg panel-toggle control-center calendar"; }
 
     Mod+O repeat=false { toggle-overview; }
     Mod+Q repeat=false { close-window; }
