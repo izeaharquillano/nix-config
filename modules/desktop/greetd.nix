@@ -10,6 +10,11 @@
     };
   };
 
+  systemd.services.greetd = {
+    after = [ "systemd-timesyncd.service" ];
+    wants = [ "systemd-timesyncd.service" ];
+  };
+
   systemd.services.greetd.serviceConfig = {
     Type = "idle";
     StandardInput = "tty";
