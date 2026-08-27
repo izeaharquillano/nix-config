@@ -75,4 +75,4 @@ widget_order = [ "lockscreen-login-box@DP-1", "lockscreen-login-box@eDP-1", "loc
 
         [lockscreen_widgets.widget.lockscreen-widget-0000000000000001.settings]
         background = false
-        format = "{:%H:%M %p}"
+        format = "{:%I:%M %p}"
