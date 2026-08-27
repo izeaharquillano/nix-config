@@ -119,6 +119,18 @@ window-rule {
     open-floating true
 }
 
+window-rule {
+    match app-id=r#"^zen-beta$"#
+    open-fullscreen false
+    open-maximized-to-edges false
+}
+
+window-rule {
+    match app-id=r#"^nemo$"#
+    open-fullscreen false
+    open-maximized-to-edges false
+}
+
 /-window-rule {
     match app-id=r#"^org\.keepassxc\.KeePassXC$"#
     match app-id=r#"^org\.gnome\.World\.Secrets$"#
