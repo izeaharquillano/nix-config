@@ -27,7 +27,7 @@ media = false
 font_family = "JetBrainsMono NF"
 
     [shell.animation]
-    speed = 2.0500000305473804
+    speed = 4.0
 
 [theme]
 builtin = "Gruvbox"
