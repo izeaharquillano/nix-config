@@ -49,6 +49,7 @@ source = "builtin"
 format = "{:%I:%M %p}"
 
 [widget.control-center]
+enabled = false
 glyph = "snowflake"
 
 [widget.launcher]
@@ -56,3 +57,6 @@ enabled = false
 
 [widget.wallpaper]
 enabled = false
+
+[widget.network]
+show_label = false
