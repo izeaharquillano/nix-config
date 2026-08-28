@@ -7,7 +7,7 @@ Each subdirectory here represents a NixOS machine. The host's `default.nix` is t
 | Host | Type | Hardware | Purpose |
 |---|---|---|---|
 | `padrick` | Laptop | AMD, BTRFS, Wayland | Daily use |
-| `jobert` | Desktop | AMD, BTRFS, Wayland | Work/gaming |
+| `jobert` | Gaming Laptop | AMD, BTRFS, Wayland | Work/gaming |
 
 ## Hardware Config Pattern
 
