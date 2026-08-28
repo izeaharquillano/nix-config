@@ -24,16 +24,6 @@ scale_to_int() {
   awk -v v="${1}" 'BEGIN {printf "%.0f", v * 100}'
 }
 
-scale_exists() {
-  local value="${1}"
-
-  for scale in "${SCALES[@]}"; do
-    [ "$(scale_to_int "${scale}")" == "${value}" ] && return 0
-  done
-
-  return 1
-}
-
 int_to_scale() {
   local value="${1}"
 
@@ -86,8 +76,8 @@ adjust_scale() {
     local key
     key="$(scale_to_int "${input}")"
 
-    if scale_exists "${key}"; then
-      int_to_scale "${key}"
+    if local s; s="$(int_to_scale "${key}")"; then
+      printf '%s\n' "${s}"
     else
       echo "'${input}' is not valid, please choose from: ${SCALES[*]}" >&2
       return 1
@@ -98,7 +88,7 @@ adjust_scale() {
 
 # --- Niri functions ---
 
-get_outputs_niri() {
+get_state_niri() {
   niri msg --json outputs
 }
 
@@ -106,39 +96,20 @@ get_focused_niri() {
   niri msg --json focused-output | jq -r '.name'
 }
 
-get_output_geometry_niri() {
-  local state="${1}"
-  local name="${2}"
-
-  jq --raw-output --arg output "${name}" '
+# Returns: x y width height scale
+get_output_info_niri() {
+  jq --raw-output --arg output "${2}" '
     .[$output].logical
     | "\(.x) \(.y) \(.width) \(.height) \(.scale)"
-  ' <<<"${state}"
-}
-
-get_output_size_niri() {
-  local state="${1}"
-  local name="${2}"
-
-  jq --raw-output --arg output "${name}" '
-    .[$output].logical
-    | "\(.width) \(.height)"
-  ' <<<"${state}"
+  ' <<<"${1}"
 }
 
 set_scale_niri() {
-  local name="${1}"
-  local scale="${2}"
-
-  niri msg output "${name}" scale "${scale}"
-}
-
-set_output_position_niri() {
-  : # Niri handles positioning internally
+  niri msg output "${1}" scale "${2}"
 }
 
 position_outputs_niri() {
-  local state_before="${1}"
+  local state="${1}"
   local focused="${2}"
   local dx="${3}"
   local dy="${4}"
@@ -148,9 +119,7 @@ position_outputs_niri() {
   local old_h="${8}"
 
   while read -r name x y; do
-    if [ "${name}" == "${focused}" ]; then
-      continue
-    fi
+    [ "${name}" == "${focused}" ] && continue
 
     local new_x="${x}"
     local new_y="${y}"
@@ -166,65 +135,39 @@ position_outputs_niri() {
     jq -r '
       to_entries[]
       | "\(.key) \(.value.logical.x) \(.value.logical.y)"
-    ' <<<"${state_before}"
+    ' <<<"${state}"
   )
 }
 
 # --- Hyprland functions ---
 
-get_outputs_hyprland() {
+get_state_hyprland() {
   hyprctl monitors -j
 }
 
 get_focused_hyprland() {
-  hyprctl monitors -j | jq -r '.[] | select(.focused == true) | .name'
+  jq -r '.[] | select(.focused == true) | .name' <<<"${1}"
 }
 
-get_output_geometry_hyprland() {
-  local state="${1}"
-  local name="${2}"
-
-  jq --raw-output --arg output "${name}" '
+# Returns: x y width height scale
+get_output_info_hyprland() {
+  jq --raw-output --arg output "${2}" '
     .[] | select(.name == $output)
     | "\(.x) \(.y) \(.width) \(.height) \(.scale)"
-  ' <<<"${state}"
-}
-
-get_output_size_hyprland() {
-  local state="${1}"
-  local name="${2}"
-
-  jq --raw-output --arg output "${name}" '
-    .[] | select(.name == $output)
-    | "\(.width) \(.height)"
-  ' <<<"${state}"
+  ' <<<"${1}"
 }
 
 set_scale_hyprland() {
   local name="${1}"
   local scale="${2}"
-  local state="${3}"
-
-  local x y
-  read -r x y <<<"$(jq --raw-output --arg output "${name}" '
-    .[] | select(.name == $output)
-    | "\(.x) \(.y)"
-  ' <<<"${state}")"
-
-  hyprctl eval "hl.monitor({output = \"${name}\", mode = \"preferred\", position = \"${x}x${y}\", scale = ${scale}})" >/dev/null
-}
-
-set_output_position_hyprland() {
-  local name="${1}"
-  local x="${2}"
-  local y="${3}"
-  local scale="${4}"
+  local x="${3}"
+  local y="${4}"
 
   hyprctl eval "hl.monitor({output = \"${name}\", mode = \"preferred\", position = \"${x}x${y}\", scale = ${scale}})" >/dev/null
 }
 
 position_outputs_hyprland() {
-  local state_before="${1}"
+  local state="${1}"
   local focused="${2}"
   local dx="${3}"
   local dy="${4}"
@@ -235,9 +178,7 @@ position_outputs_hyprland() {
   local new_scale="${9}"
 
   while read -r name x y scale; do
-    if [ "${name}" == "${focused}" ]; then
-      continue
-    fi
+    [ "${name}" == "${focused}" ] && continue
 
     local new_x="${x}"
     local new_y="${y}"
@@ -246,14 +187,11 @@ position_outputs_hyprland() {
     ((y >= old_y + old_h)) && new_y=$((y + dy))
 
     if [[ "${new_x}" != "${x}" || "${new_y}" != "${y}" ]]; then
-      set_output_position_hyprland "${name}" "${new_x}" "${new_y}" "${scale}"
+      set_scale_hyprland "${name}" "${scale}" "${new_x}" "${new_y}"
     fi
 
   done < <(
-    jq -r '
-      .[]
-      | "\(.name) \(.x) \(.y) \(.scale)"
-    ' <<<"${state_before}"
+    jq -r '.[] | "\(.name) \(.x) \(.y) \(.scale)"' <<<"${state}"
   )
 }
 
@@ -261,12 +199,12 @@ position_outputs_hyprland() {
 
 main() {
   local state_before
-  state_before="$(get_outputs_${compositor})"
+  state_before="$(get_state_${compositor})"
 
   local focused_output
-  focused_output="$(get_focused_${compositor})"
+  focused_output="$(get_focused_${compositor} "${state_before}")"
 
-  read -r old_x old_y old_w old_h current_scale <<<"$(get_output_geometry_${compositor} "${state_before}" "${focused_output}")"
+  read -r old_x old_y old_w old_h current_scale <<<"$(get_output_info_${compositor} "${state_before}" "${focused_output}")"
 
   local current_scale_int current_scale_index
   current_scale_int="$(scale_to_int "${current_scale}")"
@@ -277,12 +215,14 @@ main() {
     exit 1
   fi
 
-  set_scale_${compositor} "${focused_output}" "${new_scale}" "${state_before}"
+  set_scale_${compositor} "${focused_output}" "${new_scale}" "${old_x}" "${old_y}"
 
   local state_after
-  state_after="$(get_outputs_${compositor})"
+  state_after="$(get_state_${compositor})"
 
-  read -r new_w new_h <<<"$(get_output_size_${compositor} "${state_after}" "${focused_output}")"
+  read -r new_w new_h <<<"$(jq --raw-output --arg output "${focused_output}" '
+    .[] | select(.name == $output) | "\(.width) \(.height)"
+  ' <<<"${state_after}")"
 
   local dx=$((new_w - old_w))
   local dy=$((new_h - old_h))
