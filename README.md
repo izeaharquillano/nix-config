@@ -1,6 +1,6 @@
 # nixos-conf
 
-Modular NixOS configuration using flakes and Home Manager.
+A Minimal (for me) Multi-host NixOS configuration using flakes and Home Manager.
 
 ## Desktops
 
