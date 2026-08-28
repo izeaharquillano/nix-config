@@ -14,6 +14,7 @@ A Minimal (for me) Multi-host NixOS configuration using flakes and Home Manager.
 .
 ├── flake.nix                  # Flake entry point (passes hostname via extraSpecialArgs)
 ├── lib/                       # Custom Nix library helpers (scanPaths, etc.)
+├── scripts/                   # Utility scripts (output-scale)
 ├── hosts/                     # Per-host NixOS system configurations
 │   ├── padrick/               # Laptop (AMD, Wayland)
 │   │   ├── default.nix        # Host NixOS config
@@ -160,6 +161,22 @@ Used by `services.netbird` in `modules/desktop/services.nix` for automatic login
 | `hyprland` | Hyprland Wayland compositor |
 | `noctalia` | Wayland shell/bar |
 | `zen-browser` | Zen Browser (Firefox-based) |
+
+## Scripts
+
+| Script | Description |
+|---|---|
+| `scripts/output-scale` | Scale (zoom) the focused output. Supports Niri and Hyprland. Cycles between scales, or accepts `+`/`-`/specific value. Installed to `$PATH` via `home/desktop/scripts.nix`. |
+
+## Mounting SMB Shares with Nemo
+
+SMB network shares can be mounted directly from the Nemo file manager. `gvfs` and `nemo-with-extensions` are included in the config, and `services.gvfs` is enabled system-wide.
+
+1. Open Nemo
+2. Click `File` in the top bar and select `Connect to Server`
+3. Set the server type to `Windows share`
+4. Enter the server address, share name, and credentials
+5. Click `Connect` -- the share appears in the sidebar and is mounted under `/run/user/1000/gvfs/`
 
 ## Custom Library
 

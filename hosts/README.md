@@ -18,6 +18,7 @@ hosts/padrick/
 ├── default.nix                 # Host NixOS config (imports modules)
 ├── hardware-configuration.nix  # Auto-generated hardware scan
 ├── hardware.nix                # Host-specific hardware (CPU, graphics)
+├── disk.nix                    # Disk/partition config
 ├── packages.nix                # Host-specific system packages
 ├── services.nix                # Host-specific services (TLP, UPower, etc.)
 └── secureboot.nix              # Optional: UEFI Secure Boot (Lanzaboote)

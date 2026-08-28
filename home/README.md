@@ -20,11 +20,13 @@ home/
 │   ├── niri.nix             # Niri config (symlinks config/niri/)
 │   ├── noctalia.nix         # Noctalia lockscreen/bar (config.toml + wallpaper.toml + host-settings.toml)
 │   ├── nvim.nix             # Neovim LazyVim config (xdg.configFile)
+│   ├── nemo.nix             # Nemo file manager desktop entry
 │   ├── obsidian.nix         # Obsidian
+│   ├── scripts.nix          # Utility scripts (output-scale)
 │   ├── starship.nix         # Starship prompt
 │   ├── yazi.nix             # Yazi file manager + gruvbox theme
 │   ├── tmux.nix             # Tmux config
-│   ├── packages.nix         # Desktop packages (ncdu, waybar, mpv, discord-ptb, etc.)
+│   ├── packages.nix         # Desktop packages (ncdu, waybar, mpv, discord-ptb, nemo, gvfs, etc.)
 │   ├── zen-browser.nix      # Zen Browser
 │   └── terminal.nix         # Terminal packages (kitty)
 └── hosts/
@@ -57,6 +59,10 @@ The host's HM entry point (`home/hosts/<name>/default.nix`) imports `core/` and 
 Raw dotfiles in `config/` are symlinked into `~/.config/` via `xdg.configFile`. Monitor/window-manager hardware configs and host-specific settings live in `home/hosts/<name>/config/` and are symlinked using relative paths. The `hostname` is passed via `extraSpecialArgs` in `flake.nix`, allowing shared modules like `noctalia.nix` to read host-specific settings.
 
 For niri, the main `config.kdl` uses `include "./niri-host-settings.kdl"` to pull in the host-specific hardware file. For hyprland, `require("hypr-host-settings")` loads the host-specific `hypr-host-settings.lua`. For noctalia, `noctalia.nix` generates `config.toml` (merged with `wallpaper.toml` for interpolated paths) and appends `host-settings.toml` with lockscreen widgets from `home/hosts/<name>/config/noctalia-host-settings.toml`.
+
+## Mounting SMB Shares with Nemo
+
+Nemo is the default file manager. `gvfs` and `nemo-with-extensions` are installed, and `services.gvfs` is enabled system-wide in `modules/desktop/services.nix`. To mount a share: click `File` > `Connect to Server`, set the type to `Windows share`, enter the details, and connect.
 
 ## Adding a Module
 

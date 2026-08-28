@@ -20,7 +20,7 @@ modules/
 │   ├── niri.nix         # Niri Wayland compositor
 │   ├── hyprland.nix     # Hyprland Wayland compositor
 │   ├── fonts.nix        # System fonts (JetBrainsMono NF)
-│   ├── services.nix     # blueman, fwupd, pipewire, syncthing, netbird, bluetooth
+│   ├── services.nix     # blueman, fwupd, pipewire, syncthing, netbird, bluetooth, gvfs, polkit
 │   ├── hardware.nix     # Laptop-specific (battery, power management)
 │   └── zsh.nix          # Zsh system-level config
 └── security.nix         # Git, neovim, nix-ld, shell aliases
