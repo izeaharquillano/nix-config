@@ -67,3 +67,8 @@ hl.bind(mainMod .. " + SHIFT + Y", hl.dsp.exec_cmd("hyprctl plugin unload /var/c
 hl.bind(mainMod .. " + backspace", hl.dsp.exec_cmd("noctalia msg panel-toggle session"))
 hl.bind(mainMod .. " + CTRL + C", hl.dsp.exec_cmd("noctalia msg panel-toggle control-center calendar"))
 hl.bind(mainMod .. " + CTRL + E", hl.dsp.exec_cmd("kitty yazi"))
+
+hl.bind(mainMod .. " + CTRL + EQUAL",    hl.dsp.exec_cmd("output-scale +"))
+hl.bind(mainMod .. " + CTRL + MINUS",    hl.dsp.exec_cmd("output-scale -"))
+hl.bind(mainMod .. " + CTRL + 1",        hl.dsp.exec_cmd("output-scale 1"))
+hl.bind(mainMod .. " + CTRL + 2",        hl.dsp.exec_cmd("output-scale 1.25"))
