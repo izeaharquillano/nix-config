@@ -64,8 +64,8 @@ hl.env("GDK_SCALE", "1")
 
 hl.on("hyprland.start", function()
     hl.exec_cmd("noctalia")
-    hl.exec_cmd("blueman-applet")
     hl.exec_cmd("netbird-ui")
+    hl.exec_cmd("blueman-applet")
 end)
 
 hl.gesture({
