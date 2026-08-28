@@ -131,18 +131,6 @@ window-rule {
     open-floating true
 }
 
-window-rule {
-    match app-id=r#"^zen-beta$"#
-    open-fullscreen false
-    open-maximized-to-edges false
-}
-
-window-rule {
-    match app-id=r#"^nemo$"#
-    open-fullscreen false
-    open-maximized-to-edges false
-}
-
 /-window-rule {
     match app-id=r#"^org\.keepassxc\.KeePassXC$"#
     match app-id=r#"^org\.gnome\.World\.Secrets$"#
@@ -183,6 +171,11 @@ binds {
     Mod+Backspace { spawn-sh "noctalia msg panel-toggle session"; }
     Mod+S { spawn-sh "noctalia msg panel-toggle control-center"; }
     Mod+Ctrl+C { spawn-sh "noctalia msg panel-toggle control-center calendar"; }
+
+    Mod+Ctrl+Equal { spawn-sh "output-scale +"; }
+    Mod+Ctrl+Minus { spawn-sh "output-scale -"; }
+    Mod+Ctrl+1 { spawn-sh "output-scale 1"; }
+    Mod+Ctrl+2 { spawn-sh "output-scale 1.25"; }
 
     Mod+O repeat=false { toggle-overview; }
     Mod+Q repeat=false { close-window; }

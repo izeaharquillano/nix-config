@@ -19,6 +19,17 @@ filter_order = [ "filter" ]
     save_history = false
     show_toast = false
 
+    [notification.filter.filter-2]
+    allow_permanent = true
+    bypass_dnd = false
+    enabled = true
+    match = "noctalia"
+    match_content = "^.*output-scale.*$"
+    override_duration = 1000
+    play_sound = true
+    save_history = true
+    show_toast = true
+
 [osd.kinds]
 lock_keys = false
 media = false
