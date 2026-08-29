@@ -9,6 +9,16 @@
     enable = true;
     remotePlay.openFirewall = true;
     dedicatedServer.openFirewall = true;
+    gamescopeSession.enable = true;
+    extraCompatPackages = with pkgs; [
+      proton-ge-bin
+    ];
+  };
+
+  programs.gamescope = {
+    enable = true;
+    capSysNice = true;
+    args = [ "--rt" ];
   };
 
   programs.gamemode.enable = true;
