@@ -7,6 +7,3 @@ result-*
 
 # Ignore NixOS interactive test driver history
 **/.nixos-test-history
-
-# Ignore host-specific syncthing device IDs (contains device identifiers)
-modules/desktop/syncthing-devices.nix
