@@ -7,7 +7,7 @@ Each subdirectory here represents a NixOS machine. The host's `default.nix` is t
 | Host | Type | Hardware | Purpose |
 |---|---|---|---|
 | `padrick` | Laptop | AMD, BTRFS, Wayland | Daily use |
-| `jobert` | Gaming Laptop | AMD, BTRFS, Wayland | Work/gaming |
+| `jobert` | Gaming Laptop | AMD + NVIDIA, BTRFS, Wayland | Work/gaming |
 
 ## Hardware Config Pattern
 
@@ -30,6 +30,20 @@ hosts/jobert/
 ```
 
 Shared BTRFS mount options and Secure Boot config live in `modules/btrfs.nix` and `modules/secureboot.nix`, imported by each host's `default.nix`.
+
+### jobert: Gaming & Virtualization
+
+`jobert` has additional gaming and virtualization packages configured in `hosts/jobert/packages.nix`:
+
+- **Steam** with remote play and dedicated server firewall rules
+- **Proton GE** (`proton-ge-bin`) as an extra compatibility layer
+- **Gamescope** (Wayland gamecope session, `--rt`)
+- **Gamemode** for automatic CPU/GPU performance tuning
+- **MangoHud** and **GOverlay** for FPS overlay and Vulkan/OpenGL settings
+- **32-bit OpenGL** support (`driSupport32Bit`) for Wine/Proton games
+- **NVIDIA** open driver with VA-API, modesetting, Wayland env vars (`GBM_BACKEND`, `__GLX_VENDOR_LIBRARY_NAME`)
+
+`jobert` also imports `modules/vm.nix` for QEMU/KVM virtualisation with virt-manager and Spice support.
 
 Host-specific dotfiles (monitor configs, noctalia settings) live in `home/hosts/<name>/config/` and are symlinked by the host-specific HM file.
 

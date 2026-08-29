@@ -14,7 +14,7 @@ home/
 ├── desktop/                 # Desktop/GUI app configs
 │   ├── default.nix          # Aggregator
 │   ├── gtk.nix              # GTK theme, cursor
-│   ├── kitty.nix            # Kitty terminal (package + config symlink)
+│   ├── terminal.nix         # Kitty terminal (package + config symlink)
 │   ├── hyprland.nix         # Hyprland config (symlinks config/hypr/)
 │   ├── niri.nix             # Niri config (symlinks config/niri/)
 │   ├── noctalia.nix         # Noctalia lockscreen/bar (config.toml + wallpaper.toml + host-settings.toml)

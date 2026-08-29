@@ -9,7 +9,7 @@ modules/
 ├── core/                # Shared by ALL hosts (auto-imported via scanPaths)
 │   ├── default.nix      # Aggregator (imports all core modules)
 │   ├── system.nix       # Boot, networking, nix settings, user accounts
-│   ├── locale.nix       # Timezone, i18n/locale settings
+│   ├── locale.nix       # Timezone, i18n/locale settings, hardware clock (UTC)
 │   └── packages.nix     # System-wide packages
 ├── desktop/             # Desktop environment (auto-imported via scanPaths)
 │   ├── default.nix      # Aggregator (imports all desktop modules)
@@ -27,6 +27,7 @@ modules/
 ## Module Types
 
 - **`core/`** - Base system config (boot, networking, nix, users) every host needs. Always imported.
+  - `locale.nix` sets `time.hardwareClockInLocalTime = false` (RTC in UTC). See the main README for dual-boot Windows instructions.
 - **`desktop/`** - GUI/desktop config. Only imported by desktop hosts.
 - **`btrfs.nix`** - BTRFS mount options. Imported by hosts using BTRFS.
 - **`secureboot.nix`** - Lanzaboote for UEFI Secure Boot. Opt-in per host.

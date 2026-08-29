@@ -127,6 +127,18 @@ sudo chattr +C ~/.local/share/steam
 
 This must be done before any files are written to the directory. If Steam is already installed, you'll need to move the folder, create a fresh one, apply the attribute, then move files back.
 
+### Dual Boot with Windows
+
+This config sets `time.hardwareClockInLocalTime = false` in `modules/core/locale.nix`, which means the hardware clock is stored in UTC. Windows assumes the hardware clock is local time by default, so time will be wrong when switching between OSes.
+
+To fix this, run the following command in an **elevated Command Prompt** (Run as Administrator) on Windows:
+
+```
+reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\TimeZoneInformation" /v RealTimeIsUniversal /t REG_DWORD /d 1 /f
+```
+
+This tells Windows to treat the hardware clock as UTC, matching Linux. Reboot Windows after running the command.
+
 ### GitHub Access Token
 
 If you use private flakes or want to avoid GitHub rate limits:
