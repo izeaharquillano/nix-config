@@ -2,7 +2,8 @@
 
 {
   environment.systemPackages = with pkgs; [
-    # host-specific packages
+    mangohud
+    goverlay
   ];
 
   programs.steam = {
@@ -21,4 +22,6 @@
   };
 
   programs.gamemode.enable = true;
+
+  hardware.opengl.driSupport32Bit = true;
 }
