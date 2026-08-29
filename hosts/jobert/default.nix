@@ -20,6 +20,7 @@
   myfeatures = {
     btrfs.enable = true;
     secureboot.enable = true;
+    zswap.enable = true;
     vm.enable = true;
     gaming.enable = true;
   };

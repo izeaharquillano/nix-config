@@ -18,6 +18,7 @@
   myfeatures = {
     btrfs.enable = true;
     secureboot.enable = true;
+    zswap.enable = true;
   };
 
   system.stateVersion = "26.05";

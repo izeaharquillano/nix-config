@@ -41,7 +41,7 @@
   {
     nixosConfigurations.padrick = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
-      specialArgs = { inherit inputs mylib; };
+      specialArgs = { inherit inputs mylib; hostname = "padrick"; };
       modules = [
         ./hosts/padrick
         home-manager.nixosModules.home-manager
@@ -58,7 +58,7 @@
 
     nixosConfigurations.jobert = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
-      specialArgs = { inherit inputs mylib; };
+      specialArgs = { inherit inputs mylib; hostname = "jobert"; };
       modules = [
         ./hosts/jobert
         home-manager.nixosModules.home-manager
