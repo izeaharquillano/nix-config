@@ -43,6 +43,8 @@
     package = config.boot.kernelPackages.nvidiaPackages.stable;
   };
 
+  hardware.graphics.enable32Bit = true;
+
   boot.extraModprobeConfig = ''
     options nvidia NVreg_EnableS0ixPowerManagement=1
     options nvidia_drm fbdev=1 modeset=1
