@@ -30,17 +30,26 @@ A multi-host NixOS configuration using flakes and Home Manager.
 │       └── services.nix       # auto-cpufreq, UPower, systemd-resolved
 ├── modules/                   # NixOS system modules
 │   ├── core/                  # Shared by all hosts (auto-imported via scanPaths)
+│   │   ├── system.nix         # Boot, networking, nix settings (recursive-nix, warn-dirty)
+│   │   ├── locale.nix         # Timezone, locale
+│   │   └── packages.nix       # Base system packages
 │   ├── desktop/               # Desktop environment (auto-imported via scanPaths)
+│   │   ├── greetd.nix         # Login manager (tuigreet)
+│   │   ├── niri.nix           # Niri Wayland compositor
+│   │   ├── services.nix       # Pipewire, fonts, firewall, rtkit, bluetooth
+│   │   ├── p2p.nix            # Syncthing + NetBird
+│   │   └── syncthing-devices.nix
 │   ├── features/              # Optional feature modules (mkEnableOption, auto-imported)
 │   │   ├── btrfs.nix          # BTRFS mount options (myfeatures.btrfs.enable)
 │   │   ├── secureboot.nix     # UEFI Secure Boot via Lanzaboote
 │   │   ├── gaming.nix         # Steam, Gamescope, Gamemode, MangoHud
 │   │   ├── vm.nix             # QEMU/KVM + virt-manager
 │   │   ├── zswap.nix          # Zswap with zstd compression
-│   │   └── backup.nix         # Restic backups with pruning
+│   │   └── backup.nix         # Restic backups (configurable paths, repository, exclude)
 │   └── security.nix           # Neovim, nix-ld, shell aliases
 ├── home/                      # Home Manager modules
 │   ├── core/                  # Shell, packages, XDG (auto-imported via scanPaths)
+│   │   ├── shell.nix          # Git, bash, zsh (cat=bat alias), starship, zoxide
 │   ├── desktop/               # GUI app configs (auto-imported via scanPaths)
 │   └── hosts/                 # Host-specific HM overrides
 │       ├── padrick/
@@ -104,7 +113,7 @@ myfeatures = {
   vm.enable = true;          # QEMU/KVM + virt-manager
   gaming.enable = true;      # Steam, Gamescope, Gamemode, MangoHud
   zswap.enable = true;       # Zswap with zstd compression
-  backup.enable = true;      # Restic backups with pruning
+  backup.enable = true;      # Restic backups (configurable paths, repository, exclude)
 };
 ```
 
@@ -118,6 +127,24 @@ The `backup` feature module (`modules/features/backup.nix`) sets up automated ba
 myfeatures.backup.enable = true;
 ```
 
+### Configuration
+
+The module supports the following options:
+
+```nix
+myfeatures.backup = {
+  enable = true;
+  paths = [ config.users.users.ize.home ];  # paths to back up (default: home directory)
+  repository = "/mnt/backup/restic-repo";   # restic repository path
+  exclude = [                                # paths to exclude
+    ".cache"
+    ".local/share/Trash"
+    "node_modules"
+    ".cargo/registry"
+  ];
+};
+```
+
 ### Setup
 
 1. **Create the password file** before deploying:
@@ -128,16 +155,7 @@ echo "your-repo-password" | sudo tee /etc/restic/password
 sudo chmod 600 /etc/restic/password
 ```
 
-2. **Ensure the backup repository exists.** The default path is `/mnt/backup/restic-repo`. Adjust the `repository` option in `modules/features/backup.nix` if using a different location (external drive, remote mount, etc.):
-
-```nix
-config = lib.mkIf cfg.enable {
-  services.restic.backups.btrfs = {
-    repository = "/mnt/backup/restic-repo";  # change this
-    # ...
-  };
-};
-```
+2. **Ensure the backup repository exists.** The default path is `/mnt/backup/restic-repo`. Override it via the `repository` option if using a different location (external drive, remote mount, etc.).
 
 3. **Deploy:**
 
@@ -147,7 +165,7 @@ sudo nixos-rebuild switch --flake .#<hostname>
 
 ### What It Does
 
-- **Backs up** `/home/ize` (excluding `.cache`, `.local/share/Trash`, `node_modules`, `.cargo/registry`)
+- **Backs up** the configured paths (default: home directory, excluding `.cache`, `.local/share/Trash`, `node_modules`, `.cargo/registry`)
 - **Runs weekly** via systemd timer (`Persistent = true` catches missed runs)
 - **Prunes old snapshots** automatically: keeps 7 daily, 4 weekly, 6 monthly
 - **Installs `restic`** system-wide for manual operations
@@ -195,6 +213,33 @@ sudo restic -r /mnt/backup/restic-repo check
 ```
 
 Shared packages live in `modules/core/packages.nix` (system) and `home/core/packages.nix` (user).
+
+## Firewall
+
+The firewall is enabled system-wide in `modules/desktop/services.nix` via `networking.firewall`. It blocks all inbound connections by default except for explicitly allowed ports.
+
+### Open Ports
+
+| Port | Protocol | Service |
+|------|----------|---------|
+| 8384 | TCP | Syncthing GUI |
+| 22000 | TCP | Syncthing sync |
+| 21027 | UDP | Syncthing discovery |
+| 22000 | UDP | Syncthing sync |
+| 51820 | UDP | NetBird (WireGuard) |
+
+### Adding Ports
+
+To open additional ports, edit `modules/desktop/services.nix`:
+
+```nix
+networking.firewall = {
+  allowedTCPPorts = [ 8080 ];
+  allowedUDPPorts = [ 51820 ];
+  # or use ranges:
+  # allowedTCPPortRanges = [ { from = 8000; to = 8100; } ];
+};
+```
 
 ## Optional Setup
 
@@ -284,7 +329,33 @@ SMB network shares can be mounted directly from the Nemo file manager. `gvfs` an
 
 The `lib/` directory contains helper functions used throughout the config. The key helper is `scanPaths`, which auto-imports all `.nix` files in a directory (excluding `default.nix`). Adding a new module to `modules/core/`, `modules/desktop/`, `home/core/`, or `home/desktop/` only requires creating the file -- no manual import needed.
 
+## Security
+
+- **Firewall:** Enabled system-wide with explicit port allowlists (see [Firewall](#firewall))
+- **RealtimeKit:** `security.rtkit.enable` grants real-time scheduling to PipeWire for low-latency audio
+- **Polkit:** `security.polkit.enable` for privilege escalation prompts
+- **Secure Boot:** Optional via `myfeatures.secureboot.enable` (Lanzaboote)
+- **nix-ld:** Enabled for LazyVim compatibility (allows running unpatched binaries)
+
+## Nix Settings
+
+Configured in `modules/core/system.nix`:
+
+- `experimental-features`: `nix-command`, `flakes`, `recursive-nix`
+- `warn-dirty = false`: Suppresses dirty tree warnings during rebuilds
+- `auto-optimise-store = true`: Deduplicates store paths weekly
+- `gc`: Automatic garbage collection weekly, deletes generations older than 14 days
+
+## Shell
+
+- **Primary:** Zsh with autosuggestion, syntax highlighting, completions
+- **Aliases:** `cat` → `bat`, `ls`/`ll`/`lt` → `eza`, `svim` → `sudoedit`
+- **Prompt:** Starship with Nerd Font symbols
+- **Smart cd:** Zoxide
+- **Git:** LazyGit for terminal UI
+
 ## Theme
 
 - **Colors:** Gruvbox (dark) across neovim, kitty, noctalia, niri, hyprland
 - **Font:** JetBrainsMono Nerd Font
+- **Icons:** Papirus-Dark (GTK)
