@@ -5,8 +5,7 @@
     ../../modules/core
     ../../modules/desktop
     ../../modules/security.nix
-    ../../modules/btrfs.nix
-    ../../modules/secureboot.nix
+    ../../modules/features
     ./hardware-configuration.nix
     ./packages.nix
     ./services.nix
@@ -15,6 +14,11 @@
   ];
 
   networking.hostName = "padrick";
+
+  myfeatures = {
+    btrfs.enable = true;
+    secureboot.enable = true;
+  };
 
   system.stateVersion = "26.05";
 }

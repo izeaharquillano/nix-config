@@ -17,7 +17,7 @@ A Minimal (for me) Multi-host NixOS configuration using flakes and Home Manager.
 ├── scripts/                   # Utility scripts (output-scale)
 ├── hosts/                     # Per-host NixOS system configurations
 │   ├── padrick/               # Laptop (AMD, Wayland)
-│   │   ├── default.nix        # Host NixOS config
+│   │   ├── default.nix        # Host NixOS config (sets feature options)
 │   │   ├── hardware-configuration.nix
 │   │   ├── hardware.nix       # Host-specific hardware (CPU, graphics)
 │   │   ├── packages.nix       # Host-specific system packages
@@ -31,9 +31,12 @@ A Minimal (for me) Multi-host NixOS configuration using flakes and Home Manager.
 ├── modules/                   # NixOS system modules
 │   ├── core/                  # Shared by all hosts (auto-imported via scanPaths)
 │   ├── desktop/               # Desktop environment (auto-imported via scanPaths)
-│   ├── btrfs.nix              # BTRFS mount options (compress, noatime, ssd)
-│   ├── secureboot.nix         # UEFI Secure Boot (Lanzaboote), opt-in per host
-│   ├── vm.nix                 # QEMU/KVM + virt-manager, opt-in per host
+│   ├── features/              # Optional feature modules (mkEnableOption, auto-imported)
+│   │   ├── default.nix        # Aggregator (auto-imported via scanPaths)
+│   │   ├── btrfs.nix          # BTRFS mount options (myfeatures.btrfs.enable)
+│   │   ├── secureboot.nix     # UEFI Secure Boot (myfeatures.secureboot.enable)
+│   │   ├── vm.nix             # QEMU/KVM + virt-manager (myfeatures.vm.enable)
+│   │   └── gaming.nix         # Steam, Gamescope, Gamemode (myfeatures.gaming.enable)
 │   └── security.nix           # Git, neovim, nix-ld, shell aliases
 ├── home/                      # Home Manager modules
 │   ├── core/                  # Shell, packages, editor (auto-imported via scanPaths)
@@ -76,16 +79,32 @@ nix build .#nixosConfigurations.padrick.config.system.build.toplevel
 
 1. Create `hosts/<name>/default.nix` and `hardware-configuration.nix`
 2. Create `hosts/<name>/packages.nix` for host-specific system packages
-3. Create `hosts/<name>/secureboot.nix` for UEFI Secure Boot (optional, see [hosts/README.md](hosts/README.md))
-4. Create `home/hosts/<name>/default.nix` for host-specific HM config (imports core + desktop, symlinks hardware files)
-5. Create `home/hosts/<name>/packages.nix` for host-specific user packages
-6. Create `home/hosts/<name>/config/` with monitor configs:
+3. Create `hosts/<name>/services.nix` for host-specific services
+4. Enable optional features via `myfeatures.*` options in `default.nix` (see [Feature Options](#feature-options))
+5. Create `home/hosts/<name>/default.nix` for host-specific HM config (imports core + desktop, symlinks hardware files)
+6. Create `home/hosts/<name>/packages.nix` for host-specific user packages
+7. Create `home/hosts/<name>/config/` with monitor configs:
    - `niri-host-settings.kdl` with your monitor outputs
    - `hypr-host-settings.lua` for Hyprland monitor config
    - `noctalia-host-settings.toml` for Noctalia lockscreen widget config (optional)
-7. Add a new `nixosConfigurations.<name>` entry in `flake.nix` with `hostname = "<name>"` in `extraSpecialArgs`
-8. Symlink repo to `/etc/nixos` if not already done
-9. See [hosts/README.md](hosts/README.md) for a detailed walkthrough
+8. Add a new `nixosConfigurations.<name>` entry in `flake.nix` with `hostname = "<name>"` in `extraSpecialArgs`
+9. Symlink repo to `/etc/nixos` if not already done
+10. See [hosts/README.md](hosts/README.md) for a detailed walkthrough
+
+## Feature Options
+
+Optional features are gated behind `mkEnableOption` in `modules/features/`. Enable them in your host's `default.nix`:
+
+```nix
+myfeatures = {
+  btrfs.enable = true;       # BTRFS mount options (compress=zstd:3, noatime, ssd)
+  secureboot.enable = true;  # UEFI Secure Boot via Lanzaboote
+  vm.enable = true;          # QEMU/KVM + virt-manager
+  gaming.enable = true;      # Steam, Gamescope, Gamemode, MangoHud
+};
+```
+
+Adding a new feature: create `modules/features/<name>.nix` with `options.myfeatures.<name>.enable = lib.mkEnableOption "..."` and gate the config with `lib.mkIf cfg.enable`. It's auto-imported via `scanPaths`.
 
 ## Host-Specific Packages
 
@@ -166,7 +185,7 @@ Used by `services.netbird` in `modules/desktop/p2p.nix` for automatic login.
 |---|---|
 | `nixpkgs` | NixOS packages (unstable) |
 | `home-manager` | User environment management |
-| `lanzaboote` | Secure Boot (UEFI), opt-in per host via `modules/secureboot.nix` |
+| `lanzaboote` | Secure Boot (UEFI), opt-in via `myfeatures.secureboot.enable` |
 | `nixos-hardware` | NixOS hardware modules (AMD, laptop, SSD, etc.) |
 | `niri` | Niri Wayland compositor |
 | `hyprland` | Hyprland Wayland compositor |

@@ -5,9 +5,7 @@
     ../../modules/core
     ../../modules/desktop
     ../../modules/security.nix
-    ../../modules/btrfs.nix
-    ../../modules/secureboot.nix
-    ../../modules/vm.nix
+    ../../modules/features
     ./hardware-configuration.nix
     ./packages.nix
     ./services.nix
@@ -18,6 +16,13 @@
   ];
 
   networking.hostName = "jobert";
+
+  myfeatures = {
+    btrfs.enable = true;
+    secureboot.enable = true;
+    vm.enable = true;
+    gaming.enable = true;
+  };
 
   system.stateVersion = "26.05";
 }

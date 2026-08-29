@@ -29,21 +29,29 @@ hosts/jobert/
 └── services.nix
 ```
 
-Shared BTRFS mount options and Secure Boot config live in `modules/btrfs.nix` and `modules/secureboot.nix`, imported by each host's `default.nix`.
+Shared features (BTRFS, Secure Boot, gaming, virtualisation) are configured via `myfeatures.*` options in each host's `default.nix`. Feature modules live in `modules/features/` and are auto-imported via `scanPaths`.
 
 ### jobert: Gaming & Virtualization
 
-`jobert` has additional gaming and virtualization packages configured in `hosts/jobert/packages.nix`:
+`jobert` enables gaming and VM features via options in `hosts/jobert/default.nix`:
+
+```nix
+myfeatures = {
+  gaming.enable = true;  # Steam, Gamescope, Gamemode, MangoHud
+  vm.enable = true;      # QEMU/KVM + virt-manager
+};
+```
+
+The gaming module configures:
 
 - **Steam** with remote play and dedicated server firewall rules
 - **Proton GE** (`proton-ge-bin`) as an extra compatibility layer
 - **Gamescope** (Wayland gamecope session, `--rt`)
 - **Gamemode** for automatic CPU/GPU performance tuning
 - **MangoHud** and **GOverlay** for FPS overlay and Vulkan/OpenGL settings
-- **32-bit OpenGL** support (`driSupport32Bit`) for Wine/Proton games
-- **NVIDIA** open driver with VA-API, modesetting, Wayland env vars (`GBM_BACKEND`, `__GLX_VENDOR_LIBRARY_NAME`)
+- **32-bit OpenGL** support (`enable32Bit`) for Wine/Proton games
 
-`jobert` also imports `modules/vm.nix` for QEMU/KVM virtualisation with virt-manager and Spice support.
+`jobert` also has NVIDIA-specific hardware config in `hosts/jobert/hardware.nix` (open driver, VA-API, Wayland env vars).
 
 Host-specific dotfiles (monitor configs, noctalia settings) live in `home/hosts/<name>/config/` and are symlinked by the host-specific HM file.
 
@@ -119,14 +127,21 @@ Or copy from an existing host and modify.
     ../../modules/core              # Base system config
     ../../modules/desktop           # Desktop environment (skip for servers)
     ../../modules/security.nix      # Git, neovim, nix-ld
-    ../../modules/btrfs.nix         # BTRFS mount options (if using BTRFS)
-    ../../modules/secureboot.nix    # Optional: UEFI Secure Boot (omit for plain systemd-boot)
+    ../../modules/features          # Optional feature modules (auto-imported)
     ./hardware-configuration.nix
     ./packages.nix                  # Host-specific system packages
     ./services.nix                  # Host-specific services
   ];
 
   networking.hostName = "<name>";
+
+  # Enable optional features
+  myfeatures = {
+    btrfs.enable = true;          # BTRFS mount options
+    secureboot.enable = true;     # UEFI Secure Boot
+    # vm.enable = true;           # QEMU/KVM
+    # gaming.enable = true;       # Steam, Gamescope, etc.
+  };
 
   # Host-specific overrides
   # e.g. disable laptop services on a desktop:
@@ -259,7 +274,7 @@ nixosConfigurations.<name> = nixpkgs.lib.nixosSystem {
 
 ### 8. Set up Secure Boot (optional, first-time only)
 
-If you included `../../modules/secureboot.nix` in your host's imports, enroll Secure Boot keys before the first deploy:
+If you enabled `myfeatures.secureboot.enable` in your host's `default.nix`, enroll Secure Boot keys before the first deploy:
 
 ```bash
 # Create and enroll keys (interactive, requires physical presence)
@@ -272,7 +287,7 @@ sbctl status
 
 This only needs to be done once per machine. The keys are stored in `/var/lib/sbctl`.
 
-To skip Secure Boot, simply omit `../../modules/secureboot.nix` from your host's imports. The host will use plain systemd-boot.
+To skip Secure Boot, omit `secureboot.enable = true` (or set it to `false`). The host will use plain systemd-boot.
 
 ### 9. Symlink repo to /etc/nixos
 
