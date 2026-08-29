@@ -16,11 +16,12 @@
   nixpkgs.config.allowUnfree = true;
 
   nix.settings = {
-    experimental-features = [ "nix-command" "flakes" ];
+    experimental-features = [ "nix-command" "flakes" "recursive-nix" ];
     max-jobs = "auto";
     cores = 0;
     http-connections = 50;
     auto-optimise-store = true;
+    warn-dirty = false;
   };
 
   nix.gc = {

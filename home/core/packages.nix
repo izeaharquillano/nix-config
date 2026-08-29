@@ -15,6 +15,7 @@
     starship
     tealdeer
     xdg-user-dirs
+    bat
 
     # terminal tools
     btop-cuda
