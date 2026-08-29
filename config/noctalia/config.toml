@@ -1,7 +1,7 @@
 config_version = 13
 
 [bar.default]
-end = [ "tray", "brightness", "volume", "network", "battery", "control-center", "session" ]
+end = [ "tray", "brightness", "volume", "battery", "network", "control-center", "session" ]
 font_family = "JetBrainsMono NF"
 margin_ends = 3
 widget_spacing = 15
