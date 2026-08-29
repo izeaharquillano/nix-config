@@ -1,6 +1,11 @@
 { pkgs, ... }:
 
 {
+  programs.git.settings = {
+    userName = "Izeah Arquillano";
+    userEmail = "izeaharquillano@gmail.com";
+  };
+
   programs = {
     bash = {
       enable = true;

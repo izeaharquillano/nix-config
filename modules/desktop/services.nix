@@ -1,6 +1,14 @@
 { pkgs, ... }:
 
 {
+  programs.zsh.enable = true;
+
+  programs.hyprland.enable = true;
+
+  fonts.packages = with pkgs; [
+    nerd-fonts.jetbrains-mono
+  ];
+
   services.blueman.enable = true;
   services.fwupd.enable = true;
   security.polkit.enable = true;
