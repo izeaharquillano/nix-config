@@ -5,12 +5,12 @@
     ../../modules/core
     ../../modules/desktop
     ../../modules/security.nix
+    ../../modules/btrfs.nix
+    ../../modules/secureboot.nix
     ./hardware-configuration.nix
     ./packages.nix
     ./services.nix
     ./hardware.nix
-    ./disk.nix
-    ./secureboot.nix
     inputs.nixos-hardware.nixosModules.lenovo-thinkpad-t14-amd-gen1
   ];
 

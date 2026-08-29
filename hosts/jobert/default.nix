@@ -5,13 +5,13 @@
     ../../modules/core
     ../../modules/desktop
     ../../modules/security.nix
+    ../../modules/btrfs.nix
+    ../../modules/secureboot.nix
+    ../../modules/vm.nix
     ./hardware-configuration.nix
     ./packages.nix
     ./services.nix
-    ./boot.nix
-    ./disk.nix
-    ./graphics.nix
-    ./secureboot.nix
+    ./hardware.nix
     inputs.nixos-hardware.nixosModules.common-cpu-amd
     inputs.nixos-hardware.nixosModules.common-pc-laptop
     inputs.nixos-hardware.nixosModules.common-pc-ssd

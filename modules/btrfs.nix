@@ -1,4 +1,4 @@
-{ config, pkgs, lib, ... }:
+{ ... }:
 
 let
   btrfsOpts = [ "compress=zstd:3" "noatime" "ssd" "commit=120" ];

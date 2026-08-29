@@ -18,11 +18,18 @@ hosts/padrick/
 ├── default.nix                 # Host NixOS config (imports modules)
 ├── hardware-configuration.nix  # Auto-generated hardware scan
 ├── hardware.nix                # Host-specific hardware (CPU, graphics)
-├── disk.nix                    # Disk/partition config
 ├── packages.nix                # Host-specific system packages
-├── services.nix                # Host-specific services (TLP, UPower, etc.)
-└── secureboot.nix              # Optional: UEFI Secure Boot (Lanzaboote)
+└── services.nix                # Host-specific services (TLP, UPower, etc.)
+
+hosts/jobert/
+├── default.nix
+├── hardware-configuration.nix
+├── hardware.nix                # GPU, boot params, zswap, swap
+├── packages.nix
+└── services.nix
 ```
+
+Shared BTRFS mount options and Secure Boot config live in `modules/btrfs.nix` and `modules/secureboot.nix`, imported by each host's `default.nix`.
 
 Host-specific dotfiles (monitor configs, noctalia settings) live in `home/hosts/<name>/config/` and are symlinked by the host-specific HM file.
 
@@ -98,10 +105,11 @@ Or copy from an existing host and modify.
     ../../modules/core              # Base system config
     ../../modules/desktop           # Desktop environment (skip for servers)
     ../../modules/security.nix      # Git, neovim, nix-ld
+    ../../modules/btrfs.nix         # BTRFS mount options (if using BTRFS)
+    ../../modules/secureboot.nix    # Optional: UEFI Secure Boot (omit for plain systemd-boot)
     ./hardware-configuration.nix
     ./packages.nix                  # Host-specific system packages
     ./services.nix                  # Host-specific services
-    ./secureboot.nix                # Optional: UEFI Secure Boot (omit for plain systemd-boot)
   ];
 
   networking.hostName = "<name>";
@@ -156,11 +164,9 @@ Services enabled in `modules/core/` or `modules/desktop/` apply to all hosts via
 { lib, ... }:
 
 {
-  # Disable netbird (modules/desktop/services.nix)
-  services.netbird.enable = lib.mkForce false;
-
-  # Disable syncthing (modules/desktop/services.nix)
+  # Disable syncthing and netbird (modules/desktop/p2p.nix)
   services.syncthing.enable = lib.mkForce false;
+  services.netbird.enable = lib.mkForce false;
 
   # Disable laptop services on a desktop
   services.tlp.enable = lib.mkForce false;
@@ -239,7 +245,7 @@ nixosConfigurations.<name> = nixpkgs.lib.nixosSystem {
 
 ### 8. Set up Secure Boot (optional, first-time only)
 
-If you created `hosts/<name>/secureboot.nix`, enroll Secure Boot keys before the first deploy:
+If you included `../../modules/secureboot.nix` in your host's imports, enroll Secure Boot keys before the first deploy:
 
 ```bash
 # Create and enroll keys (interactive, requires physical presence)
@@ -252,7 +258,7 @@ sbctl status
 
 This only needs to be done once per machine. The keys are stored in `/var/lib/sbctl`.
 
-To skip Secure Boot, simply omit `./secureboot.nix` from your host's imports. The host will use plain systemd-boot.
+To skip Secure Boot, simply omit `../../modules/secureboot.nix` from your host's imports. The host will use plain systemd-boot.
 
 ### 9. Symlink repo to /etc/nixos
 

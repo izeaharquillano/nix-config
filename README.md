@@ -21,21 +21,20 @@ A Minimal (for me) Multi-host NixOS configuration using flakes and Home Manager.
 │   │   ├── hardware-configuration.nix
 │   │   ├── hardware.nix       # Host-specific hardware (CPU, graphics)
 │   │   ├── packages.nix       # Host-specific system packages
-│   │   ├── services.nix       # Host-specific services (TLP, UPower, etc.)
-│   │   └── secureboot.nix     # Optional: UEFI Secure Boot (Lanzaboote)
-│   └── jobert/                # Desktop (AMD, Wayland)
+│   │   └── services.nix       # Host-specific services (TLP, UPower, etc.)
+│   └── jobert/                # Gaming laptop (AMD, Wayland)
 │       ├── default.nix
-│       ├── boot.nix           # Boot config (GRUB, systemd-boot)
-│       ├── disk.nix           # Disk/partition config
-│       ├── graphics.nix       # Graphics driver config
 │       ├── hardware-configuration.nix
+│       ├── hardware.nix       # GPU, boot params, zswap, swap
 │       ├── packages.nix
-│       ├── services.nix
-│       └── secureboot.nix
+│       └── services.nix
 ├── modules/                   # NixOS system modules
 │   ├── core/                  # Shared by all hosts (auto-imported via scanPaths)
 │   ├── desktop/               # Desktop environment (auto-imported via scanPaths)
-│   └── security.nix
+│   ├── btrfs.nix              # BTRFS mount options (compress, noatime, ssd)
+│   ├── secureboot.nix         # UEFI Secure Boot (Lanzaboote), opt-in per host
+│   ├── vm.nix                 # QEMU/KVM + virt-manager, opt-in per host
+│   └── security.nix           # Git, neovim, nix-ld, shell aliases
 ├── home/                      # Home Manager modules
 │   ├── core/                  # Shell, git, packages, editor (auto-imported via scanPaths)
 │   ├── desktop/               # GUI app configs (auto-imported via scanPaths)
@@ -147,7 +146,7 @@ sudo mkdir -p /etc/netbird
 echo "your-netbird-setup-key" | sudo tee /etc/netbird/setup-key
 ```
 
-Used by `services.netbird` in `modules/desktop/services.nix` for automatic login.
+Used by `services.netbird` in `modules/desktop/p2p.nix` for automatic login.
 
 ## Flake Inputs
 
@@ -155,7 +154,7 @@ Used by `services.netbird` in `modules/desktop/services.nix` for automatic login
 |---|---|
 | `nixpkgs` | NixOS packages (unstable) |
 | `home-manager` | User environment management |
-| `lanzaboote` | Secure Boot (UEFI), opt-in per host via `hosts/<name>/secureboot.nix` |
+| `lanzaboote` | Secure Boot (UEFI), opt-in per host via `modules/secureboot.nix` |
 | `nixos-hardware` | NixOS hardware modules (AMD, laptop, SSD, etc.) |
 | `niri` | Niri Wayland compositor |
 | `hyprland` | Hyprland Wayland compositor |

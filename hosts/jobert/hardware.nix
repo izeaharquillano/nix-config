@@ -1,6 +1,27 @@
 { config, pkgs, lib, ... }:
 
 {
+  boot.kernelParams = [
+    "amd_pstate=active"
+    "amd_pmc.suspend_delay=1"
+  ];
+
+  boot.kernel.sysctl."vm.swappiness" = 10;
+
+  boot.zswap = {
+    enable = true;
+    compressor = "zstd";
+    zpool = "zsmalloc";
+    maxPoolPercent = 25;
+    acceptThresholdPercent = 90;
+    shrinkerEnabled = true;
+  };
+
+  swapDevices = [{
+    device = "/dev/disk/by-uuid/64be0cf0-e081-46aa-84c8-03d7d602d89b";
+    options = [ "discard" ];
+  }];
+
   boot.initrd.kernelModules = [ "nvidia" ];
 
   hardware.graphics = {
