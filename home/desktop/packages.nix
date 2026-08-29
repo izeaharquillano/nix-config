@@ -10,6 +10,7 @@
     xwayland-satellite
 
     # gui apps
+    (bottles.override { removeWarningPopup = true; })
     gvfs
     mpv
     qimgv
