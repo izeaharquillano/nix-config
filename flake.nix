@@ -10,7 +10,7 @@
     };
 
     lanzaboote = {
-      url = "github:nix-community/lanzaboote/v1.1.0";
+      url = "github:nix-community/lanzaboote";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -30,47 +30,40 @@
       inputs.home-manager.follows = "home-manager";
     };
 
-    niri.url = "github:sodiboo/niri-flake";
-    hyprland.url = "github:hyprwm/Hyprland";
+    niri = {
+      url = "github:sodiboo/niri-flake";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    hyprland = {
+      url = "github:hyprwm/Hyprland";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = inputs@{ self, nixpkgs, home-manager, ... }:
   let
     mylib = import ./lib { lib = nixpkgs.lib; };
+
+    mkHost = hostname: nixpkgs.lib.nixosSystem {
+      system = "x86_64-linux";
+      specialArgs = { inherit inputs mylib; inherit hostname; };
+      modules = [
+        ./hosts/${hostname}
+        home-manager.nixosModules.home-manager
+        {
+          home-manager = {
+            useGlobalPkgs = true;
+            useUserPackages = true;
+            users.ize = import ./home/hosts/${hostname};
+            extraSpecialArgs = { inherit inputs mylib; inherit hostname; };
+          };
+        }
+      ];
+    };
   in
   {
-    nixosConfigurations.padrick = nixpkgs.lib.nixosSystem {
-      system = "x86_64-linux";
-      specialArgs = { inherit inputs mylib; hostname = "padrick"; };
-      modules = [
-        ./hosts/padrick
-        home-manager.nixosModules.home-manager
-        {
-          home-manager = {
-            useGlobalPkgs = true;
-            useUserPackages = true;
-            users.ize = import ./home/hosts/padrick;
-            extraSpecialArgs = { inherit inputs mylib; hostname = "padrick"; };
-          };
-        }
-      ];
-    };
-
-    nixosConfigurations.jobert = nixpkgs.lib.nixosSystem {
-      system = "x86_64-linux";
-      specialArgs = { inherit inputs mylib; hostname = "jobert"; };
-      modules = [
-        ./hosts/jobert
-        home-manager.nixosModules.home-manager
-        {
-          home-manager = {
-            useGlobalPkgs = true;
-            useUserPackages = true;
-            users.ize = import ./home/hosts/jobert;
-            extraSpecialArgs = { inherit inputs mylib; hostname = "jobert"; };
-          };
-        }
-      ];
-    };
+    nixosConfigurations.padrick = mkHost "padrick";
+    nixosConfigurations.jobert = mkHost "jobert";
   };
 }

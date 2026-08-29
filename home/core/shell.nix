@@ -1,12 +1,16 @@
 { pkgs, ... }:
 
 {
-  programs.git.settings = {
-    userName = "Izeah Arquillano";
-    userEmail = "izeaharquillano@gmail.com";
-  };
-
   programs = {
+    git = {
+      enable = true;
+      settings = {
+        user = {
+          name = "Izeah Arquillano";
+          email = "izeaharquillano@gmail.com";
+        };
+      };
+    };
     bash = {
       enable = true;
       shellAliases = {

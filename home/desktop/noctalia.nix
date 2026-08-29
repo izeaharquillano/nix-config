@@ -13,15 +13,17 @@ in
   xdg.configFile."noctalia/config.toml".source = ../../config/noctalia/config.toml;
   xdg.configFile."noctalia/wallpapers".source = ../../_img/wallpapers;
 
-  xdg.configFile."noctalia/wallpaper.toml".text = ''
+  xdg.configFile."noctalia/wallpaper.toml".text = let
+    wp = "${config.home.homeDirectory}/.config/noctalia/wallpapers/gruv-abstract-maze.png";
+  in ''
     [wallpaper.default]
-    path = "${config.home.homeDirectory}/.config/noctalia/wallpapers/gruv-abstract-maze.png"
+    path = "${wp}"
 
     [wallpaper.last]
-    path = "${config.home.homeDirectory}/.config/noctalia/wallpapers/gruv-abstract-maze.png"
+    path = "${wp}"
 
     [wallpaper.monitors.eDP-1]
-    path = "${config.home.homeDirectory}/.config/noctalia/wallpapers/gruv-abstract-maze.png"
+    path = "${wp}"
   '';
 
   xdg.configFile."noctalia/host-settings.toml".text = hostSettings;

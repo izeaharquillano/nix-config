@@ -15,18 +15,18 @@ Each host directory contains hardware-specific config files:
 
 ```
 hosts/padrick/
-├── default.nix                 # Host NixOS config (imports modules)
+├── default.nix                 # Host NixOS config (imports modules, enables features)
 ├── hardware-configuration.nix  # Auto-generated hardware scan
-├── hardware.nix                # Host-specific hardware (CPU, graphics)
+├── hardware.nix                # Kernel params, swap, VA-API
 ├── packages.nix                # Host-specific system packages
-└── services.nix                # Host-specific services (TLP, UPower, etc.)
+└── services.nix                # TLP, UPower, mic-mute LED sync
 
 hosts/jobert/
 ├── default.nix
 ├── hardware-configuration.nix
-├── hardware.nix                # GPU, boot params, zswap, swap
+├── hardware.nix                # NVIDIA driver, boot params, session vars
 ├── packages.nix
-└── services.nix
+└── services.nix                # auto-cpufreq, UPower, systemd-resolved
 ```
 
 Shared features (BTRFS, Secure Boot, gaming, virtualisation) are configured via `myfeatures.*` options in each host's `default.nix`. Feature modules live in `modules/features/` and are auto-imported via `scanPaths`.
@@ -37,8 +37,11 @@ Shared features (BTRFS, Secure Boot, gaming, virtualisation) are configured via 
 
 ```nix
 myfeatures = {
-  gaming.enable = true;  # Steam, Gamescope, Gamemode, MangoHud
-  vm.enable = true;      # QEMU/KVM + virt-manager
+  btrfs.enable = true;       # BTRFS mount options
+  secureboot.enable = true;  # UEFI Secure Boot
+  zswap.enable = true;       # Zswap with zstd compression
+  vm.enable = true;          # QEMU/KVM + virt-manager
+  gaming.enable = true;      # Steam, Gamescope, Gamemode, MangoHud
 };
 ```
 
@@ -49,9 +52,8 @@ The gaming module configures:
 - **Gamescope** (Wayland gamecope session, `--rt`)
 - **Gamemode** for automatic CPU/GPU performance tuning
 - **MangoHud** and **GOverlay** for FPS overlay and Vulkan/OpenGL settings
-- **32-bit OpenGL** support (`enable32Bit`) for Wine/Proton games
 
-`jobert` also has NVIDIA-specific hardware config in `hosts/jobert/hardware.nix` (open driver, VA-API, Wayland env vars).
+`jobert` also has NVIDIA-specific hardware config in `hosts/jobert/hardware.nix` (open driver, VA-API, Wayland env vars, 32-bit OpenGL).
 
 Host-specific dotfiles (monitor configs, noctalia settings) live in `home/hosts/<name>/config/` and are symlinked by the host-specific HM file.
 
@@ -126,11 +128,12 @@ Or copy from an existing host and modify.
   imports = [
     ../../modules/core              # Base system config
     ../../modules/desktop           # Desktop environment (skip for servers)
-    ../../modules/security.nix      # Git, neovim, nix-ld
+    ../../modules/security.nix      # Neovim, nix-ld
     ../../modules/features          # Optional feature modules (auto-imported)
     ./hardware-configuration.nix
     ./packages.nix                  # Host-specific system packages
     ./services.nix                  # Host-specific services
+    ./hardware.nix                  # Host-specific hardware (kernel params, swap, GPU)
   ];
 
   networking.hostName = "<name>";
@@ -139,13 +142,11 @@ Or copy from an existing host and modify.
   myfeatures = {
     btrfs.enable = true;          # BTRFS mount options
     secureboot.enable = true;     # UEFI Secure Boot
+    zswap.enable = true;          # Zswap with zstd compression
+    # backup.enable = true;       # Restic backups
     # vm.enable = true;           # QEMU/KVM
     # gaming.enable = true;       # Steam, Gamescope, etc.
   };
-
-  # Host-specific overrides
-  # e.g. disable laptop services on a desktop:
-  # services.tlp.enable = lib.mkForce false;
 
   system.stateVersion = "26.05";
 }
@@ -156,9 +157,11 @@ Or copy from an existing host and modify.
 Host-specific services that differ from the shared desktop modules. For laptops, include power management and hardware-specific services:
 
 ```nix
-{ pkgs, ... }:
+{ pkgs, lib, ... }:
 
 {
+  services.resolved.enable = true;  # systemd-resolved for DNS
+
   # Power management (disable power-profiles-daemon when using TLP)
   services.power-profiles-daemon.enable = false;
   services.tlp = {
@@ -166,8 +169,6 @@ Host-specific services that differ from the shared desktop modules. For laptops,
     settings = {
       CPU_SCALING_GOVERNOR_ON_AC = "performance";
       CPU_SCALING_GOVERNOR_ON_BAT = "powersave";
-      CPU_ENERGY_PERF_POLICY_ON_AC = "performance";
-      CPU_ENERGY_PERF_POLICY_ON_BAT = "power";
     };
   };
 
@@ -178,8 +179,6 @@ Host-specific services that differ from the shared desktop modules. For laptops,
     percentageAction = 2;
     criticalPowerAction = "PowerOff";
   };
-
-  # Add host-specific udev rules, systemd services, etc.
 }
 ```
 
@@ -244,33 +243,19 @@ Create `home/hosts/<name>/default.nix`:
   ];
 
   xdg.configFile."niri/niri-host-settings.kdl".source = ./config/niri-host-settings.kdl;
-
   xdg.configFile."hypr/hypr-host-settings.lua".source = ./config/hypr-host-settings.lua;
 }
 ```
 
 ### 7. Register in `flake.nix`
 
-Add a new entry in the `outputs` attrset:
+Add a new `mkHost` call in the `outputs` attrset:
 
 ```nix
-nixosConfigurations.<name> = nixpkgs.lib.nixosSystem {
-  system = "x86_64-linux";
-  specialArgs = { inherit inputs mylib; };
-  modules = [
-    ./hosts/<name>
-    home-manager.nixosModules.home-manager
-    {
-      home-manager = {
-        useGlobalPkgs = true;
-        useUserPackages = true;
-        users.ize = import ./home/hosts/<name>;
-        extraSpecialArgs = { inherit inputs mylib; hostname = "<name>"; };
-      };
-    }
-  ];
-};
+nixosConfigurations.<name> = mkHost "<name>";
 ```
+
+The `mkHost` helper handles all the boilerplate (system, specialArgs, home-manager config). See the root README for details.
 
 ### 8. Set up Secure Boot (optional, first-time only)
 
@@ -321,4 +306,4 @@ If you use private flakes or want to avoid GitHub rate limits, create a token fi
 echo "access-tokens = github.com=ghp_GithubTokenHere" | sudo tee /etc/nix/github-token.conf
 ```
 
-Nix reads this automatically via `nix.extraOptions` in `modules/core/system.nix`.
+Nix reads this automatically via `nix.extraOptions` in `modules/core/system.nix`. The config handles missing files gracefully.

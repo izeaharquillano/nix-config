@@ -1,16 +1,19 @@
-{ ... }:
+{ pkgs, lib, config, ... }:
 
+let
+  devicesFile = ./syncthing-devices.nix;
+  hasDevices = builtins.pathExists devicesFile;
+  devices = if hasDevices then import devicesFile else {};
+in
 {
-  services.syncthing = {
+  services.syncthing = lib.mkIf hasDevices {
     enable = true;
     openDefaultPorts = true;
     user = "ize";
     dataDir = "/home/ize/Documents";
     configDir = "/home/ize/.config/syncthing";
     settings = {
-      devices = {
-        "Server" = { id = "JDJRA5Z-2BXVR3Z-GTHRJND-AIJLXZW-TAMJRXF-CYYTJMM-6LKWWT7-QCD32AA"; };
-      };
+      inherit devices;
       folders = {
         "Obsidian" = {
           path = "/home/ize/Documents/obsidian";

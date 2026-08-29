@@ -6,7 +6,7 @@ Raw application configuration files (dotfiles) consumed by Home Manager via `xdg
 
 ```
 config/
-├── kitty/kitty.conf     # kitty terminal config
+├── kitty/kitty.conf     # Kitty terminal config
 ├── hypr/                # Hyprland Lua config (keybinds, rules, plugins)
 │   ├── hyprland.lua     # Main config (requires hypr-host-settings, animations, etc.)
 │   ├── keybindings.lua  # Key bindings
@@ -14,8 +14,7 @@ config/
 │   ├── animations.lua   # Animation config
 │   └── plugins/         # Hyprland plugins (hyprbars)
 ├── niri/
-│   ├── config.kdl       # Niri config (includes niri-host-settings.kdl)
-│   └── config.kdl.old   # Old reference config
+│   └── config.kdl       # Niri config (includes niri-host-settings.kdl)
 ├── noctalia/config.toml # Noctalia Wayland bar/shell (symlinked, wallpaper in wallpaper.toml)
 ├── nvim/                # Neovim LazyVim config (Lua)
 ├── starship.toml        # Starship prompt config
@@ -27,7 +26,7 @@ config/
 In `home/desktop/*.nix`, each module symlinks its config into `~/.config/`:
 
 ```nix
-# Example from home/desktop/kitty.nix
+# Example from home/desktop/terminal.nix
 xdg.configFile."kitty/kitty.conf".source = ../../config/kitty/kitty.conf;
 ```
 

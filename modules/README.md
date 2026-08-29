@@ -7,24 +7,27 @@ System-level NixOS configuration split into reusable modules.
 ```
 modules/
 ├── core/                # Shared by ALL hosts (auto-imported via scanPaths)
-│   ├── default.nix      # Aggregator (imports all core modules)
+│   ├── default.nix      # Aggregator (auto-imported via scanPaths)
 │   ├── system.nix       # Boot, networking, nix settings, user accounts
 │   ├── locale.nix       # Timezone, i18n/locale settings, hardware clock (UTC)
 │   └── packages.nix     # System-wide packages
 ├── desktop/             # Desktop environment (auto-imported via scanPaths)
-│   ├── default.nix      # Aggregator (imports all desktop modules)
+│   ├── default.nix      # Aggregator (auto-imported via scanPaths)
 │   ├── greetd.nix       # Login manager (tuigreet)
 │   ├── niri.nix         # Niri Wayland compositor
 │   ├── p2p.nix          # Syncthing + Netbird (disable per host with mkForce)
 │   ├── services.nix     # blueman, fwupd, pipewire, bluetooth, gvfs, polkit, zsh, hyprland, fonts
-│   └── hardware.nix     # Laptop-specific (battery, power management)
+│   ├── syncthing-devices.nix         # Syncthing device IDs (gitignored)
+│   └── syncthing-devices.nix.example # Template for device IDs
 ├── features/            # Optional feature modules (mkEnableOption, auto-imported)
 │   ├── default.nix      # Aggregator (auto-imported via scanPaths)
 │   ├── btrfs.nix        # BTRFS mount options (myfeatures.btrfs.enable)
 │   ├── secureboot.nix   # UEFI Secure Boot (myfeatures.secureboot.enable)
 │   ├── vm.nix           # QEMU/KVM + virt-manager (myfeatures.vm.enable)
-│   └── gaming.nix       # Steam, Gamescope, Gamemode (myfeatures.gaming.enable)
-└── security.nix         # Git, neovim, nix-ld, shell aliases
+│   ├── gaming.nix       # Steam, Gamescope, Gamemode (myfeatures.gaming.enable)
+│   ├── zswap.nix        # Zswap with zstd compression (myfeatures.zswap.enable)
+│   └── backup.nix       # Restic backups (myfeatures.backup.enable)
+└── security.nix         # Neovim, nix-ld, shell aliases
 ```
 
 ## Module Types
@@ -33,7 +36,7 @@ modules/
   - `locale.nix` sets `time.hardwareClockInLocalTime = false` (RTC in UTC). See the main README for dual-boot Windows instructions.
 - **`desktop/`** - GUI/desktop config. Only imported by desktop hosts.
 - **`features/`** - Optional features gated behind `mkEnableOption`. Auto-imported via `scanPaths`; enable per host with `myfeatures.<name>.enable`.
-- **`security.nix`** - Shared tools (git, editor). Imported separately for flexibility.
+- **`security.nix`** - Neovim, nix-ld, shell aliases. Imported separately for flexibility.
 
 ## Feature Options
 
@@ -45,8 +48,20 @@ myfeatures = {
   secureboot.enable = true;  # UEFI Secure Boot via Lanzaboote
   vm.enable = true;          # QEMU/KVM + virt-manager
   gaming.enable = true;      # Steam, Gamescope, Gamemode, MangoHud
+  zswap.enable = true;       # Zswap with zstd compression
+  backup.enable = true;      # Restic backups with pruning
 };
 ```
+
+### Backup Feature
+
+The `backup` feature module sets up automated backups using Restic. See the [main README](../README.md#backup) for full setup instructions.
+
+Key details:
+- Backs up `/home/ize` weekly
+- Excludes `.cache`, `.local/share/Trash`, `node_modules`, `.cargo/registry`
+- Prunes to 7 daily, 4 weekly, 6 monthly snapshots
+- Requires `/etc/restic/password` and a repository path (default: `/mnt/backup/restic-repo`)
 
 ### Adding a new feature
 

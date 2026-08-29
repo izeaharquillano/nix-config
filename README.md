@@ -1,6 +1,6 @@
 # nixos-conf
 
-A Minimal (for me) Multi-host NixOS configuration using flakes and Home Manager.
+A multi-host NixOS configuration using flakes and Home Manager.
 
 ## Desktops
 
@@ -12,50 +12,51 @@ A Minimal (for me) Multi-host NixOS configuration using flakes and Home Manager.
 
 ```
 .
-├── flake.nix                  # Flake entry point (passes hostname via extraSpecialArgs)
-├── lib/                       # Custom Nix library helpers (scanPaths, etc.)
+├── flake.nix                  # Flake entry point (mkHost helper, passes hostname via specialArgs)
+├── lib/                       # Custom Nix library helpers (scanPaths)
 ├── scripts/                   # Utility scripts (output-scale)
 ├── hosts/                     # Per-host NixOS system configurations
-│   ├── padrick/               # Laptop (AMD, Wayland)
-│   │   ├── default.nix        # Host NixOS config (sets feature options)
+│   ├── padrick/               # ThinkPad T14 AMD Gen1 (daily use)
+│   │   ├── default.nix        # Host config (imports modules, enables features)
 │   │   ├── hardware-configuration.nix
-│   │   ├── hardware.nix       # Host-specific hardware (CPU, graphics)
+│   │   ├── hardware.nix       # Kernel params, swap, VA-API
 │   │   ├── packages.nix       # Host-specific system packages
-│   │   └── services.nix       # Host-specific services (TLP, UPower, etc.)
-│   └── jobert/                # Gaming laptop (AMD, Wayland)
+│   │   └── services.nix       # TLP, UPower, mic-mute LED sync
+│   └── jobert/                # AMD + NVIDIA gaming laptop
 │       ├── default.nix
 │       ├── hardware-configuration.nix
-│       ├── hardware.nix       # GPU, boot params, zswap, swap
+│       ├── hardware.nix       # NVIDIA driver, boot params, session vars
 │       ├── packages.nix
-│       └── services.nix
+│       └── services.nix       # auto-cpufreq, UPower, systemd-resolved
 ├── modules/                   # NixOS system modules
 │   ├── core/                  # Shared by all hosts (auto-imported via scanPaths)
 │   ├── desktop/               # Desktop environment (auto-imported via scanPaths)
 │   ├── features/              # Optional feature modules (mkEnableOption, auto-imported)
-│   │   ├── default.nix        # Aggregator (auto-imported via scanPaths)
 │   │   ├── btrfs.nix          # BTRFS mount options (myfeatures.btrfs.enable)
-│   │   ├── secureboot.nix     # UEFI Secure Boot (myfeatures.secureboot.enable)
-│   │   ├── vm.nix             # QEMU/KVM + virt-manager (myfeatures.vm.enable)
-│   │   └── gaming.nix         # Steam, Gamescope, Gamemode (myfeatures.gaming.enable)
-│   └── security.nix           # Git, neovim, nix-ld, shell aliases
+│   │   ├── secureboot.nix     # UEFI Secure Boot via Lanzaboote
+│   │   ├── gaming.nix         # Steam, Gamescope, Gamemode, MangoHud
+│   │   ├── vm.nix             # QEMU/KVM + virt-manager
+│   │   ├── zswap.nix          # Zswap with zstd compression
+│   │   └── backup.nix         # Restic backups with pruning
+│   └── security.nix           # Neovim, nix-ld, shell aliases
 ├── home/                      # Home Manager modules
-│   ├── core/                  # Shell, packages, editor (auto-imported via scanPaths)
+│   ├── core/                  # Shell, packages, XDG (auto-imported via scanPaths)
 │   ├── desktop/               # GUI app configs (auto-imported via scanPaths)
-│   └── hosts/                 # Host-specific HM overrides + per-host configs
+│   └── hosts/                 # Host-specific HM overrides
 │       ├── padrick/
-│       │   ├── default.nix    # Host HM config (imports core + desktop, symlinks hardware)
-│       │   ├── packages.nix   # Host-specific user packages
+│       │   ├── default.nix    # Imports core + desktop, symlinks host configs
+│       │   ├── packages.nix
 │       │   └── config/        # Host-specific dotfiles
 │       │       ├── niri-host-settings.kdl
 │       │       ├── hypr-host-settings.lua
-│       │       └── noctalia-host-settings.toml  # Noctalia lockscreen widget config
+│       │       └── noctalia-host-settings.toml
 │       └── jobert/
 │           ├── default.nix
 │           ├── packages.nix
 │           └── config/
 │               ├── niri-host-settings.kdl
 │               ├── hypr-host-settings.lua
-│               └── noctalia-host-settings.toml  # Noctalia lockscreen widget config
+│               └── noctalia-host-settings.toml
 └── config/                    # Shared raw dotfiles (nvim, hypr, niri, kitty, tmux, noctalia)
 ```
 
@@ -80,16 +81,17 @@ nix build .#nixosConfigurations.padrick.config.system.build.toplevel
 1. Create `hosts/<name>/default.nix` and `hardware-configuration.nix`
 2. Create `hosts/<name>/packages.nix` for host-specific system packages
 3. Create `hosts/<name>/services.nix` for host-specific services
-4. Enable optional features via `myfeatures.*` options in `default.nix` (see [Feature Options](#feature-options))
-5. Create `home/hosts/<name>/default.nix` for host-specific HM config (imports core + desktop, symlinks hardware files)
-6. Create `home/hosts/<name>/packages.nix` for host-specific user packages
-7. Create `home/hosts/<name>/config/` with monitor configs:
+4. Create `hosts/<name>/hardware.nix` for host-specific hardware config (kernel params, swap, GPU)
+5. Enable optional features via `myfeatures.*` options in `default.nix` (see [Feature Options](#feature-options))
+6. Create `home/hosts/<name>/default.nix` for host-specific HM config (imports core + desktop)
+7. Create `home/hosts/<name>/packages.nix` for host-specific user packages
+8. Create `home/hosts/<name>/config/` with monitor configs:
    - `niri-host-settings.kdl` with your monitor outputs
    - `hypr-host-settings.lua` for Hyprland monitor config
    - `noctalia-host-settings.toml` for Noctalia lockscreen widget config (optional)
-8. Add a new `nixosConfigurations.<name>` entry in `flake.nix` with `hostname = "<name>"` in `extraSpecialArgs`
-9. Symlink repo to `/etc/nixos` if not already done
-10. See [hosts/README.md](hosts/README.md) for a detailed walkthrough
+9. Add a new `nixosConfigurations.<name>` entry in `flake.nix` (or add to `mkHost` calls)
+10. Symlink repo to `/etc/nixos` if not already done
+11. See [hosts/README.md](hosts/README.md) for a detailed walkthrough
 
 ## Feature Options
 
@@ -101,10 +103,70 @@ myfeatures = {
   secureboot.enable = true;  # UEFI Secure Boot via Lanzaboote
   vm.enable = true;          # QEMU/KVM + virt-manager
   gaming.enable = true;      # Steam, Gamescope, Gamemode, MangoHud
+  zswap.enable = true;       # Zswap with zstd compression
+  backup.enable = true;      # Restic backups with pruning
 };
 ```
 
 Adding a new feature: create `modules/features/<name>.nix` with `options.myfeatures.<name>.enable = lib.mkEnableOption "..."` and gate the config with `lib.mkIf cfg.enable`. It's auto-imported via `scanPaths`.
+
+## Backup
+
+The `backup` feature module (`modules/features/backup.nix`) sets up automated backups using [Restic](https://restic.net/). Enable it per host:
+
+```nix
+myfeatures.backup.enable = true;
+```
+
+### Setup
+
+1. **Create the password file** before deploying:
+
+```bash
+sudo mkdir -p /etc/restic
+echo "your-repo-password" | sudo tee /etc/restic/password
+sudo chmod 600 /etc/restic/password
+```
+
+2. **Ensure the backup repository exists.** The default path is `/mnt/backup/restic-repo`. Adjust the `repository` option in `modules/features/backup.nix` if using a different location (external drive, remote mount, etc.):
+
+```nix
+config = lib.mkIf cfg.enable {
+  services.restic.backups.btrfs = {
+    repository = "/mnt/backup/restic-repo";  # change this
+    # ...
+  };
+};
+```
+
+3. **Deploy:**
+
+```bash
+sudo nixos-rebuild switch --flake .#<hostname>
+```
+
+### What It Does
+
+- **Backs up** `/home/ize` (excluding `.cache`, `.local/share/Trash`, `node_modules`, `.cargo/registry`)
+- **Runs weekly** via systemd timer (`Persistent = true` catches missed runs)
+- **Prunes old snapshots** automatically: keeps 7 daily, 4 weekly, 6 monthly
+- **Installs `restic`** system-wide for manual operations
+
+### Manual Operations
+
+```bash
+# List snapshots
+sudo restic -r /mnt/backup/restic-repo snapshots
+
+# Restore a specific snapshot
+sudo restic -r /mnt/backup/restic-repo restore latest --target /tmp/restore
+
+# Run a backup manually
+sudo systemctl start restic-backup-btrfs.service
+
+# Check repository integrity
+sudo restic -r /mnt/backup/restic-repo check
+```
 
 ## Host-Specific Packages
 
@@ -166,7 +228,7 @@ If you use private flakes or want to avoid GitHub rate limits:
 echo "access-tokens = github.com=ghp_GithubTokenHere" | sudo tee /etc/nix/github-token.conf
 ```
 
-Read automatically via `nix.extraOptions` in `modules/core/system.nix`.
+Read automatically via `nix.extraOptions` in `modules/core/system.nix`. The config handles missing files gracefully.
 
 ### NetBird Access Token
 
@@ -178,6 +240,16 @@ echo "your-netbird-setup-key" | sudo tee /etc/netbird/setup-key
 ```
 
 Used by `services.netbird` in `modules/desktop/p2p.nix` for automatic login.
+
+### Syncthing Device IDs
+
+Syncthing device IDs are stored in `modules/desktop/syncthing-devices.nix` (gitignored). To set up:
+
+```bash
+cp modules/desktop/syncthing-devices.nix.example modules/desktop/syncthing-devices.nix
+```
+
+Then edit the file with your device IDs. Get a device's ID from the Syncthing GUI under Actions > Show ID.
 
 ## Flake Inputs
 
@@ -210,7 +282,7 @@ SMB network shares can be mounted directly from the Nemo file manager. `gvfs` an
 
 ## Custom Library
 
-The `lib/` directory contains helper functions used throughout the config. The key helper is `scanPaths`, which auto-imports all `.nix` files in a directory. Adding a new module to `modules/core/`, `modules/desktop/`, `home/core/`, or `home/desktop/` only requires creating the file -- no manual import needed.
+The `lib/` directory contains helper functions used throughout the config. The key helper is `scanPaths`, which auto-imports all `.nix` files in a directory (excluding `default.nix`). Adding a new module to `modules/core/`, `modules/desktop/`, `home/core/`, or `home/desktop/` only requires creating the file -- no manual import needed.
 
 ## Theme
 

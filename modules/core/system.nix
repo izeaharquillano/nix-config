@@ -36,7 +36,7 @@
   };
 
   nix.extraOptions = ''
-    !include /etc/nix/github-token.conf
+    ${if builtins.pathExists "/etc/nix/github-token.conf" then "!include /etc/nix/github-token.conf" else ""}
   '';
 
   users.users."ize" = {
