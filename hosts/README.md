@@ -292,4 +292,4 @@ If you use private flakes or want to avoid GitHub rate limits, create a token fi
 echo "access-tokens = github.com=ghp_GithubTokenHere" | sudo tee /etc/nix/github-token.conf
 ```
 
-Nix reads this automatically via `nix.extraOptions` in `modules/core/nix.nix`.
+Nix reads this automatically via `nix.extraOptions` in `modules/core/system.nix`.

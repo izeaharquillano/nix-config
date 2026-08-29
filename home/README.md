@@ -8,27 +8,25 @@ User-level configuration managed by Home Manager.
 home/
 ├── core/                    # Shared across all hosts
 │   ├── default.nix          # Aggregator + stateVersion, username
-│   ├── shell.nix            # Bash, zoxide, aliases
-│   ├── git.nix              # Git user name/email
+│   ├── shell.nix            # Bash, zsh, git, starship, zoxide, aliases
 │   ├── packages.nix         # CLI tools (fd, fzf, btop-cuda, ripgrep, opencode, etc.)
 │   └── xdg.nix              # XDG user directories + portal config
 ├── desktop/                 # Desktop/GUI app configs
 │   ├── default.nix          # Aggregator
 │   ├── gtk.nix              # GTK theme, cursor
-│   ├── kitty.nix            # Kitty terminal
+│   ├── kitty.nix            # Kitty terminal (package + config symlink)
 │   ├── hyprland.nix         # Hyprland config (symlinks config/hypr/)
 │   ├── niri.nix             # Niri config (symlinks config/niri/)
 │   ├── noctalia.nix         # Noctalia lockscreen/bar (config.toml + wallpaper.toml + host-settings.toml)
 │   ├── nvim.nix             # Neovim LazyVim config (xdg.configFile)
-│   ├── nemo.nix             # Nemo file manager desktop entry
+│   ├── mimeapps.nix         # Nemo desktop entry + MIME associations
 │   ├── obsidian.nix         # Obsidian
 │   ├── scripts.nix          # Utility scripts (output-scale)
 │   ├── starship.nix         # Starship prompt
 │   ├── yazi.nix             # Yazi file manager + gruvbox theme
 │   ├── tmux.nix             # Tmux config
 │   ├── packages.nix         # Desktop packages (ncdu, waybar, mpv, discord-ptb, nemo, gvfs, etc.)
-│   ├── zen-browser.nix      # Zen Browser
-│   └── terminal.nix         # Terminal packages (kitty)
+│   └── zen-browser.nix      # Zen Browser
 └── hosts/
     ├── padrick/
     │   ├── default.nix      # Host-specific HM: imports core + desktop, symlinks hardware configs
@@ -48,7 +46,7 @@ home/
 
 ## Module Types
 
-- **`core/`** - Essential user config (shell, git, packages). Always imported.
+- **`core/`** - Essential user config (shell, packages). Always imported.
 - **`desktop/`** - GUI applications and dotfiles. Only for desktop hosts.
 - **`hosts/<name>/`** - Host-specific overrides, flake input imports, and hardware config symlinks.
 

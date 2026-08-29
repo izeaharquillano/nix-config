@@ -36,7 +36,7 @@ A Minimal (for me) Multi-host NixOS configuration using flakes and Home Manager.
 │   ├── vm.nix                 # QEMU/KVM + virt-manager, opt-in per host
 │   └── security.nix           # Git, neovim, nix-ld, shell aliases
 ├── home/                      # Home Manager modules
-│   ├── core/                  # Shell, git, packages, editor (auto-imported via scanPaths)
+│   ├── core/                  # Shell, packages, editor (auto-imported via scanPaths)
 │   ├── desktop/               # GUI app configs (auto-imported via scanPaths)
 │   └── hosts/                 # Host-specific HM overrides + per-host configs
 │       ├── padrick/
@@ -135,7 +135,7 @@ If you use private flakes or want to avoid GitHub rate limits:
 echo "access-tokens = github.com=ghp_GithubTokenHere" | sudo tee /etc/nix/github-token.conf
 ```
 
-Read automatically via `nix.extraOptions` in `modules/core/nix.nix`.
+Read automatically via `nix.extraOptions` in `modules/core/system.nix`.
 
 ### NetBird Access Token
 
