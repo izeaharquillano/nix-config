@@ -1,6 +1,6 @@
 keys:
-  - &padrick ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAXNwpuUhP9UdRk4oVjl9Bzva/sWiXkiD7HMrY4NcgOZ root@padrick
-  - &jobert ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIDwOimLkLULeahLXIwCuhE3GHC/rbtbcA+8fsZQC4GG root@jobert
+  - &padrick age1jmwmvkcn59ja8534h47hzq23uyf6wsjef532px626tmmp36hmy3qp666tw
+  - &jobert age1y7k3sgnvhlxz0lctllgradx4ng4ky24lmwhr7tnz4py9fv7c5vhqcufyyh
 
 creation_rules:
   - path_regex: secrets/system/.*\.yaml$

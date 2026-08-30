@@ -45,15 +45,6 @@
     dates = [ "weekly" ];
   };
 
-  nix.extraOptions = ''
-    ${
-      if builtins.pathExists "/etc/nix/github-token.conf" then
-        "!include /etc/nix/github-token.conf"
-      else
-        ""
-    }
-  '';
-
   users.users."ize" = {
     isNormalUser = true;
     description = "ize";
