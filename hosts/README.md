@@ -288,15 +288,23 @@ This only needs to be done once per machine. The keys are stored in `/var/lib/sb
 
 To skip Secure Boot, omit `secureboot.enable = true` (or set it to `false`). The host will use plain systemd-boot.
 
-### 9. Symlink repo to /etc/nixos
-
-Required for shell aliases (`bldflk`, `bldswc`, etc.) to work:
+### 9. First deploy (generates SSH host keys)
 
 ```bash
-sudo ln -s /path/to/nixos-conf /etc/nixos
+sudo nixos-rebuild switch --flake .#<name>
 ```
 
-### 10. Deploy
+### 10. Add host key to secrets
+
+SSH host keys are generated on first boot. Grab the key:
+
+```bash
+ssh-keyscan <name> 2>/dev/null | grep ssh-ed25519
+```
+
+Add it to `secrets/secrets.nix` and rekey (see [Secrets Management](../README.md#adding-a-new-host) in the main README).
+
+### 11. Second deploy (decrypts secrets)
 
 ```bash
 sudo nixos-rebuild switch --flake .#<name>
@@ -317,7 +325,7 @@ This must be done before any files are written to the directory. If Steam is alr
 If you use private flakes or want to avoid GitHub rate limits, add your token via agenix:
 
 ```bash
-agenix -e nix-access-tokens.age
+sudo agenix -i /etc/ssh/ssh_host_ed25519_key -e nix-access-tokens.age
 ```
 
 Add the token in the format: `access-tokens = github.com=ghp_GithubTokenHere`

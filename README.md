@@ -82,7 +82,7 @@ sudo ln -s /path/to/nixos-conf /etc/nixos
 # Set up secrets (first time only)
 # 1. Get your host's SSH public key: ssh-keyscan <hostname> 2>/dev/null | grep ssh-ed25519
 # 2. Add keys to secrets/secrets.nix
-# 3. Create encrypted secrets: agenix -e <secret-name>.age
+# 3. Create encrypted secrets: sudo agenix -i /etc/ssh/ssh_host_ed25519_key -e <secret-name>.age
 
 # Deploy for padrick
 sudo nixos-rebuild switch --flake .#padrick
@@ -123,9 +123,16 @@ nix fmt
    ```nix
    nixosConfigurations.<name> = mkHost "<name>" "x86_64-linux";
    ```
-8. Add the host's SSH public key to `secrets/secrets.nix` and re-encrypt with `agenix --rekey` (see [Secrets Management](#adding-a-new-host))
-9. Symlink repo to `/etc/nixos` if not already done
-10. Deploy:
+8. First deploy (generates SSH host keys):
+   ```bash
+   sudo nixos-rebuild switch --flake .#<name>
+   ```
+9. Grab the new host's SSH public key:
+   ```bash
+   ssh-keyscan <name> 2>/dev/null | grep ssh-ed25519
+   ```
+10. Add the key to `secrets/secrets.nix` and rekey (see [Secrets Management](#adding-a-new-host))
+11. Second deploy (decrypts secrets):
     ```bash
     sudo nixos-rebuild switch --flake .#<name>
     ```
@@ -185,8 +192,8 @@ The flake passes `flakeRoot = self` via `specialArgs`, allowing modules to refer
 
 3. Create encrypted secrets:
    ```bash
-   agenix -e nix-access-tokens.age
-   agenix -e netbird-setup-key.age
+   sudo agenix -i /etc/ssh/ssh_host_ed25519_key -e nix-access-tokens.age
+   sudo agenix -i /etc/ssh/ssh_host_ed25519_key -e netbird-setup-key.age
    ```
 
 4. Deploy:
@@ -205,7 +212,7 @@ The flake passes `flakeRoot = self` via `specialArgs`, allowing modules to refer
 
 1. Create the encrypted file:
    ```bash
-   agenix -e <secret-name>.age
+   sudo agenix -i /etc/ssh/ssh_host_ed25519_key -e <secret-name>.age
    ```
    This opens `$EDITOR`. Write the secret, save, and quit to encrypt.
 
@@ -219,7 +226,7 @@ The flake passes `flakeRoot = self` via `specialArgs`, allowing modules to refer
 
 3. Re-encrypt for all hosts:
    ```bash
-   agenix --rekey
+   sudo agenix -i /etc/ssh/ssh_host_ed25519_key --rekey
    ```
 
 4. Reference it in a NixOS module:
@@ -239,29 +246,40 @@ The flake passes `flakeRoot = self` via `specialArgs`, allowing modules to refer
 1. Remove the declaration from `secrets/secrets.nix`
 2. Delete the `.age` file: `rm secrets/<secret-name>.age`
 3. Remove all `age.secrets.<secret-name>` declarations from module files
-4. Re-encrypt (clears orphaned references): `agenix --rekey`
+4. Re-encrypt (clears orphaned references): `sudo agenix -i /etc/ssh/ssh_host_ed25519_key --rekey`
 
 ### Editing Secrets
 
 ```bash
 # Edit an encrypted secret (opens in $EDITOR)
-agenix -e <secret-name>.age
+sudo agenix -i /etc/ssh/ssh_host_ed25519_key -e <secret-name>.age
 
 # Decrypt a secret to stdout (for debugging)
-agenix -d <secret-name>.age
+sudo agenix -i /etc/ssh/ssh_host_ed25519_key -d <secret-name>.age
 
 # Re-encrypt all secrets after key changes
-agenix --rekey
+sudo agenix -i /etc/ssh/ssh_host_ed25519_key --rekey
 ```
 
 ### Adding a New Host
 
-1. Get the new host's SSH public key:
+**Cold start (fresh install)?** SSH host keys are generated when OpenSSH starts (on first `nixos-rebuild switch`). You'll need two passes:
+
+1. First deploy (generates SSH keys, enables services):
    ```bash
-   ssh-keyscan <new-hostname> 2>/dev/null | grep ssh-ed25519
+   sudo nixos-rebuild switch --flake .#newhost
    ```
 
-2. Add the key as a binding in `secrets/secrets.nix`:
+2. Now grab the key:
+   ```bash
+   ssh-keyscan newhost 2>/dev/null | grep ssh-ed25519
+   ```
+   Or on the new machine directly:
+   ```bash
+   cat /etc/ssh/ssh_host_ed25519_key.pub
+   ```
+
+3. Add the key as a binding in `secrets/secrets.nix`:
    ```nix
    let
      newhost = "ssh-ed25519 AAAA... root@newhost";
@@ -269,12 +287,12 @@ agenix --rekey
    in
    ```
 
-3. Re-encrypt all secrets for the new host:
+4. Re-encrypt all secrets for the new host:
    ```bash
-   agenix --rekey
+   sudo agenix -i /etc/ssh/ssh_host_ed25519_key --rekey
    ```
 
-4. Deploy to the new host:
+5. Second deploy (decrypts secrets with the new key):
    ```bash
    sudo nixos-rebuild switch --flake .#newhost
    ```
@@ -299,7 +317,7 @@ If a host's SSH host key is lost or regenerated (e.g., after reinstalling), you 
 
 3. Re-encrypt all secrets (this re-encrypts with the new key):
    ```bash
-   agenix --rekey
+   sudo agenix -i /etc/ssh/ssh_host_ed25519_key --rekey
    ```
 
 4. Deploy from another host or from the target if it can already build:
@@ -311,16 +329,18 @@ If a host's SSH host key is lost or regenerated (e.g., after reinstalling), you 
 
 ### Using the agenix CLI
 
-The agenix CLI is available in two ways:
+The agenix CLI needs the SSH host private key to decrypt secrets. Since the key is at `/etc/ssh/ssh_host_ed25519_key` (not in `~/.ssh/`), you must specify it with `-i`:
 
 ```bash
 # Via the dev shell
 nix develop
-agenix -e <secret>.age
+sudo agenix -i /etc/ssh/ssh_host_ed25519_key -e <secret>.age
 
 # As a flake app (no dev shell needed)
-nix run .#agenix -- -e <secret>.age
+sudo nix run .#agenix -- -i /etc/ssh/ssh_host_ed25519_key -e <secret>.age
 ```
+
+**Note:** The NixOS module handles decryption at boot automatically (runs as root). The `-i` flag is only needed for manual CLI operations.
 
 ## Host-Specific Packages
 

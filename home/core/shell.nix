@@ -7,6 +7,7 @@ let
     bldswc = "sudo nixos-rebuild switch";
     bldflk = "sudo nixos-rebuild switch --flake /etc/nixos#$(hostname)";
     nixgarb = "sudo nix-collect-garbage";
+    sagenix = "sudo agenix -i /etc/ssh/ssh_host_ed25519_key";
   };
 
   zshAliases = sharedAliases // {
