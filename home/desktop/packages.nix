@@ -10,13 +10,14 @@
     xwayland-satellite
 
     # gui apps
-    (bottles.override { removeWarningPopup = true; })
     gvfs
     mpv
     qimgv
     gparted
     discord-ptb
     pavucontrol
+    protonvpn-gui
     nemo-with-extensions
+    (bottles.override { removeWarningPopup = true; })
   ];
 }
