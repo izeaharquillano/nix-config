@@ -23,23 +23,18 @@ config/
 
 ## How Dotfiles Are Consumed
 
-In `home/desktop/*.nix`, individual config files are live-symlinked into `~/.config/` via `config.lib.file.mkOutOfStoreSymlink`:
+In `home/desktop/*.nix`, config files are consumed via `xdg.configFile` store copies:
 
 ```nix
 # Example from home/desktop/terminal.nix
-{ config, ... }:
+{ ... }:
 
-let
-  repoDir = "${config.home.homeDirectory}/nixos-conf";
-in
 {
-  xdg.configFile."kitty/kitty.conf".source = config.lib.file.mkOutOfStoreSymlink "${repoDir}/config/kitty/kitty.conf";
+  xdg.configFile."kitty/kitty.conf".source = ../../config/kitty/kitty.conf;
 }
 ```
 
-This creates a symlink at `~/.config/kitty/kitty.conf` pointing to this file. Edits take effect immediately without a rebuild.
-
-Directories with multiple files (like `hypr/` and `nvim/`) use store copies with `recursive = true` instead, because `mkOutOfStoreSymlink` on a directory conflicts with Home Manager's file management when other modules also create files inside that directory.
+Directories with multiple files (like `hypr/` and `nvim/`) use `recursive = true`.
 
 ## Host-Specific Configs
 
@@ -54,20 +49,17 @@ Host-specific settings (niri, hyprland, noctalia) live in `home/hosts/<name>/con
 1. Place your config file(s) in `config/<app>/`
 2. Create a module in `home/desktop/<app>.nix`:
 
-For a single file (live symlink):
+For a single file:
 
 ```nix
-{ config, ... }:
+{ ... }:
 
-let
-  repoDir = "${config.home.homeDirectory}/nixos-conf";
-in
 {
-  xdg.configFile."app/config".source = config.lib.file.mkOutOfStoreSymlink "${repoDir}/config/app/config";
+  xdg.configFile."app/config".source = ../../config/app/config;
 }
 ```
 
-For a directory (store copy, requires rebuild):
+For a directory:
 
 ```nix
 { ... }:
@@ -85,6 +77,5 @@ For a directory (store copy, requires rebuild):
 ## Notes
 
 - These are **not** Nix modules -- they are plain config files
-- Individual files: edits take effect **immediately** (no rebuild needed) via live symlinks
-- Directories: changes require a rebuild (store copies)
+- Individual files and directories are consumed as store copies
 - For Nix-native app configuration, use `programs.<name>` in Home Manager modules instead

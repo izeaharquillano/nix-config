@@ -14,22 +14,22 @@ home/
 ├── desktop/                 # Desktop/GUI app configs
 │   ├── default.nix          # Aggregator
 │   ├── gtk.nix              # GTK theme, cursor
-│   ├── terminal.nix         # Kitty terminal (package + live symlink)
+│   ├── terminal.nix         # Kitty terminal
 │   ├── hyprland.nix         # Hyprland config (store copy, recursive)
-│   ├── niri.nix             # Niri config (live symlink for config.kdl)
+│   ├── niri.nix             # Niri config
 │   ├── noctalia.nix         # Noctalia lockscreen/bar (config.toml + wallpaper.toml + host-settings.toml)
 │   ├── nvim.nix             # Neovim LazyVim config (store copy, recursive)
 │   ├── mimeapps.nix         # Nemo desktop entry + MIME associations
 │   ├── obsidian.nix         # Obsidian
 │   ├── scripts.nix          # Utility scripts (output-scale)
-│   ├── starship.nix         # Starship prompt (live symlink for starship.toml)
+│   ├── starship.nix         # Starship prompt
 │   ├── yazi.nix             # Yazi file manager + gruvbox theme
-│   ├── tmux.nix             # Tmux config (live symlink for tmux.conf)
+│   ├── tmux.nix             # Tmux config
 │   ├── packages.nix         # Desktop packages (ncdu, waybar, mpv, discord-ptb, nemo, gvfs, etc.)
 │   └── zen-browser.nix      # Zen Browser
 └── hosts/
     ├── padrick/
-    │   ├── default.nix      # Host-specific HM: imports core + desktop, live-symlinks host configs
+    │   ├── default.nix      # Host-specific HM: imports core + desktop
     │   ├── packages.nix     # btop
     │   └── config/          # Host-specific dotfiles (niri, hyprland, noctalia)
     │       ├── niri-host-settings.kdl
@@ -54,9 +54,7 @@ home/
 
 The host's HM entry point (`home/hosts/<name>/default.nix`) imports `core/` and `desktop/`, plus any flake module inputs (niri, noctalia).
 
-Individual config files in `config/` are live-symlinked into `~/.config/` via `config.lib.file.mkOutOfStoreSymlink`. This means edits to config files take effect immediately without a rebuild. Each module constructs the symlink target as `${config.home.homeDirectory}/nixos-conf/config/<app>`.
-
-Directories with multiple files (like `hypr/` and `nvim/`) use store copies with `recursive = true` instead, because `mkOutOfStoreSymlink` on a directory conflicts with HM's file management when other modules also create files inside that directory. Host-specific settings in `home/hosts/<name>/config/` use store copies for the same reason.
+Config files in `config/` are consumed by Home Manager modules via `xdg.configFile` store copies. Directories with multiple files (like `hypr/` and `nvim/`) use `recursive = true`. Host-specific settings in `home/hosts/<name>/config/` also use store copies.
 
 The `hostname` is passed via `specialArgs` in `flake.nix`, allowing shared modules like `noctalia.nix` to read host-specific settings.
 
@@ -98,20 +96,17 @@ Nemo is the default file manager. `gvfs` and `nemo-with-extensions` are installe
 1. Place the config file in `config/<app>/`
 2. Create or update a module in `home/desktop/`:
 
-For a single file (live symlink, edits take effect immediately):
+For a single file:
 
 ```nix
-{ config, ... }:
+{ ... }:
 
-let
-  repoDir = "${config.home.homeDirectory}/nixos-conf";
-in
 {
-  xdg.configFile."app/config".source = config.lib.file.mkOutOfStoreSymlink "${repoDir}/config/app/config";
+  xdg.configFile."app/config".source = ../../config/app/config;
 }
 ```
 
-For a directory with multiple files (store copy, requires rebuild):
+For a directory with multiple files:
 
 ```nix
 { ... }:

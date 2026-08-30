@@ -62,7 +62,6 @@
     }:
     let
       mylib = import ./lib { lib = nixpkgs.lib; };
-      repoRoot = "/home/ize/nixos-conf";
 
       forAllSystems = nixpkgs.lib.genAttrs [
         "x86_64-linux"
@@ -85,7 +84,6 @@
           specialArgs = {
             inherit inputs mylib hostname;
             flakeRoot = self;
-            inherit repoRoot;
           };
           modules = [
             ./hosts/${hostname}
@@ -101,7 +99,6 @@
                 extraSpecialArgs = {
                   inherit inputs mylib hostname;
                   flakeRoot = self;
-                  inherit repoRoot;
                 };
               };
             }
@@ -122,6 +119,7 @@
         agenix = {
           type = "app";
           program = "${agenix.packages.${system}.default}/bin/agenix";
+          meta.description = "Secret management with age";
         };
       });
 

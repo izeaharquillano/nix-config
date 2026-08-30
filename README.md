@@ -59,19 +59,19 @@ A multi-host NixOS configuration using flakes and Home Manager. A gruvbox themed
 │   │   ├── shell.nix          # Git, bash, zsh (shared aliases via let binding), starship, zoxide
 │   │   ├── packages.nix       # CLI tools (fd, fzf, btop, ripgrep, opencode, etc.)
 │   │   └── xdg.nix            # XDG user directories + portal config
-│   ├── desktop/               # GUI app configs (auto-imported via scanPaths, live-symlinked)
+│   ├── desktop/               # GUI app configs (auto-imported via scanPaths)
 │   │   ├── gtk.nix            # GTK theme, cursor
-│   │   ├── terminal.nix       # Kitty terminal (package + live symlink)
+│   │   ├── terminal.nix       # Kitty terminal
 │   │   ├── hyprland.nix       # Hyprland config (store copy, recursive)
-│   │   ├── niri.nix           # Niri config (live symlink for config.kdl)
+│   │   ├── niri.nix           # Niri config
 │   │   ├── noctalia.nix       # Noctalia lockscreen/bar
 │   │   ├── nvim.nix           # Neovim LazyVim config (store copy, recursive)
 │   │   ├── mimeapps.nix       # Nemo desktop entry + MIME associations
 │   │   ├── obsidian.nix       # Obsidian
 │   │   ├── scripts.nix        # Utility scripts (output-scale)
-│   │   ├── starship.nix       # Starship prompt (live symlink for starship.toml)
+│   │   ├── starship.nix       # Starship prompt
 │   │   ├── yazi.nix           # Yazi file manager + gruvbox theme
-│   │   ├── tmux.nix           # Tmux config (live symlink for tmux.conf)
+│   │   ├── tmux.nix           # Tmux config
 │   │   ├── packages.nix       # Desktop packages (ncdu, waybar, mpv, discord-ptb, nemo, etc.)
 │   │   └── zen-browser.nix    # Zen Browser
 │   └── hosts/                 # Host-specific HM overrides
@@ -543,15 +543,6 @@ SMB network shares can be mounted directly from the Nemo file manager. `gvfs` an
 
 The `lib/` directory contains helper functions used throughout the config. The key helper is `scanPaths`, which auto-imports all `.nix` files in a directory (excluding `default.nix`). Adding a new module to `modules/core/`, `modules/desktop/`, `home/core/`, or `home/desktop/` only requires creating the file -- no manual import needed.
 
-## Live Symlinks
-
-Individual config files are managed via `config.lib.file.mkOutOfStoreSymlink` rather than Nix store copies. This means:
-
-- Edits to individual `config/` files take effect immediately (no rebuild needed)
-- The symlinks point to `~/nixos-conf/config/<app>`, so the repo must be cloned at that path
-- Directories (`hypr/`, `nvim/`) still use store copies because directory-level symlinks conflict with Home Manager's per-file management
-- Host-specific configs in `home/hosts/<name>/config/` also use store copies
-
 ## Security
 
 - **Firewall:** Enabled system-wide with explicit port allowlists (see [Firewall](#firewall))
@@ -583,11 +574,7 @@ Configured in `modules/core/system.nix`:
 
 ## Config Files
 
-Individual config files in `config/` are live-symlinked into `~/.config/` via `config.lib.file.mkOutOfStoreSymlink`. Edits take effect immediately without a rebuild. The `repoRoot` (hardcoded repo path) is passed to Home Manager via `extraSpecialArgs`, and each desktop module constructs the symlink target as `${repoRoot}/config/<app>`. The `flakeRoot` (`self`) is passed to NixOS modules for agenix secret paths.
-
-Directories with multiple files (`hypr/`, `nvim/`) use store copies with `recursive = true` because `mkOutOfStoreSymlink` on a directory conflicts with Home Manager's file management when other modules also create files inside that directory.
-
-Host-specific dotfiles in `home/hosts/<name>/config/` use store copies for the same reason.
+Config files in `config/` are consumed by Home Manager modules via `xdg.configFile` store copies. Directories with multiple files (`hypr/`, `nvim/`) use `recursive = true`. The `flakeRoot` (`self`) is passed to NixOS modules for agenix secret paths.
 
 ## Theme
 
