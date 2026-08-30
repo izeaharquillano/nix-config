@@ -47,7 +47,7 @@ A multi-host NixOS configuration using flakes and Home Manager. A gruvbox themed
 │   │   ├── zswap.nix          # Zswap with zstd compression
 │   │   ├── p2p.nix            # Syncthing + NetBird
 │   │   └── backup.nix         # Restic backups (configurable paths, repository, exclude)
-│   └── security.nix           # Neovim, nix-ld, shell aliases
+│   └── security.nix           # Neovim, nix-ld, firewall, polkit
 ├── secrets/                    # Encrypted secrets (sops-nix)
 │   ├── system/                # Shared secrets (accessible by all hosts)
 │   │   └── secrets.yaml       # restic-password, netbird-setup-key
@@ -399,7 +399,7 @@ This config uses `treefmt-nix` for consistent code formatting. Run:
 nix fmt
 
 # Check formatting without modifying
-nix flake check
+nix fmt -- --check
 ```
 
 The formatter is configured with `nixfmt` for Nix files and `shfmt` for shell scripts.

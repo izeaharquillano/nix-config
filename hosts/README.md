@@ -143,7 +143,7 @@ Or copy from an existing host and modify.
     ../../modules/core              # Base system config (includes SSH)
     ../../modules/desktop           # Desktop environment (skip for servers)
     ../../modules/security.nix      # Neovim, nix-ld, firewall
-    ../..//modules/features          # Optional feature modules (auto-imported)
+    ../../modules/features          # Optional feature modules (auto-imported)
     ./hardware-configuration.nix
     ./packages.nix                  # Host-specific system packages
     ./services.nix                  # Host-specific services

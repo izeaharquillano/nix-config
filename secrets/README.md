@@ -9,8 +9,8 @@ secrets/
 ├── system/              # Shared secrets (accessible by all hosts)
 │   └── secrets.yaml     # restic-password, netbird-setup-key
 ├── hosts/
-│   ├── padrick/         # Padrick-specific secrets
-│   └── jobert/          # Jobert-specific secrets
+│   ├── padrick/         # Padrick-specific secrets (empty, reserved for future use)
+│   └── jobert/          # Jobert-specific secrets (empty, reserved for future use)
 └── README.md
 ```
 

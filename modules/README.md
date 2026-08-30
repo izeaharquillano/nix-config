@@ -11,6 +11,7 @@ modules/
 │   ├── system.nix       # Boot, networking, nix settings, user accounts
 │   ├── locale.nix       # Timezone, i18n/locale settings, hardware clock (UTC)
 │   ├── ssh.nix          # OpenSSH (key-based auth only, root login denied)
+│   ├── secrets.nix      # sops-nix age key configuration
 │   └── packages.nix     # System-wide packages
 ├── desktop/             # Desktop environment (auto-imported via scanPaths)
 │   ├── default.nix      # Aggregator (auto-imported via scanPaths)
@@ -62,7 +63,7 @@ Key details:
 - Backs up home directory weekly
 - Excludes `.cache`, `.local/share/Trash`, `node_modules`, `.cargo/registry`
 - Prunes to 7 daily, 4 weekly, 6 monthly snapshots
-- Requires `/etc/restic/password` and a repository path (default: `/mnt/backup/restic-repo`)
+- Requires the `restic-password` secret in `secrets/system/secrets.yaml` (decrypted to `/run/secrets/restic-password` via sops-nix) and a repository path (default: `/mnt/backup/restic-repo`)
 
 ### P2P Feature
 
