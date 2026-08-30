@@ -23,18 +23,25 @@ config/
 
 ## How Dotfiles Are Consumed
 
-In `home/desktop/*.nix`, each module symlinks its config into `~/.config/`:
+In `home/desktop/*.nix`, each module live-symlinks its config into `~/.config/` via `config.lib.file.mkOutOfStoreSymlink`:
 
 ```nix
 # Example from home/desktop/terminal.nix
-xdg.configFile."kitty/kitty.conf".source = ../../config/kitty/kitty.conf;
+{ config, ... }:
+
+let
+  repoDir = "${config.home.homeDirectory}/nixos-conf";
+in
+{
+  xdg.configFile."kitty/kitty.conf".source = config.lib.file.mkOutOfStoreSymlink "${repoDir}/config/kitty/kitty.conf";
+}
 ```
 
-This creates a symlink at `~/.config/kitty/kitty.conf` pointing to this file.
+This creates a symlink at `~/.config/kitty/kitty.conf` pointing to this file. Edits take effect immediately without a rebuild.
 
 ## Host-Specific Configs
 
-Host-specific settings (niri, hyprland, noctalia) live in `home/hosts/<name>/config/` rather than here. They are symlinked by the host-specific HM file (`home/hosts/<name>/default.nix`).
+Host-specific settings (niri, hyprland, noctalia) live in `home/hosts/<name>/config/` rather than here. They are live-symlinked by the host-specific HM file (`home/hosts/<name>/default.nix`) using `mkOutOfStoreSymlink`.
 
 - **Niri**: `home/hosts/<name>/config/niri-host-settings.kdl` is symlinked to `~/.config/niri/niri-host-settings.kdl` and included by `config.kdl` via `include "./niri-host-settings.kdl"`.
 - **Hyprland**: `home/hosts/<name>/config/hypr-host-settings.lua` is symlinked to `~/.config/hypr/hypr-host-settings.lua` and loaded via `require("hypr-host-settings")`.
@@ -46,10 +53,13 @@ Host-specific settings (niri, hyprland, noctalia) live in `home/hosts/<name>/con
 2. Create a module in `home/desktop/<app>.nix`:
 
 ```nix
-{ ... }:
+{ config, ... }:
 
+let
+  repoDir = "${config.home.homeDirectory}/nixos-conf";
+in
 {
-  xdg.configFile."app/config".source = ../../config/app/config;
+  xdg.configFile."app/config".source = config.lib.file.mkOutOfStoreSymlink "${repoDir}/config/app/config";
 }
 ```
 
@@ -58,5 +68,5 @@ Host-specific settings (niri, hyprland, noctalia) live in `home/hosts/<name>/con
 ## Notes
 
 - These are **not** Nix modules -- they are plain config files
-- Changes to these files take effect on next home-manager switch
+- Changes to these files take effect **immediately** (no rebuild needed) via live symlinks
 - For Nix-native app configuration, use `programs.<name>` in Home Manager modules instead

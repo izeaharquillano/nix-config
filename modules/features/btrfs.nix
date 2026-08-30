@@ -2,6 +2,7 @@
 
 let
   cfg = config.myfeatures.btrfs;
+
   btrfsOpts = [
     "compress=zstd:3"
     "noatime"
@@ -16,7 +17,7 @@ in
 
   config = lib.mkIf cfg.enable {
     fileSystems."/".options = btrfsOpts;
-    fileSystems."/home".options = [ "subvol=home" ] ++ btrfsOpts;
-    fileSystems."/nix".options = [ "subvol=nix" ] ++ btrfsOpts;
+    fileSystems."/home".options = btrfsOpts;
+    fileSystems."/nix".options = btrfsOpts;
   };
 }

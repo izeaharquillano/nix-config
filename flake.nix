@@ -65,7 +65,6 @@
 
       forAllSystems = nixpkgs.lib.genAttrs [
         "x86_64-linux"
-        "aarch64-linux"
       ];
 
       treefmtEval = forAllSystems (
@@ -98,8 +97,8 @@
                 backupFileExtension = "hm-bak";
                 users.ize = import ./home/hosts/${hostname};
                 extraSpecialArgs = {
-                  inherit inputs mylib;
-                  inherit hostname;
+                  inherit inputs mylib hostname;
+                  flakeRoot = self;
                 };
               };
             }

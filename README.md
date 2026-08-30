@@ -25,12 +25,12 @@ A multi-host NixOS configuration using flakes and Home Manager. A gruvbox themed
 │   └── jobert/                # AMD + NVIDIA gaming laptop
 │       ├── default.nix
 │       ├── hardware-configuration.nix
-│       ├── hardware.nix       # NVIDIA driver, boot params, session vars
+│       ├── hardware.nix       # NVIDIA driver, pinned kernel (7.2), boot params, session vars
 │       ├── packages.nix
 │       └── services.nix       # auto-cpufreq, UPower, systemd-resolved
 ├── modules/                   # NixOS system modules
 │   ├── core/                  # Shared by all hosts (auto-imported via scanPaths)
-│   │   ├── system.nix         # Boot, networking, nix settings (recursive-nix, warn-dirty)
+│   │   ├── system.nix         # Boot (latest kernel), networking, nix settings
 │   │   ├── locale.nix         # Timezone, locale
 │   │   ├── ssh.nix            # OpenSSH (key-based auth only)
 │   │   ├── secrets.nix        # agenix secret declarations, identityPaths, token include
@@ -40,13 +40,13 @@ A multi-host NixOS configuration using flakes and Home Manager. A gruvbox themed
 │   │   ├── niri.nix           # Niri Wayland compositor
 │   │   └── services.nix       # Pipewire, fonts, rtkit, bluetooth
 │   ├── features/              # Optional feature modules (mkEnableOption, auto-imported)
-│   │   ├── btrfs.nix          # BTRFS mount options (myfeatures.btrfs.enable)
+│   │   ├── btrfs.nix          # BTRFS compression/tuning options (myfeatures.btrfs.enable)
 │   │   ├── secureboot.nix     # UEFI Secure Boot via Lanzaboote
 │   │   ├── gaming.nix         # Steam, Gamescope, Gamemode, MangoHud
 │   │   ├── vm.nix             # QEMU/KVM + virt-manager
 │   │   ├── zswap.nix          # Zswap with zstd compression
 │   │   └── p2p.nix            # Syncthing + NetBird
-│   └── security.nix           # Neovim, nix-ld, firewall, polkit
+│   └── security.nix           # Neovim, nix-ld, firewall
 ├── secrets/                    # Encrypted secrets (agenix)
 │   ├── secrets.nix            # Public key declarations for each secret
 │   ├── nix-access-tokens.age  # Nix/GitHub access tokens (encrypted)
@@ -54,10 +54,10 @@ A multi-host NixOS configuration using flakes and Home Manager. A gruvbox themed
 ├── home/                      # Home Manager modules
 │   ├── core/                  # Shell, packages, XDG (auto-imported via scanPaths)
 │   │   ├── shell.nix          # Git, bash, zsh (shared aliases via let binding), starship, zoxide
-│   ├── desktop/               # GUI app configs (auto-imported via scanPaths)
+│   ├── desktop/               # GUI app configs (auto-imported via scanPaths, live-symlinked)
 │   └── hosts/                 # Host-specific HM overrides
 │       ├── padrick/
-│       │   ├── default.nix    # Imports core + desktop, symlinks host configs
+│       │   ├── default.nix    # Imports core + desktop, live-symlinks host configs
 │       │   ├── packages.nix   # btop
 │       │   └── config/        # Host-specific dotfiles
 │       │       ├── niri-host-settings.kdl
@@ -76,9 +76,6 @@ A multi-host NixOS configuration using flakes and Home Manager. A gruvbox themed
 ## Quick Start
 
 ```bash
-# Symlink this repo to /etc/nixos (required for shell aliases like bldflk)
-sudo ln -s /path/to/nixos-conf /etc/nixos
-
 # Set up secrets (first time only)
 # 1. Get your host's SSH public key: ssh-keyscan <hostname> 2>/dev/null | grep ssh-ed25519
 # 2. Add keys to secrets/secrets.nix
@@ -145,7 +142,7 @@ Optional features are gated behind `mkEnableOption` in `modules/features/`. Enab
 
 ```nix
 myfeatures = {
-  btrfs.enable = true;       # BTRFS mount options (compress=zstd:3, noatime, ssd)
+  btrfs.enable = true;       # BTRFS compression/tuning (compress=zstd:3, noatime, ssd)
   secureboot.enable = true;  # UEFI Secure Boot via Lanzaboote
   vm.enable = true;          # QEMU/KVM + virt-manager
   gaming.enable = true;      # Steam, Gamescope, Gamemode, MangoHud
@@ -505,6 +502,14 @@ SMB network shares can be mounted directly from the Nemo file manager. `gvfs` an
 
 The `lib/` directory contains helper functions used throughout the config. The key helper is `scanPaths`, which auto-imports all `.nix` files in a directory (excluding `default.nix`). Adding a new module to `modules/core/`, `modules/desktop/`, `home/core/`, or `home/desktop/` only requires creating the file -- no manual import needed.
 
+## Live Symlinks
+
+Config files are managed via `config.lib.file.mkOutOfStoreSymlink` rather than Nix store copies. This means:
+
+- Edits to `config/` files take effect immediately (no rebuild needed)
+- The symlinks point to `~/nixos-conf/config/<app>`, so the repo must be cloned at that path
+- Host-specific configs in `home/hosts/<name>/config/` follow the same pattern
+
 ## Security
 
 - **Firewall:** Enabled system-wide with explicit port allowlists (see [Firewall](#firewall))
@@ -514,6 +519,7 @@ The `lib/` directory contains helper functions used throughout the config. The k
 - **Polkit:** `security.polkit.enable` for privilege escalation prompts
 - **Secure Boot:** Optional via `myfeatures.secureboot.enable` (Lanzaboote)
 - **nix-ld:** Enabled for LazyVim compatibility (allows running unpatched binaries)
+- **Kernel pinning:** Jobert pinned to `linuxPackages_7_2` with `lib.mkForce` for NVIDIA stability
 
 ## Nix Settings
 
@@ -531,6 +537,12 @@ Configured in `modules/core/system.nix`:
 - **Prompt:** Starship with Nerd Font symbols
 - **Smart cd:** Zoxide
 - **Git:** LazyGit for terminal UI
+
+## Config Files
+
+Dotfiles in `config/` are live-symlinked into `~/.config/` via `config.lib.file.mkOutOfStoreSymlink`. Edits take effect immediately without a rebuild. The `flakeRoot` (repo path) is passed to Home Manager via `extraSpecialArgs`, and each desktop module constructs the symlink target as `${config.home.homeDirectory}/nixos-conf/config/<app>`.
+
+Host-specific dotfiles in `home/hosts/<name>/config/` are also live-symlinked using the same pattern.
 
 ## Theme
 

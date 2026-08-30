@@ -24,7 +24,7 @@ hosts/padrick/
 hosts/jobert/
 ├── default.nix
 ├── hardware-configuration.nix
-├── hardware.nix                # NVIDIA driver, boot params, session vars
+├── hardware.nix                # NVIDIA driver, pinned kernel (7.2), boot params, session vars
 ├── packages.nix
 └── services.nix                # auto-cpufreq, UPower, systemd-resolved
 ```
@@ -67,7 +67,7 @@ The gaming module configures:
 - **Gamemode** for automatic CPU/GPU performance tuning
 - **MangoHud** and **GOverlay** for FPS overlay and Vulkan/OpenGL settings
 
-`jobert` also has NVIDIA-specific hardware config in `hosts/jobert/hardware.nix` (open driver, VA-API, Wayland env vars, 32-bit OpenGL).
+`jobert` also has NVIDIA-specific hardware config in `hosts/jobert/hardware.nix` (pinned kernel `linuxPackages_7_2` with `lib.mkForce`, open driver, VA-API, Wayland env vars, 32-bit OpenGL).
 
 Host-specific dotfiles (niri, hyprland, noctalia settings) live in `home/hosts/<name>/config/` and are symlinked by the host-specific HM file.
 
@@ -247,6 +247,9 @@ Create `home/hosts/<name>/default.nix`:
 ```nix
 { config, inputs, ... }:
 
+let
+  repoDir = "${config.home.homeDirectory}/nixos-conf";
+in
 {
   imports = [
     ../../core
@@ -256,8 +259,8 @@ Create `home/hosts/<name>/default.nix`:
     inputs.noctalia.homeModules.default
   ];
 
-  xdg.configFile."niri/niri-host-settings.kdl".source = ./config/niri-host-settings.kdl;
-  xdg.configFile."hypr/hypr-host-settings.lua".source = ./config/hypr-host-settings.lua;
+  xdg.configFile."niri/niri-host-settings.kdl".source = config.lib.file.mkOutOfStoreSymlink "${repoDir}/home/hosts/<name>/config/niri-host-settings.kdl";
+  xdg.configFile."hypr/hypr-host-settings.lua".source = config.lib.file.mkOutOfStoreSymlink "${repoDir}/home/hosts/<name>/config/hypr-host-settings.lua";
 }
 ```
 

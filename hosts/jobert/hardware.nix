@@ -6,6 +6,8 @@
 }:
 
 {
+  boot.kernelPackages = lib.mkForce pkgs.linuxPackages_7_2;
+
   boot.kernelParams = [
     "amd_pstate=active"
     "amd_pmc.suspend_delay=1"

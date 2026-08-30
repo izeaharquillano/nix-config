@@ -22,9 +22,6 @@
       gtk-application-prefer-dark-theme = true;
     };
   };
-  home.sessionVariables = {
-    GTK_THEME = "Adwaita:dark";
-  };
   dconf.settings = {
     "org/gnome/desktop/interface" = {
       color-scheme = "prefer-dark";

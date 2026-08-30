@@ -27,7 +27,6 @@
       "recursive-nix"
     ];
     max-jobs = "auto";
-    cores = 0;
     http-connections = 50;
     auto-optimise-store = true;
     warn-dirty = false;

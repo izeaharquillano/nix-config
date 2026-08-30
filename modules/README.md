@@ -8,7 +8,7 @@ System-level NixOS configuration split into reusable modules.
 modules/
 ├── core/                # Shared by ALL hosts (auto-imported via scanPaths)
 │   ├── default.nix      # Aggregator (auto-imported via scanPaths)
-│   ├── system.nix       # Boot, networking, nix settings, user accounts
+│   ├── system.nix       # Boot (latest kernel), networking, nix settings, user accounts
 │   ├── locale.nix       # Timezone, i18n/locale settings, hardware clock (UTC)
 │   ├── ssh.nix          # OpenSSH (key-based auth only, root login denied)
 │   ├── secrets.nix      # agenix secret declarations (age key config, secrets)
@@ -20,7 +20,7 @@ modules/
 │   └── services.nix     # blueman, fwupd, pipewire, bluetooth, gvfs, zsh, hyprland, fonts
 ├── features/            # Optional feature modules (mkEnableOption, auto-imported)
 │   ├── default.nix      # Aggregator (auto-imported via scanPaths)
-│   ├── btrfs.nix        # BTRFS mount options (myfeatures.btrfs.enable)
+│   ├── btrfs.nix        # BTRFS compression/tuning options (myfeatures.btrfs.enable)
 │   ├── secureboot.nix   # UEFI Secure Boot (myfeatures.secureboot.enable)
 │   ├── vm.nix           # QEMU/KVM + virt-manager (myfeatures.vm.enable)
 │   ├── gaming.nix       # Steam, Gamescope, Gamemode (myfeatures.gaming.enable)
@@ -32,6 +32,7 @@ modules/
 ## Module Types
 
 - **`core/`** - Base system config (boot, networking, nix, users, SSH) every host needs. Always imported.
+  - `system.nix` sets `boot.kernelPackages` to `linuxPackages_latest` (currently 7.2). Hosts can override this with `lib.mkForce` (e.g., jobert pins `linuxPackages_7_2`).
   - `locale.nix` sets `time.hardwareClockInLocalTime = false` (RTC in UTC). See the main README for dual-boot Windows instructions.
   - `ssh.nix` enables OpenSSH with key-based auth only.
 - **`desktop/`** - GUI/desktop config. Only imported by desktop hosts.
@@ -44,7 +45,7 @@ Enable optional features in `hosts/<name>/default.nix`:
 
 ```nix
 myfeatures = {
-  btrfs.enable = true;       # BTRFS mount options (compress=zstd:3, noatime, ssd)
+  btrfs.enable = true;       # BTRFS compression/tuning options (compress=zstd:3, noatime, ssd)
   secureboot.enable = true;  # UEFI Secure Boot via Lanzaboote
   vm.enable = true;          # QEMU/KVM + virt-manager
   gaming.enable = true;      # Steam, Gamescope, Gamemode, MangoHud
