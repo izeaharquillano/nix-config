@@ -504,11 +504,12 @@ The `lib/` directory contains helper functions used throughout the config. The k
 
 ## Live Symlinks
 
-Config files are managed via `config.lib.file.mkOutOfStoreSymlink` rather than Nix store copies. This means:
+Individual config files are managed via `config.lib.file.mkOutOfStoreSymlink` rather than Nix store copies. This means:
 
-- Edits to `config/` files take effect immediately (no rebuild needed)
+- Edits to individual `config/` files take effect immediately (no rebuild needed)
 - The symlinks point to `~/nixos-conf/config/<app>`, so the repo must be cloned at that path
-- Host-specific configs in `home/hosts/<name>/config/` follow the same pattern
+- Directories (`hypr/`, `nvim/`) still use store copies because directory-level symlinks conflict with Home Manager's per-file management
+- Host-specific configs in `home/hosts/<name>/config/` also use store copies
 
 ## Security
 
@@ -540,9 +541,11 @@ Configured in `modules/core/system.nix`:
 
 ## Config Files
 
-Dotfiles in `config/` are live-symlinked into `~/.config/` via `config.lib.file.mkOutOfStoreSymlink`. Edits take effect immediately without a rebuild. The `flakeRoot` (repo path) is passed to Home Manager via `extraSpecialArgs`, and each desktop module constructs the symlink target as `${config.home.homeDirectory}/nixos-conf/config/<app>`.
+Individual config files in `config/` are live-symlinked into `~/.config/` via `config.lib.file.mkOutOfStoreSymlink`. Edits take effect immediately without a rebuild. The `flakeRoot` (repo path) is passed to Home Manager via `extraSpecialArgs`, and each desktop module constructs the symlink target as `${config.home.homeDirectory}/nixos-conf/config/<app>`.
 
-Host-specific dotfiles in `home/hosts/<name>/config/` are also live-symlinked using the same pattern.
+Directories with multiple files (`hypr/`, `nvim/`) use store copies with `recursive = true` because `mkOutOfStoreSymlink` on a directory conflicts with Home Manager's file management when other modules also create files inside that directory.
+
+Host-specific dotfiles in `home/hosts/<name>/config/` use store copies for the same reason.
 
 ## Theme
 

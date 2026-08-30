@@ -15,16 +15,16 @@ home/
 │   ├── default.nix          # Aggregator
 │   ├── gtk.nix              # GTK theme, cursor
 │   ├── terminal.nix         # Kitty terminal (package + live symlink)
-│   ├── hyprland.nix         # Hyprland config (live symlinks config/hypr/)
-│   ├── niri.nix             # Niri config (live symlinks config/niri/)
+│   ├── hyprland.nix         # Hyprland config (store copy, recursive)
+│   ├── niri.nix             # Niri config (live symlink for config.kdl)
 │   ├── noctalia.nix         # Noctalia lockscreen/bar (config.toml + wallpaper.toml + host-settings.toml)
-│   ├── nvim.nix             # Neovim LazyVim config (live symlinks config/nvim/)
+│   ├── nvim.nix             # Neovim LazyVim config (store copy, recursive)
 │   ├── mimeapps.nix         # Nemo desktop entry + MIME associations
 │   ├── obsidian.nix         # Obsidian
 │   ├── scripts.nix          # Utility scripts (output-scale)
-│   ├── starship.nix         # Starship prompt (live symlinks config/starship.toml)
+│   ├── starship.nix         # Starship prompt (live symlink for starship.toml)
 │   ├── yazi.nix             # Yazi file manager + gruvbox theme
-│   ├── tmux.nix             # Tmux config (live symlinks config/tmux/tmux.conf)
+│   ├── tmux.nix             # Tmux config (live symlink for tmux.conf)
 │   ├── packages.nix         # Desktop packages (ncdu, waybar, mpv, discord-ptb, nemo, gvfs, etc.)
 │   └── zen-browser.nix      # Zen Browser
 └── hosts/
@@ -54,7 +54,9 @@ home/
 
 The host's HM entry point (`home/hosts/<name>/default.nix`) imports `core/` and `desktop/`, plus any flake module inputs (niri, noctalia).
 
-Raw dotfiles in `config/` are live-symlinked into `~/.config/` via `config.lib.file.mkOutOfStoreSymlink`. This means edits to config files take effect immediately without a rebuild. Each module constructs the symlink target as `${config.home.homeDirectory}/nixos-conf/config/<app>`. Host-specific settings live in `home/hosts/<name>/config/` and are symlinked using the same pattern.
+Individual config files in `config/` are live-symlinked into `~/.config/` via `config.lib.file.mkOutOfStoreSymlink`. This means edits to config files take effect immediately without a rebuild. Each module constructs the symlink target as `${config.home.homeDirectory}/nixos-conf/config/<app>`.
+
+Directories with multiple files (like `hypr/` and `nvim/`) use store copies with `recursive = true` instead, because `mkOutOfStoreSymlink` on a directory conflicts with HM's file management when other modules also create files inside that directory. Host-specific settings in `home/hosts/<name>/config/` use store copies for the same reason.
 
 The `hostname` is passed via `specialArgs` in `flake.nix`, allowing shared modules like `noctalia.nix` to read host-specific settings.
 
@@ -96,6 +98,8 @@ Nemo is the default file manager. `gvfs` and `nemo-with-extensions` are installe
 1. Place the config file in `config/<app>/`
 2. Create or update a module in `home/desktop/`:
 
+For a single file (live symlink, edits take effect immediately):
+
 ```nix
 { config, ... }:
 
@@ -107,18 +111,28 @@ in
 }
 ```
 
+For a directory with multiple files (store copy, requires rebuild):
+
+```nix
+{ ... }:
+
+{
+  xdg.configFile."app" = {
+    source = ../../config/app;
+    recursive = true;
+  };
+}
+```
+
 3. It will be auto-imported by `scanPaths` in `default.nix`
 
 ## Host-Specific Overrides
 
-In `home/hosts/<name>/default.nix`, add host-specific settings after the imports. Hardware config files in `home/hosts/<name>/config/` are live-symlinked using `mkOutOfStoreSymlink`:
+In `home/hosts/<name>/default.nix`, add host-specific settings after the imports. Hardware config files in `home/hosts/<name>/config/` use store copies:
 
 ```nix
 { config, inputs, ... }:
 
-let
-  repoDir = "${config.home.homeDirectory}/nixos-conf";
-in
 {
   imports = [
     ../../core
@@ -128,8 +142,8 @@ in
     inputs.noctalia.homeModules.default
   ];
 
-  xdg.configFile."niri/niri-host-settings.kdl".source = config.lib.file.mkOutOfStoreSymlink "${repoDir}/home/hosts/<name>/config/niri-host-settings.kdl";
-  xdg.configFile."hypr/hypr-host-settings.lua".source = config.lib.file.mkOutOfStoreSymlink "${repoDir}/home/hosts/<name>/config/hypr-host-settings.lua";
+  xdg.configFile."niri/niri-host-settings.kdl".source = ./config/niri-host-settings.kdl;
+  xdg.configFile."hypr/hypr-host-settings.lua".source = ./config/hypr-host-settings.lua;
 }
 ```
 
