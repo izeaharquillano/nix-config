@@ -158,7 +158,6 @@ Or copy from an existing host and modify.
     secureboot.enable = true;     # UEFI Secure Boot
     zswap.enable = true;          # Zswap with zstd compression
     p2p.enable = true;            # Syncthing + NetBird VPN
-    # backup.enable = true;       # Restic backups
     # vm.enable = true;           # QEMU/KVM
     # gaming.enable = true;       # Steam, Gamescope, etc.
   };

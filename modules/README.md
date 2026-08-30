@@ -25,8 +25,7 @@ modules/
 │   ├── vm.nix           # QEMU/KVM + virt-manager (myfeatures.vm.enable)
 │   ├── gaming.nix       # Steam, Gamescope, Gamemode (myfeatures.gaming.enable)
 │   ├── zswap.nix        # Zswap with zstd compression (myfeatures.zswap.enable)
-│   ├── p2p.nix          # Syncthing + NetBird (myfeatures.p2p.enable)
-│   └── backup.nix       # Restic backups (myfeatures.backup.enable)
+│   └── p2p.nix          # Syncthing + NetBird (myfeatures.p2p.enable)
 └── security.nix         # Neovim, nix-ld, firewall
 ```
 
@@ -51,19 +50,8 @@ myfeatures = {
   gaming.enable = true;      # Steam, Gamescope, Gamemode, MangoHud
   zswap.enable = true;       # Zswap with zstd compression
   p2p.enable = true;         # Syncthing + NetBird VPN
-  backup.enable = true;      # Restic backups with pruning
 };
 ```
-
-### Backup Feature
-
-The `backup` feature module sets up automated backups using Restic. See the [main README](../README.md#backup) for full setup instructions.
-
-Key details:
-- Backs up home directory weekly
-- Excludes `.cache`, `.local/share/Trash`, `node_modules`, `.cargo/registry`
-- Prunes to 7 daily, 4 weekly, 6 monthly snapshots
-- Requires the `restic-password` secret (create with `agenix -e restic-password.age`) and a repository path (default: `/mnt/backup/restic-repo`)
 
 ### P2P Feature
 

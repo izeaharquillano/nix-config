@@ -116,6 +116,13 @@
 
       formatter = forAllSystems (system: treefmtEval.${system}.config.build.wrapper);
 
+      apps = forAllSystems (system: {
+        agenix = {
+          type = "app";
+          program = "${agenix.packages.${system}.default}/bin/agenix";
+        };
+      });
+
       devShells = forAllSystems (system: {
         default = nixpkgs.legacyPackages.${system}.mkShell {
           inputsFrom = [ treefmtEval.${system}.config.build.devShell ];

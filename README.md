@@ -33,7 +33,7 @@ A multi-host NixOS configuration using flakes and Home Manager. A gruvbox themed
 │   │   ├── system.nix         # Boot, networking, nix settings (recursive-nix, warn-dirty)
 │   │   ├── locale.nix         # Timezone, locale
 │   │   ├── ssh.nix            # OpenSSH (key-based auth only)
-│   │   ├── secrets.nix        # agenix secret declarations (age key config, secrets)
+│   │   ├── secrets.nix        # agenix secret declarations, identityPaths, token include
 │   │   └── packages.nix       # Base system packages
 │   ├── desktop/               # Desktop environment (auto-imported via scanPaths)
 │   │   ├── greetd.nix         # Login manager (tuigreet)
@@ -45,8 +45,7 @@ A multi-host NixOS configuration using flakes and Home Manager. A gruvbox themed
 │   │   ├── gaming.nix         # Steam, Gamescope, Gamemode, MangoHud
 │   │   ├── vm.nix             # QEMU/KVM + virt-manager
 │   │   ├── zswap.nix          # Zswap with zstd compression
-│   │   ├── p2p.nix            # Syncthing + NetBird
-│   │   └── backup.nix         # Restic backups (configurable paths, repository, exclude)
+│   │   └── p2p.nix            # Syncthing + NetBird
 │   └── security.nix           # Neovim, nix-ld, firewall, polkit
 ├── secrets/                    # Encrypted secrets (agenix)
 │   ├── secrets.nix            # Public key declarations for each secret
@@ -124,7 +123,7 @@ nix fmt
    ```nix
    nixosConfigurations.<name> = mkHost "<name>" "x86_64-linux";
    ```
-8. Add the host's SSH public key to `secrets/secrets.nix` and re-encrypt with `agenix --rekey`
+8. Add the host's SSH public key to `secrets/secrets.nix` and re-encrypt with `agenix --rekey` (see [Secrets Management](#adding-a-new-host))
 9. Symlink repo to `/etc/nixos` if not already done
 10. Deploy:
     ```bash
@@ -145,7 +144,6 @@ myfeatures = {
   gaming.enable = true;      # Steam, Gamescope, Gamemode, MangoHud
   zswap.enable = true;       # Zswap with zstd compression
   p2p.enable = true;         # Syncthing + NetBird VPN
-  backup.enable = true;      # Restic backups (configurable paths, repository, exclude)
 };
 ```
 
@@ -155,9 +153,17 @@ Adding a new feature: create `modules/features/<name>.nix` with `options.myfeatu
 
 This config uses [agenix](https://github.com/ryantm/agenix) for managing encrypted secrets. Secrets are encrypted with [age](https://github.com/FiloSottile/age) using SSH host keys.
 
-The flake passes `flakeRoot = self` via `specialArgs`, allowing modules to reference `.age` files in the repo root using absolute paths.
+The flake passes `flakeRoot = self` via `specialArgs`, allowing modules to reference `.age` files in the repo root using absolute store paths. The `age.identityPaths` option is explicitly set in `modules/core/secrets.nix` to `/etc/ssh/ssh_host_ed25519_key`.
 
-### Setup
+### How It Works
+
+1. Secrets are encrypted with age using SSH public keys from each host
+2. `secrets/secrets.nix` maps each `.age` file to the public keys that can decrypt it
+3. Feature modules declare `age.secrets.<name>` pointing to the `.age` file
+4. At boot, agenix decrypts secrets to `/run/agenix/` with the specified mode/owner
+5. Services reference the decrypted path via `config.age.secrets.<name>.path`
+
+### Setup (First Time)
 
 1. Get your host's SSH public key:
    ```bash
@@ -174,15 +180,13 @@ The flake passes `flakeRoot = self` via `specialArgs`, allowing modules to refer
    {
      "nix-access-tokens.age".publicKeys = systems;
      "netbird-setup-key.age".publicKeys = systems;
-     "restic-password.age".publicKeys = systems;
    }
    ```
 
-3. Create/edit encrypted secrets:
+3. Create encrypted secrets:
    ```bash
    agenix -e nix-access-tokens.age
    agenix -e netbird-setup-key.age
-   agenix -e restic-password.age
    ```
 
 4. Deploy:
@@ -197,11 +201,45 @@ The flake passes `flakeRoot = self` via `specialArgs`, allowing modules to refer
 | `nix-access-tokens.age` | Always | Nix/GitHub access tokens for private flakes |
 | `netbird-setup-key.age` | `myfeatures.p2p.enable = true` | NetBird VPN auto-login key |
 
-### Adding a New Host
+### Adding a New Secret
 
-1. Get the new host's SSH public key
-2. Add the key to `secrets/secrets.nix` for each secret
-3. Re-encrypt: `agenix --rekey`
+1. Create the encrypted file:
+   ```bash
+   agenix -e <secret-name>.age
+   ```
+   This opens `$EDITOR`. Write the secret, save, and quit to encrypt.
+
+2. Declare public keys in `secrets/secrets.nix`:
+   ```nix
+   {
+     # ...existing secrets...
+     "<secret-name>.age".publicKeys = systems;
+   }
+   ```
+
+3. Re-encrypt for all hosts:
+   ```bash
+   agenix --rekey
+   ```
+
+4. Reference it in a NixOS module:
+   ```nix
+   age.secrets.<secret-name> = {
+     file = "${flakeRoot}/secrets/<secret-name>.age";
+     owner = "root";
+     group = "root";
+     mode = "0400";
+   };
+   ```
+
+   Then use `config.age.secrets.<secret-name>.path` in your service config.
+
+### Removing a Secret
+
+1. Remove the declaration from `secrets/secrets.nix`
+2. Delete the `.age` file: `rm secrets/<secret-name>.age`
+3. Remove all `age.secrets.<secret-name>` declarations from module files
+4. Re-encrypt (clears orphaned references): `agenix --rekey`
 
 ### Editing Secrets
 
@@ -216,117 +254,72 @@ agenix -d <secret-name>.age
 agenix --rekey
 ```
 
-### Adding a New Secret
+### Adding a New Host
 
-1. Create the encrypted secret file:
-
+1. Get the new host's SSH public key:
    ```bash
-   agenix -e <secret-name>.age
+   ssh-keyscan <new-hostname> 2>/dev/null | grep ssh-ed25519
    ```
 
-   This opens your `$EDITOR` with a temp file. Write the secret, save, and quit to encrypt.
-
-2. Declare the public keys in `secrets/secrets.nix`:
-
+2. Add the key as a binding in `secrets/secrets.nix`:
    ```nix
-   {
-     # ...existing secrets...
-     "<secret-name>.age".publicKeys = systems;
-   }
+   let
+     newhost = "ssh-ed25519 AAAA... root@newhost";
+     systems = [ padrick jobert newhost ];
+   in
    ```
 
-3. Re-encrypt for all hosts:
-
+3. Re-encrypt all secrets for the new host:
    ```bash
    agenix --rekey
    ```
 
-4. Reference it in a NixOS module:
-
-   ```nix
-   age.secrets.<secret-name> = {
-     file = "${flakeRoot}/secrets/<secret-name>.age";
-     owner = "root";
-     group = "root";
-     mode = "0400";
-   };
-   ```
-
-   Then use `config.age.secrets.<secret-name>.path` in your service config.
-
-## Backup
-
-The `backup` feature module (`modules/features/backup.nix`) sets up automated backups using [Restic](https://restic.net/). Enable it per host:
-
-```nix
-myfeatures.backup.enable = true;
-```
-
-### Configuration
-
-The module supports the following options:
-
-```nix
-myfeatures.backup = {
-  enable = true;
-  paths = [ config.users.users.ize.home ];  # paths to back up (default: home directory)
-  repository = "/mnt/backup/restic-repo";   # restic repository path
-  exclude = [                                # paths to exclude
-    ".cache"
-    ".local/share/Trash"
-    "node_modules"
-    ".cargo/registry"
-  ];
-};
-```
-
-### Setup
-
-1. **Enable the backup feature** in `hosts/<name>/default.nix`:
-
-   ```nix
-   myfeatures.backup.enable = true;
-   ```
-
-2. **Add the restic password to agenix.** Create `restic-password.age` in the `secrets/` directory:
-
+4. Deploy to the new host:
    ```bash
-   agenix -e restic-password.age
+   sudo nixos-rebuild switch --flake .#newhost
    ```
 
-   Then add the key to `secrets/secrets.nix` and re-encrypt with `agenix --rekey`.
+### Resetting a Host (Lost SSH Keys)
 
-3. **Ensure the backup repository exists.** The default path is `/mnt/backup/restic-repo`. Override it via the `repository` option if using a different location (external drive, remote mount, etc.).
+If a host's SSH host key is lost or regenerated (e.g., after reinstalling), you need to update the key in `secrets/secrets.nix` and re-encrypt.
 
-4. **Deploy:**
+1. Get the new SSH public key from the host:
+   ```bash
+   ssh-keyscan <hostname> 2>/dev/null | grep ssh-ed25519
+   ```
 
+2. Update the key binding in `secrets/secrets.nix`:
+   ```nix
+   let
+     # Replace the old key with the new one
+     padrick = "ssh-ed25519 AAAA... root@padrick";
+     systems = [ padrick jobert ];
+   in
+   ```
+
+3. Re-encrypt all secrets (this re-encrypts with the new key):
+   ```bash
+   agenix --rekey
+   ```
+
+4. Deploy from another host or from the target if it can already build:
    ```bash
    sudo nixos-rebuild switch --flake .#<hostname>
    ```
 
-**Note:** The `restic-password` secret is only required when backup is enabled. If you don't use backups, you can omit it from `secrets/secrets.nix`.
+**Important:** If the lost host was the only one that could decrypt a secret, you'll need to re-create the secret from another host that still has access, or from a backup of the decrypted value.
 
-### What It Does
+### Using the agenix CLI
 
-- **Backs up** the configured paths (default: home directory, excluding `.cache`, `.local/share/Trash`, `node_modules`, `.cargo/registry`)
-- **Runs weekly** via systemd timer (`Persistent = true` catches missed runs)
-- **Prunes old snapshots** automatically: keeps 7 daily, 4 weekly, 6 monthly
-- **Installs `restic`** system-wide for manual operations
-
-### Manual Operations
+The agenix CLI is available in two ways:
 
 ```bash
-# List snapshots
-sudo restic -r /mnt/backup/restic-repo snapshots
+# Via the dev shell
+nix develop
+agenix -e <secret>.age
 
-# Restore a specific snapshot
-sudo restic -r /mnt/backup/restic-repo restore latest --target /tmp/restore
-
-# Run a backup manually
-sudo systemctl start restic-backup-home.service
-
-# Check repository integrity
-sudo restic -r /mnt/backup/restic-repo check
+# As a flake app (no dev shell needed)
+nix run .#agenix -- -e <secret>.age
 ```
 
 ## Host-Specific Packages
@@ -418,7 +411,7 @@ agenix -e nix-access-tokens.age
 # access-tokens = github.com=ghp_GithubTokenHere
 ```
 
-The token is automatically included in Nix configuration via `nix.extraOptions` in `modules/core/secrets.nix`.
+The token is automatically included in Nix configuration via `nix.extraOptions` in `modules/core/secrets.nix`. On first boot, an activation script ensures the token file exists before Nix reads it.
 
 ### NetBird Access Token
 
