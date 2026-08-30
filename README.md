@@ -312,7 +312,7 @@ Get a device's ID from the Syncthing GUI under Actions > Show ID.
 | `hyprland` | Hyprland Wayland compositor |
 | `noctalia` | Wayland shell/bar |
 | `zen-browser` | Zen Browser (Firefox-based) |
-| `treefmt-nix` | Nix code formatting (nixpkgs-fmt, shfmt) |
+| `treefmt-nix` | Nix code formatting (nixfmt, shfmt) |
 
 ## Formatting
 
@@ -326,7 +326,7 @@ nix fmt
 nix flake check
 ```
 
-The formatter is configured with `nixpkgs-fmt` for Nix files and `shfmt` for shell scripts.
+The formatter is configured with `nixfmt` for Nix files and `shfmt` for shell scripts.
 
 ## Scripts
 

@@ -7,7 +7,7 @@ User-level configuration managed by Home Manager.
 ```
 home/
 ├── core/                    # Shared across all hosts
-│   ├── default.nix          # Aggregator + stateVersion, username, backupFileExtension
+│   ├── default.nix          # Aggregator + stateVersion, username
 │   ├── shell.nix            # Bash, zsh, git, starship, zoxide, aliases (shared via let)
 │   ├── packages.nix         # CLI tools (fd, fzf, btop, ripgrep, opencode, etc.)
 │   └── xdg.nix              # XDG user directories + portal config
@@ -60,7 +60,7 @@ For niri, the main `config.kdl` uses `include "./niri-host-settings.kdl"` to pul
 
 ## Home Manager Backup
 
-If existing files conflict with Home Manager managed files, HM will rename them with a `.hm-bak` extension instead of failing. This is configured in `home/core/default.nix`:
+If existing files conflict with Home Manager managed files, HM will rename them with a `.hm-bak` extension instead of failing. This is configured in `flake.nix` under the `mkHost` helper:
 
 ```nix
 home-manager.backupFileExtension = "hm-bak";
