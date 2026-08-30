@@ -267,7 +267,7 @@ Create `home/hosts/<name>/default.nix`:
 Add a new `mkHost` call in the `outputs` attrset:
 
 ```nix
-nixosConfigurations.<name> = mkHost "<name>";
+nixosConfigurations.<name> = mkHost "<name>" "x86_64-linux";
 ```
 
 The `mkHost` helper handles all the boilerplate (system, specialArgs, home-manager config). See the root README for details.

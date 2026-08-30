@@ -83,7 +83,7 @@ sudo ln -s /path/to/nixos-conf /etc/nixos
 # Set up secrets (first time only)
 # 1. Get your host's SSH public key: ssh-keyscan <hostname> 2>/dev/null | grep ssh-ed25519
 # 2. Add keys to secrets/secrets.nix
-# 3. Create encrypted secrets: agenix -e <secret-name>.age (see Secrets Management section)
+# 3. Create encrypted secrets: agenix -e <secret-name>.age
 
 # Deploy for padrick
 sudo nixos-rebuild switch --flake .#padrick
@@ -100,21 +100,38 @@ nix fmt
 
 ## Adding a New Host
 
-1. Create `hosts/<name>/default.nix` and `hardware-configuration.nix`
-2. Create `hosts/<name>/packages.nix` for host-specific system packages
-3. Create `hosts/<name>/services.nix` for host-specific services
-4. Create `hosts/<name>/hardware.nix` for host-specific hardware config (kernel params, swap, GPU)
-5. Enable optional features via `myfeatures.*` options in `default.nix` (see [Feature Options](#feature-options))
-6. Create `home/hosts/<name>/default.nix` for host-specific HM config (imports core + desktop)
-7. Create `home/hosts/<name>/packages.nix` for host-specific user packages
-8. Create `home/hosts/<name>/config/` with monitor configs:
+1. Create the host directory and generate hardware config:
+
+   ```bash
+   mkdir -p hosts/<name>
+   mkdir -p home/hosts/<name>/config
+   ```
+
+2. On the target machine, generate the hardware config:
+
+   ```bash
+   sudo nixos-generate-config --show-hardware-config > hosts/<name>/hardware-configuration.nix
+   ```
+
+3. Create `hosts/<name>/default.nix` (see [hosts/README.md](hosts/README.md) for a template)
+4. Create `hosts/<name>/hardware.nix`, `packages.nix`, `services.nix`
+5. Create `home/hosts/<name>/default.nix` and `packages.nix`
+6. Create `home/hosts/<name>/config/` with monitor configs:
    - `niri-host-settings.kdl` for host-specific Niri settings
    - `hypr-host-settings.lua` for host-specific Hyprland settings
-   - `noctalia-host-settings.toml` for host-specific Noctalia settings (optional)
-9. Add a new `nixosConfigurations.<name>` entry in `flake.nix` (or add to `mkHost` calls)
-10. Add the host's SSH public key to `secrets/secrets.nix` and re-encrypt secrets with `agenix --rekey` (see [Secrets Management](#secrets-management))
-11. Symlink repo to `/etc/nixos` if not already done
-12. See [hosts/README.md](hosts/README.md) for a detailed walkthrough
+   - `noctalia-host-settings.toml` for Noctalia (optional)
+7. Add a new entry in `flake.nix`:
+   ```nix
+   nixosConfigurations.<name> = mkHost "<name>" "x86_64-linux";
+   ```
+8. Add the host's SSH public key to `secrets/secrets.nix` and re-encrypt with `agenix --rekey`
+9. Symlink repo to `/etc/nixos` if not already done
+10. Deploy:
+    ```bash
+    sudo nixos-rebuild switch --flake .#<name>
+    ```
+
+See [hosts/README.md](hosts/README.md) for a detailed walkthrough with code examples.
 
 ## Feature Options
 
@@ -198,6 +215,44 @@ agenix -d <secret-name>.age
 # Re-encrypt all secrets after key changes
 agenix --rekey
 ```
+
+### Adding a New Secret
+
+1. Create the encrypted secret file:
+
+   ```bash
+   agenix -e <secret-name>.age
+   ```
+
+   This opens your `$EDITOR` with a temp file. Write the secret, save, and quit to encrypt.
+
+2. Declare the public keys in `secrets/secrets.nix`:
+
+   ```nix
+   {
+     # ...existing secrets...
+     "<secret-name>.age".publicKeys = systems;
+   }
+   ```
+
+3. Re-encrypt for all hosts:
+
+   ```bash
+   agenix --rekey
+   ```
+
+4. Reference it in a NixOS module:
+
+   ```nix
+   age.secrets.<secret-name> = {
+     file = "${flakeRoot}/secrets/<secret-name>.age";
+     owner = "root";
+     group = "root";
+     mode = "0400";
+   };
+   ```
+
+   Then use `config.age.secrets.<secret-name>.path` in your service config.
 
 ## Backup
 
