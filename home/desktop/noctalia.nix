@@ -1,4 +1,9 @@
-{ config, hostname, repoRoot, ... }:
+{
+  config,
+  hostname,
+  repoRoot,
+  ...
+}:
 
 let
   hostSettingsFile = ../hosts/${hostname}/config/noctalia-host-settings.toml;
@@ -8,8 +13,10 @@ in
 {
   programs.noctalia.enable = true;
 
-  xdg.configFile."noctalia/config.toml".source = config.lib.file.mkOutOfStoreSymlink "${repoRoot}/config/noctalia/config.toml";
-  xdg.configFile."noctalia/wallpapers".source = config.lib.file.mkOutOfStoreSymlink "${repoRoot}/_img/wallpapers";
+  xdg.configFile."noctalia/config.toml".source =
+    config.lib.file.mkOutOfStoreSymlink "${repoRoot}/config/noctalia/config.toml";
+  xdg.configFile."noctalia/wallpapers".source =
+    config.lib.file.mkOutOfStoreSymlink "${repoRoot}/_img/wallpapers";
 
   xdg.configFile."noctalia/wallpaper.toml".text =
     let
