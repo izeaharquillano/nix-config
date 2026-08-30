@@ -1,4 +1,9 @@
-{ config, pkgs, lib, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 
 {
   boot = {
@@ -16,7 +21,11 @@
   nixpkgs.config.allowUnfree = true;
 
   nix.settings = {
-    experimental-features = [ "nix-command" "flakes" "recursive-nix" ];
+    experimental-features = [
+      "nix-command"
+      "flakes"
+      "recursive-nix"
+    ];
     max-jobs = "auto";
     cores = 0;
     http-connections = 50;
@@ -37,13 +46,21 @@
   };
 
   nix.extraOptions = ''
-    ${if builtins.pathExists "/etc/nix/github-token.conf" then "!include /etc/nix/github-token.conf" else ""}
+    ${
+      if builtins.pathExists "/etc/nix/github-token.conf" then
+        "!include /etc/nix/github-token.conf"
+      else
+        ""
+    }
   '';
 
   users.users."ize" = {
     isNormalUser = true;
     description = "ize";
-    extraGroups = [ "networkmanager" "wheel" ];
+    extraGroups = [
+      "networkmanager"
+      "wheel"
+    ];
     shell = pkgs.zsh;
   };
 }

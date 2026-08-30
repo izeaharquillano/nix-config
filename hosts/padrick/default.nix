@@ -1,4 +1,10 @@
-{ config, pkgs, lib, inputs, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  inputs,
+  ...
+}:
 
 {
   imports = [
@@ -19,6 +25,7 @@
     btrfs.enable = true;
     secureboot.enable = true;
     zswap.enable = true;
+    p2p.enable = true;
   };
 
   system.stateVersion = "26.05";

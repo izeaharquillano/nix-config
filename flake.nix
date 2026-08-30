@@ -39,31 +39,79 @@
       url = "github:hyprwm/Hyprland";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-  };
 
-  outputs = inputs@{ self, nixpkgs, home-manager, ... }:
-  let
-    mylib = import ./lib { lib = nixpkgs.lib; };
-
-    mkHost = hostname: nixpkgs.lib.nixosSystem {
-      system = "x86_64-linux";
-      specialArgs = { inherit inputs mylib; inherit hostname; };
-      modules = [
-        ./hosts/${hostname}
-        home-manager.nixosModules.home-manager
-        {
-          home-manager = {
-            useGlobalPkgs = true;
-            useUserPackages = true;
-            users.ize = import ./home/hosts/${hostname};
-            extraSpecialArgs = { inherit inputs mylib; inherit hostname; };
-          };
-        }
-      ];
+    treefmt-nix = {
+      url = "github:numtide/treefmt-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
     };
-  in
-  {
-    nixosConfigurations.padrick = mkHost "padrick";
-    nixosConfigurations.jobert = mkHost "jobert";
   };
+
+  outputs =
+    inputs@{
+      self,
+      nixpkgs,
+      home-manager,
+      treefmt-nix,
+      ...
+    }:
+    let
+      mylib = import ./lib { lib = nixpkgs.lib; };
+
+      forAllSystems = nixpkgs.lib.genAttrs [
+        "x86_64-linux"
+        "aarch64-linux"
+      ];
+
+      treefmtEval = forAllSystems (
+        system:
+        treefmt-nix.lib.evalModule nixpkgs.legacyPackages.${system} {
+          projectRootFile = "flake.nix";
+
+          programs.nixfmt.enable = true;
+          programs.shfmt.enable = true;
+        }
+      );
+
+      mkHost =
+        hostname: system:
+        nixpkgs.lib.nixosSystem {
+          inherit system;
+          specialArgs = {
+            inherit inputs mylib;
+            inherit hostname;
+          };
+          modules = [
+            ./hosts/${hostname}
+            home-manager.nixosModules.home-manager
+            {
+              home-manager = {
+                useGlobalPkgs = true;
+                useUserPackages = true;
+                backupFileExtension = "hm-bak";
+                users.ize = import ./home/hosts/${hostname};
+                extraSpecialArgs = {
+                  inherit inputs mylib;
+                  inherit hostname;
+                };
+              };
+            }
+          ];
+        };
+    in
+    {
+      nixosConfigurations.padrick = mkHost "padrick" "x86_64-linux";
+      nixosConfigurations.jobert = mkHost "jobert" "x86_64-linux";
+
+      checks = forAllSystems (system: {
+        formatting = treefmtEval.${system}.config.build.check self;
+      });
+
+      formatter = forAllSystems (system: treefmtEval.${system}.config.build.wrapper);
+
+      devShells = forAllSystems (system: {
+        default = nixpkgs.legacyPackages.${system}.mkShell {
+          inputsFrom = [ treefmtEval.${system}.config.build.devShell ];
+        };
+      });
+    };
 }

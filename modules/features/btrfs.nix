@@ -2,7 +2,12 @@
 
 let
   cfg = config.myfeatures.btrfs;
-  btrfsOpts = [ "compress=zstd:3" "noatime" "ssd" "commit=120" ];
+  btrfsOpts = [
+    "compress=zstd:3"
+    "noatime"
+    "ssd"
+    "commit=120"
+  ];
 in
 {
   options.myfeatures.btrfs = {

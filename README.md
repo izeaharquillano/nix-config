@@ -32,36 +32,36 @@ A multi-host NixOS configuration using flakes and Home Manager.
 │   ├── core/                  # Shared by all hosts (auto-imported via scanPaths)
 │   │   ├── system.nix         # Boot, networking, nix settings (recursive-nix, warn-dirty)
 │   │   ├── locale.nix         # Timezone, locale
+│   │   ├── ssh.nix            # OpenSSH (key-based auth only)
 │   │   └── packages.nix       # Base system packages
 │   ├── desktop/               # Desktop environment (auto-imported via scanPaths)
 │   │   ├── greetd.nix         # Login manager (tuigreet)
 │   │   ├── niri.nix           # Niri Wayland compositor
-│   │   ├── services.nix       # Pipewire, fonts, firewall, rtkit, bluetooth
-│   │   ├── p2p.nix            # Syncthing + NetBird
-│   │   └── syncthing-devices.nix
+│   │   └── services.nix       # Pipewire, fonts, rtkit, bluetooth
 │   ├── features/              # Optional feature modules (mkEnableOption, auto-imported)
 │   │   ├── btrfs.nix          # BTRFS mount options (myfeatures.btrfs.enable)
 │   │   ├── secureboot.nix     # UEFI Secure Boot via Lanzaboote
 │   │   ├── gaming.nix         # Steam, Gamescope, Gamemode, MangoHud
 │   │   ├── vm.nix             # QEMU/KVM + virt-manager
 │   │   ├── zswap.nix          # Zswap with zstd compression
+│   │   ├── p2p.nix            # Syncthing + NetBird
 │   │   └── backup.nix         # Restic backups (configurable paths, repository, exclude)
 │   └── security.nix           # Neovim, nix-ld, shell aliases
 ├── home/                      # Home Manager modules
 │   ├── core/                  # Shell, packages, XDG (auto-imported via scanPaths)
-│   │   ├── shell.nix          # Git, bash, zsh (cat=bat alias), starship, zoxide
+│   │   ├── shell.nix          # Git, bash, zsh (shared aliases via let binding), starship, zoxide
 │   ├── desktop/               # GUI app configs (auto-imported via scanPaths)
 │   └── hosts/                 # Host-specific HM overrides
 │       ├── padrick/
 │       │   ├── default.nix    # Imports core + desktop, symlinks host configs
-│       │   ├── packages.nix
+│       │   ├── packages.nix   # btop
 │       │   └── config/        # Host-specific dotfiles
 │       │       ├── niri-host-settings.kdl
 │       │       ├── hypr-host-settings.lua
 │       │       └── noctalia-host-settings.toml
 │       └── jobert/
 │           ├── default.nix
-│           ├── packages.nix
+│           ├── packages.nix   # btop-cuda, chromium, prismlauncher
 │           └── config/
 │               ├── niri-host-settings.kdl
 │               ├── hypr-host-settings.lua
@@ -83,6 +83,9 @@ sudo nixos-rebuild switch --flake .#jobert
 
 # Build without switching
 nix build .#nixosConfigurations.padrick.config.system.build.toplevel
+
+# Format all .nix files
+nix fmt
 ```
 
 ## Adding a New Host
@@ -113,6 +116,7 @@ myfeatures = {
   vm.enable = true;          # QEMU/KVM + virt-manager
   gaming.enable = true;      # Steam, Gamescope, Gamemode, MangoHud
   zswap.enable = true;       # Zswap with zstd compression
+  p2p.enable = true;         # Syncthing + NetBird VPN
   backup.enable = true;      # Restic backups (configurable paths, repository, exclude)
 };
 ```
@@ -216,21 +220,19 @@ Shared packages live in `modules/core/packages.nix` (system) and `home/core/pack
 
 ## Firewall
 
-The firewall is enabled system-wide in `modules/desktop/services.nix` via `networking.firewall`. It blocks all inbound connections by default except for explicitly allowed ports.
+The firewall is enabled system-wide in `modules/security.nix` via `networking.firewall`. It blocks all inbound connections by default except for explicitly allowed ports.
 
 ### Open Ports
 
 | Port | Protocol | Service |
 |------|----------|---------|
-| 8384 | TCP | Syncthing GUI |
-| 22000 | TCP | Syncthing sync |
-| 21027 | UDP | Syncthing discovery |
-| 22000 | UDP | Syncthing sync |
 | 51820 | UDP | NetBird (WireGuard) |
+
+Syncthing ports are opened automatically when `myfeatures.p2p.enable = true` via `services.syncthing.openDefaultPorts`.
 
 ### Adding Ports
 
-To open additional ports, edit `modules/desktop/services.nix`:
+To open additional ports, edit `modules/security.nix`:
 
 ```nix
 networking.firewall = {
@@ -284,17 +286,19 @@ sudo mkdir -p /etc/netbird
 echo "your-netbird-setup-key" | sudo tee /etc/netbird/setup-key
 ```
 
-Used by `services.netbird` in `modules/desktop/p2p.nix` for automatic login.
+Used by `services.netbird` in `modules/features/p2p.nix` for automatic login.
 
 ### Syncthing Device IDs
 
-Syncthing device IDs are stored in `modules/desktop/syncthing-devices.nix` (gitignored). To set up:
+Syncthing device IDs are configured inline in `modules/features/p2p.nix`. To change the server device ID, edit the `devices` attrset:
 
-```bash
-cp modules/desktop/syncthing-devices.nix.example modules/desktop/syncthing-devices.nix
+```nix
+services.syncthing.settings.devices = {
+  "Server".id = "YOUR-DEVICE-ID";
+};
 ```
 
-Then edit the file with your device IDs. Get a device's ID from the Syncthing GUI under Actions > Show ID.
+Get a device's ID from the Syncthing GUI under Actions > Show ID.
 
 ## Flake Inputs
 
@@ -308,6 +312,21 @@ Then edit the file with your device IDs. Get a device's ID from the Syncthing GU
 | `hyprland` | Hyprland Wayland compositor |
 | `noctalia` | Wayland shell/bar |
 | `zen-browser` | Zen Browser (Firefox-based) |
+| `treefmt-nix` | Nix code formatting (nixpkgs-fmt, shfmt) |
+
+## Formatting
+
+This config uses `treefmt-nix` for consistent code formatting. Run:
+
+```bash
+# Format all .nix files
+nix fmt
+
+# Check formatting without modifying
+nix flake check
+```
+
+The formatter is configured with `nixpkgs-fmt` for Nix files and `shfmt` for shell scripts.
 
 ## Scripts
 
@@ -332,6 +351,7 @@ The `lib/` directory contains helper functions used throughout the config. The k
 ## Security
 
 - **Firewall:** Enabled system-wide with explicit port allowlists (see [Firewall](#firewall))
+- **SSH:** OpenSSH enabled with key-based auth only, root login denied (`modules/core/ssh.nix`)
 - **RealtimeKit:** `security.rtkit.enable` grants real-time scheduling to PipeWire for low-latency audio
 - **Polkit:** `security.polkit.enable` for privilege escalation prompts
 - **Secure Boot:** Optional via `myfeatures.secureboot.enable` (Lanzaboote)
@@ -349,7 +369,7 @@ Configured in `modules/core/system.nix`:
 ## Shell
 
 - **Primary:** Zsh with autosuggestion, syntax highlighting, completions
-- **Aliases:** `cat` → `bat`, `ls`/`ll`/`lt` → `eza`, `svim` → `sudoedit`
+- **Aliases:** Shared aliases extracted to `let` binding in `home/core/shell.nix`, with zsh-only aliases (`ls`/`ll`/`lt` → `eza`) in a separate attrset
 - **Prompt:** Starship with Nerd Font symbols
 - **Smart cd:** Zoxide
 - **Git:** LazyGit for terminal UI

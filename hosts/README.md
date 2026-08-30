@@ -29,7 +29,20 @@ hosts/jobert/
 └── services.nix                # auto-cpufreq, UPower, systemd-resolved
 ```
 
-Shared features (BTRFS, Secure Boot, gaming, virtualisation) are configured via `myfeatures.*` options in each host's `default.nix`. Feature modules live in `modules/features/` and are auto-imported via `scanPaths`.
+Shared features (BTRFS, Secure Boot, gaming, virtualisation, P2P) are configured via `myfeatures.*` options in each host's `default.nix`. Feature modules live in `modules/features/` and are auto-imported via `scanPaths`.
+
+### padrick: Daily Use ThinkPad
+
+`padrick` enables core features in `hosts/padrick/default.nix`:
+
+```nix
+myfeatures = {
+  btrfs.enable = true;       # BTRFS mount options
+  secureboot.enable = true;  # UEFI Secure Boot
+  zswap.enable = true;       # Zswap with zstd compression
+  p2p.enable = true;         # Syncthing + NetBird
+};
+```
 
 ### jobert: Gaming & Virtualization
 
@@ -40,6 +53,7 @@ myfeatures = {
   btrfs.enable = true;       # BTRFS mount options
   secureboot.enable = true;  # UEFI Secure Boot
   zswap.enable = true;       # Zswap with zstd compression
+  p2p.enable = true;         # Syncthing + NetBird
   vm.enable = true;          # QEMU/KVM + virt-manager
   gaming.enable = true;      # Steam, Gamescope, Gamemode, MangoHud
 };
@@ -126,10 +140,10 @@ Or copy from an existing host and modify.
 
 {
   imports = [
-    ../../modules/core              # Base system config
+    ../../modules/core              # Base system config (includes SSH)
     ../../modules/desktop           # Desktop environment (skip for servers)
-    ../../modules/security.nix      # Neovim, nix-ld
-    ../../modules/features          # Optional feature modules (auto-imported)
+    ../../modules/security.nix      # Neovim, nix-ld, firewall
+    ../..//modules/features          # Optional feature modules (auto-imported)
     ./hardware-configuration.nix
     ./packages.nix                  # Host-specific system packages
     ./services.nix                  # Host-specific services
@@ -143,6 +157,7 @@ Or copy from an existing host and modify.
     btrfs.enable = true;          # BTRFS mount options
     secureboot.enable = true;     # UEFI Secure Boot
     zswap.enable = true;          # Zswap with zstd compression
+    p2p.enable = true;            # Syncthing + NetBird VPN
     # backup.enable = true;       # Restic backups
     # vm.enable = true;           # QEMU/KVM
     # gaming.enable = true;       # Steam, Gamescope, etc.
@@ -192,7 +207,7 @@ Services enabled in `modules/core/` or `modules/desktop/` apply to all hosts via
 { lib, ... }:
 
 {
-  # Disable syncthing and netbird (modules/desktop/p2p.nix)
+  # Disable syncthing and netbird (modules/features/p2p.nix)
   services.syncthing.enable = lib.mkForce false;
   services.netbird.enable = lib.mkForce false;
 

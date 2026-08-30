@@ -18,7 +18,6 @@
     bat
 
     # terminal tools
-    btop-cuda
     fastfetch
     zoxide
     lazygit

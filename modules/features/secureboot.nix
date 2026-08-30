@@ -1,4 +1,10 @@
-{ pkgs, lib, inputs, config, ... }:
+{
+  pkgs,
+  lib,
+  inputs,
+  config,
+  ...
+}:
 
 let
   cfg = config.myfeatures.secureboot;

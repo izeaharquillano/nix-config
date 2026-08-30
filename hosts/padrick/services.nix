@@ -42,15 +42,23 @@
   services.udev.extraRules = ''
     ACTION=="add", SUBSYSTEM=="leds", KERNEL=="platform::micmute", \
     RUN+="${pkgs.coreutils}/bin/chmod 0666 /sys/class/leds/%k/brightness"
-    '';
+  '';
 
   systemd.user.services.mic-mute-led-sync = {
     description = "Mic Mute LED Sync";
     wantedBy = [ "graphical-session.target" ];
     partOf = [ "graphical-session.target" ];
-    after = [ "pipewire.service" "wireplumber.service" ];
+    after = [
+      "pipewire.service"
+      "wireplumber.service"
+    ];
 
-    path = with pkgs; [ wireplumber pulseaudio gnugrep coreutils ];
+    path = with pkgs; [
+      wireplumber
+      pulseaudio
+      gnugrep
+      coreutils
+    ];
 
     script = ''
       readonly LED_PATH="/sys/class/leds/platform::micmute/brightness"

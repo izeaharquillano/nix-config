@@ -2,7 +2,5 @@
 
 {
   environment.systemPackages = with pkgs; [
-    chromium
-    prismlauncher
   ];
 }

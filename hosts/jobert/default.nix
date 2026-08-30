@@ -1,4 +1,10 @@
-{ config, pkgs, lib, inputs, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  inputs,
+  ...
+}:
 
 {
   imports = [
@@ -21,6 +27,7 @@
     btrfs.enable = true;
     secureboot.enable = true;
     zswap.enable = true;
+    p2p.enable = true;
     vm.enable = true;
     gaming.enable = true;
   };
