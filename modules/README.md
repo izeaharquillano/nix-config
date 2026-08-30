@@ -63,7 +63,7 @@ Key details:
 - Backs up home directory weekly
 - Excludes `.cache`, `.local/share/Trash`, `node_modules`, `.cargo/registry`
 - Prunes to 7 daily, 4 weekly, 6 monthly snapshots
-- Requires the `restic-password` secret in `secrets/restic-password.age` (decrypted to `/run/agenix/restic-password` via agenix) and a repository path (default: `/mnt/backup/restic-repo`)
+- Requires the `restic-password` secret (create with `agenix -e restic-password.age`) and a repository path (default: `/mnt/backup/restic-repo`)
 
 ### P2P Feature
 

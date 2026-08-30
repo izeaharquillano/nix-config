@@ -51,9 +51,7 @@ A multi-host NixOS configuration using flakes and Home Manager. A gruvbox themed
 ├── secrets/                    # Encrypted secrets (agenix)
 │   ├── secrets.nix            # Public key declarations for each secret
 │   ├── nix-access-tokens.age  # Nix/GitHub access tokens (encrypted)
-│   ├── netbird-setup-key.age  # NetBird VPN setup key (encrypted)
-│   ├── restic-password.age    # Restic repository password (encrypted)
-│   └── README.md              # Secrets management documentation
+│   └── netbird-setup-key.age  # NetBird VPN setup key (encrypted)
 ├── home/                      # Home Manager modules
 │   ├── core/                  # Shell, packages, XDG (auto-imported via scanPaths)
 │   │   ├── shell.nix          # Git, bash, zsh (shared aliases via let binding), starship, zoxide
@@ -85,7 +83,7 @@ sudo ln -s /path/to/nixos-conf /etc/nixos
 # Set up secrets (first time only)
 # 1. Get your host's SSH public key: ssh-keyscan <hostname> 2>/dev/null | grep ssh-ed25519
 # 2. Add keys to secrets/secrets.nix
-# 3. Create encrypted secrets: agenix -e <secret-name>.age (see secrets/README.md)
+# 3. Create encrypted secrets: agenix -e <secret-name>.age (see Secrets Management section)
 
 # Deploy for padrick
 sudo nixos-rebuild switch --flake .#padrick
@@ -179,15 +177,14 @@ The flake passes `flakeRoot = self` via `specialArgs`, allowing modules to refer
 
 | Secret | Required By | Purpose |
 |--------|-------------|---------|
+| `nix-access-tokens.age` | Always | Nix/GitHub access tokens for private flakes |
 | `netbird-setup-key.age` | `myfeatures.p2p.enable = true` | NetBird VPN auto-login key |
-| `restic-password.age` | `myfeatures.backup.enable = true` | Restic repository password |
 
 ### Adding a New Host
 
 1. Get the new host's SSH public key
 2. Add the key to `secrets/secrets.nix` for each secret
 3. Re-encrypt: `agenix --rekey`
-4. See [secrets/README.md](secrets/README.md) for detailed instructions
 
 ### Editing Secrets
 
@@ -236,7 +233,13 @@ myfeatures.backup = {
    myfeatures.backup.enable = true;
    ```
 
-2. **Add the restic password to agenix.** See [Secrets Management](#secrets-management) for how to create and encrypt secrets. Create `restic-password.age` in the `secrets/` directory.
+2. **Add the restic password to agenix.** Create `restic-password.age` in the `secrets/` directory:
+
+   ```bash
+   agenix -e restic-password.age
+   ```
+
+   Then add the key to `secrets/secrets.nix` and re-encrypt with `agenix --rekey`.
 
 3. **Ensure the backup repository exists.** The default path is `/mnt/backup/restic-repo`. Override it via the `repository` option if using a different location (external drive, remote mount, etc.).
 
@@ -353,14 +356,25 @@ This tells Windows to treat the hardware clock as UTC, matching Linux. Reboot Wi
 If you use private flakes or want to avoid GitHub rate limits:
 
 ```bash
-echo "access-tokens = github.com=ghp_GithubTokenHere" | sudo tee /etc/nix/github-token.conf
+# Create/edit the agenix secret
+agenix -e nix-access-tokens.age
+
+# Add your token in the format:
+# access-tokens = github.com=ghp_GithubTokenHere
 ```
 
-Read automatically via `nix.extraOptions` in `modules/core/system.nix`. The config handles missing files gracefully.
+The token is automatically included in Nix configuration via `nix.extraOptions` in `modules/core/secrets.nix`.
 
 ### NetBird Access Token
 
-The NetBird setup key is managed via agenix. See [Secrets Management](#secrets-management) for how to create and encrypt secrets. Create `netbird-setup-key.age` in the `secrets/` directory.
+The NetBird setup key is managed via agenix:
+
+```bash
+# Create/edit the agenix secret
+agenix -e netbird-setup-key.age
+```
+
+The key is automatically decrypted to `/run/agenix/netbird-setup-key` and referenced by the NetBird service.
 
 ### Syncthing Device IDs
 

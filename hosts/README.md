@@ -315,10 +315,12 @@ This must be done before any files are written to the directory. If Steam is alr
 
 ## GitHub Access Token (Optional)
 
-If you use private flakes or want to avoid GitHub rate limits, create a token file before building:
+If you use private flakes or want to avoid GitHub rate limits, add your token via agenix:
 
 ```bash
-echo "access-tokens = github.com=ghp_GithubTokenHere" | sudo tee /etc/nix/github-token.conf
+agenix -e nix-access-tokens.age
 ```
 
-Nix reads this automatically via `nix.extraOptions` in `modules/core/system.nix`. The config handles missing files gracefully.
+Add the token in the format: `access-tokens = github.com=ghp_GithubTokenHere`
+
+The token is automatically included in Nix configuration via `nix.extraOptions` in `modules/core/secrets.nix`.

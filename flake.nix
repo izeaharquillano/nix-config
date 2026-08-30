@@ -119,6 +119,7 @@
       devShells = forAllSystems (system: {
         default = nixpkgs.legacyPackages.${system}.mkShell {
           inputsFrom = [ treefmtEval.${system}.config.build.devShell ];
+          packages = [ agenix.packages.${system}.default ];
         };
       });
     };
