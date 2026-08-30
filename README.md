@@ -266,7 +266,7 @@ sudo restic -r /mnt/backup/restic-repo snapshots
 sudo restic -r /mnt/backup/restic-repo restore latest --target /tmp/restore
 
 # Run a backup manually
-sudo systemctl start restic-backup-btrfs.service
+sudo systemctl start restic-backup-home.service
 
 # Check repository integrity
 sudo restic -r /mnt/backup/restic-repo check

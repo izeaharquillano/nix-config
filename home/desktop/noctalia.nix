@@ -6,10 +6,7 @@ let
     if builtins.pathExists hostSettingsFile then builtins.readFile hostSettingsFile else "";
 in
 {
-  programs.noctalia = {
-    enable = true;
-    settings = { };
-  };
+  programs.noctalia.enable = true;
 
   xdg.configFile."noctalia/config.toml".source = ../../config/noctalia/config.toml;
   xdg.configFile."noctalia/wallpapers".source = ../../_img/wallpapers;

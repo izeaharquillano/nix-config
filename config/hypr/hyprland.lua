@@ -1,6 +1,4 @@
-local terminal    = "kitty"
-local fileManager = "dolphin"
-local menu        = os.getenv("HOME") .. "/.config/rofi/scripts/launcher_t1"
+local terminal = "kitty"
 
 hl.config({
     general = {

@@ -44,7 +44,7 @@ in
     };
 
     services.restic.backups = {
-      btrfs = {
+      home = {
         paths = cfg.paths;
         exclude = cfg.exclude;
         repository = cfg.repository;
