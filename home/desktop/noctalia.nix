@@ -1,7 +1,6 @@
-{ config, hostname, ... }:
+{ config, hostname, repoRoot, ... }:
 
 let
-  repoDir = "${config.home.homeDirectory}/nixos-conf";
   hostSettingsFile = ../hosts/${hostname}/config/noctalia-host-settings.toml;
   hostSettings =
     if builtins.pathExists hostSettingsFile then builtins.readFile hostSettingsFile else "";
@@ -9,8 +8,8 @@ in
 {
   programs.noctalia.enable = true;
 
-  xdg.configFile."noctalia/config.toml".source = config.lib.file.mkOutOfStoreSymlink "${repoDir}/config/noctalia/config.toml";
-  xdg.configFile."noctalia/wallpapers".source = config.lib.file.mkOutOfStoreSymlink "${repoDir}/_img/wallpapers";
+  xdg.configFile."noctalia/config.toml".source = config.lib.file.mkOutOfStoreSymlink "${repoRoot}/config/noctalia/config.toml";
+  xdg.configFile."noctalia/wallpapers".source = config.lib.file.mkOutOfStoreSymlink "${repoRoot}/_img/wallpapers";
 
   xdg.configFile."noctalia/wallpaper.toml".text =
     let

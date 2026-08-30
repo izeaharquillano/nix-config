@@ -62,6 +62,7 @@
     }:
     let
       mylib = import ./lib { lib = nixpkgs.lib; };
+      repoRoot = "/home/ize/nixos-conf";
 
       forAllSystems = nixpkgs.lib.genAttrs [
         "x86_64-linux"
@@ -82,15 +83,16 @@
         nixpkgs.lib.nixosSystem {
           inherit system;
           specialArgs = {
-            inherit inputs mylib;
-            inherit hostname;
+            inherit inputs mylib hostname;
             flakeRoot = self;
+            inherit repoRoot;
           };
           modules = [
             ./hosts/${hostname}
             home-manager.nixosModules.home-manager
             inputs.agenix.nixosModules.age
             {
+              nixpkgs.overlays = [ (import ./overlays) ];
               home-manager = {
                 useGlobalPkgs = true;
                 useUserPackages = true;
@@ -99,6 +101,7 @@
                 extraSpecialArgs = {
                   inherit inputs mylib hostname;
                   flakeRoot = self;
+                  inherit repoRoot;
                 };
               };
             }

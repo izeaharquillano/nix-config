@@ -6,51 +6,63 @@
 }:
 
 {
-  boot = {
-    kernelPackages = pkgs.linuxPackages_latest;
-
-    loader = {
-      efi.canTouchEfiVariables = true;
-      timeout = 10;
-      systemd-boot.enable = true;
+  options.mySystem = {
+    kernelPackage = lib.mkOption {
+      type = lib.types.package;
+      default = pkgs.linuxPackages_7_2;
+      description = "Linux kernel package to use";
     };
   };
 
-  networking.networkmanager.enable = true;
+  config = {
+    programs.direnv.enable = true;
 
-  nixpkgs.config.allowUnfree = true;
+    boot = {
+      kernelPackages = config.mySystem.kernelPackage;
 
-  nix.settings = {
-    experimental-features = [
-      "nix-command"
-      "flakes"
-      "recursive-nix"
-    ];
-    max-jobs = "auto";
-    http-connections = 50;
-    auto-optimise-store = true;
-    warn-dirty = false;
-  };
+      loader = {
+        efi.canTouchEfiVariables = true;
+        timeout = 10;
+        systemd-boot.enable = true;
+      };
+    };
 
-  nix.gc = {
-    automatic = true;
-    persistent = true;
-    dates = "weekly";
-    options = "--delete-older-than 14d";
-  };
+    networking.networkmanager.enable = true;
 
-  nix.optimise = {
-    automatic = true;
-    dates = [ "weekly" ];
-  };
+    nixpkgs.config.allowUnfree = true;
 
-  users.users."ize" = {
-    isNormalUser = true;
-    description = "ize";
-    extraGroups = [
-      "networkmanager"
-      "wheel"
-    ];
-    shell = pkgs.zsh;
+    nix.settings = {
+      experimental-features = [
+        "nix-command"
+        "flakes"
+        "recursive-nix"
+      ];
+      max-jobs = "auto";
+      http-connections = 50;
+      auto-optimise-store = true;
+      warn-dirty = false;
+    };
+
+    nix.gc = {
+      automatic = true;
+      persistent = true;
+      dates = "weekly";
+      options = "--delete-older-than 14d";
+    };
+
+    nix.optimise = {
+      automatic = true;
+      dates = [ "weekly" ];
+    };
+
+    users.users."ize" = {
+      isNormalUser = true;
+      description = "ize";
+      extraGroups = [
+        "networkmanager"
+        "wheel"
+      ];
+      shell = pkgs.zsh;
+    };
   };
 }
