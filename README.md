@@ -13,7 +13,10 @@ A multi-host NixOS configuration using flakes and Home Manager. A gruvbox themed
 ```
 .
 ├── flake.nix                  # Flake entry point (mkHost helper, passes hostname via specialArgs)
+├── .envrc                     # direnv integration (use flake)
 ├── lib/                       # Custom Nix library helpers (scanPaths)
+├── overlays/                  # Nixpkgs overlays (gruvbox-material-yazi)
+├── pkgs/                      # Custom packages (gruvbox-material-yazi.yazi)
 ├── scripts/                   # Utility scripts (output-scale)
 ├── hosts/                     # Per-host NixOS system configurations
 │   ├── padrick/               # ThinkPad T14 AMD Gen1 (daily use)
@@ -30,7 +33,7 @@ A multi-host NixOS configuration using flakes and Home Manager. A gruvbox themed
 │       └── services.nix       # auto-cpufreq, UPower, systemd-resolved
 ├── modules/                   # NixOS system modules
 │   ├── core/                  # Shared by all hosts (auto-imported via scanPaths)
-│   │   ├── system.nix         # Boot (latest kernel), networking, nix settings
+│   │   ├── system.nix         # Boot, networking, nix settings, user accounts, kernelPackage option
 │   │   ├── locale.nix         # Timezone, locale
 │   │   ├── ssh.nix            # OpenSSH (key-based auth only)
 │   │   ├── secrets.nix        # agenix secret declarations, identityPaths, token include
@@ -54,10 +57,26 @@ A multi-host NixOS configuration using flakes and Home Manager. A gruvbox themed
 ├── home/                      # Home Manager modules
 │   ├── core/                  # Shell, packages, XDG (auto-imported via scanPaths)
 │   │   ├── shell.nix          # Git, bash, zsh (shared aliases via let binding), starship, zoxide
+│   │   ├── packages.nix       # CLI tools (fd, fzf, btop, ripgrep, opencode, etc.)
+│   │   └── xdg.nix            # XDG user directories + portal config
 │   ├── desktop/               # GUI app configs (auto-imported via scanPaths, live-symlinked)
+│   │   ├── gtk.nix            # GTK theme, cursor
+│   │   ├── terminal.nix       # Kitty terminal (package + live symlink)
+│   │   ├── hyprland.nix       # Hyprland config (store copy, recursive)
+│   │   ├── niri.nix           # Niri config (live symlink for config.kdl)
+│   │   ├── noctalia.nix       # Noctalia lockscreen/bar
+│   │   ├── nvim.nix           # Neovim LazyVim config (store copy, recursive)
+│   │   ├── mimeapps.nix       # Nemo desktop entry + MIME associations
+│   │   ├── obsidian.nix       # Obsidian
+│   │   ├── scripts.nix        # Utility scripts (output-scale)
+│   │   ├── starship.nix       # Starship prompt (live symlink for starship.toml)
+│   │   ├── yazi.nix           # Yazi file manager + gruvbox theme
+│   │   ├── tmux.nix           # Tmux config (live symlink for tmux.conf)
+│   │   ├── packages.nix       # Desktop packages (ncdu, waybar, mpv, discord-ptb, nemo, etc.)
+│   │   └── zen-browser.nix    # Zen Browser
 │   └── hosts/                 # Host-specific HM overrides
 │       ├── padrick/
-│       │   ├── default.nix    # Imports core + desktop, live-symlinks host configs
+│       │   ├── default.nix    # Imports core + desktop, symlinks host configs
 │       │   ├── packages.nix   # btop
 │       │   └── config/        # Host-specific dotfiles
 │       │       ├── niri-host-settings.kdl
@@ -70,7 +89,8 @@ A multi-host NixOS configuration using flakes and Home Manager. A gruvbox themed
 │               ├── niri-host-settings.kdl
 │               ├── hypr-host-settings.lua
 │               └── noctalia-host-settings.toml
-└── config/                    # Shared raw dotfiles (nvim, hypr, niri, kitty, tmux, noctalia)
+├── config/                    # Shared raw dotfiles (nvim, hypr, niri, kitty, tmux, noctalia)
+└── .github/workflows/ci.yml  # CI: flake checks + dry builds for all hosts
 ```
 
 ## Quick Start
@@ -482,11 +502,32 @@ nix fmt -- --check
 
 The formatter is configured with `nixfmt` for Nix files and `shfmt` for shell scripts.
 
+## CI
+
+GitHub Actions runs on push/PR to `main` (`.github/workflows/ci.yml`):
+
+- **Flake checks**: `nix flake check --all-systems` (formatting, etc.)
+- **Dry builds**: builds each host's system toplevel (`--dry-run`) to catch evaluation errors
+
+## direnv
+
+The `.envrc` at the repo root contains `use flake`, which automatically loads the dev shell (treefmt + agenix) when you `cd` into the repo. Requires [direnv](https://direnv.net/) to be installed and `direnv allow` run once.
+
 ## Scripts
 
 | Script | Description |
 |---|---|
 | `scripts/output-scale` | Scale (zoom) the focused output. Supports Niri and Hyprland. Cycles between scales, or accepts `+`/`-`/specific value. Installed to `$PATH` via `home/desktop/scripts.nix`. |
+
+## Overlays & Custom Packages
+
+Custom Nix packages live in `pkgs/` and are exposed via overlays in `overlays/default.nix`. The overlay is applied globally in `flake.nix` via `nixpkgs.overlays`.
+
+| Package | Description |
+|---|---|
+| `gruvbox-material-yazi` | Gruvbox Material theme for Yazi file manager (fetched from GitHub) |
+
+To add a new custom package: create `pkgs/<name>.nix`, add it to `overlays/default.nix`, then reference it as `pkgs.<name>` in any module.
 
 ## Mounting SMB Shares with Nemo
 
@@ -520,12 +561,13 @@ Individual config files are managed via `config.lib.file.mkOutOfStoreSymlink` ra
 - **Polkit:** `security.polkit.enable` for privilege escalation prompts
 - **Secure Boot:** Optional via `myfeatures.secureboot.enable` (Lanzaboote)
 - **nix-ld:** Enabled for LazyVim compatibility (allows running unpatched binaries)
-- **Kernel pinning:** Jobert pinned to `linuxPackages_7_2` with `lib.mkForce` for NVIDIA stability
+- **Kernel:** Configurable per host via `mySystem.kernelPackage` option (default: `linuxPackages_7_2`). Override in host's `hardware.nix` with `mySystem.kernelPackage = pkgs.linuxPackages_xxx;`.
 
 ## Nix Settings
 
 Configured in `modules/core/system.nix`:
 
+- `mySystem.kernelPackage`: Configurable kernel packages set (default: `linuxPackages_7_2`). Hosts can override via `mySystem.kernelPackage = pkgs.linuxPackages_xxx;` in their `hardware.nix`.
 - `experimental-features`: `nix-command`, `flakes`, `recursive-nix`
 - `warn-dirty = false`: Suppresses dirty tree warnings during rebuilds
 - `auto-optimise-store = true`: Deduplicates store paths weekly
@@ -541,7 +583,7 @@ Configured in `modules/core/system.nix`:
 
 ## Config Files
 
-Individual config files in `config/` are live-symlinked into `~/.config/` via `config.lib.file.mkOutOfStoreSymlink`. Edits take effect immediately without a rebuild. The `flakeRoot` (repo path) is passed to Home Manager via `extraSpecialArgs`, and each desktop module constructs the symlink target as `${config.home.homeDirectory}/nixos-conf/config/<app>`.
+Individual config files in `config/` are live-symlinked into `~/.config/` via `config.lib.file.mkOutOfStoreSymlink`. Edits take effect immediately without a rebuild. The `repoRoot` (hardcoded repo path) is passed to Home Manager via `extraSpecialArgs`, and each desktop module constructs the symlink target as `${repoRoot}/config/<app>`. The `flakeRoot` (`self`) is passed to NixOS modules for agenix secret paths.
 
 Directories with multiple files (`hypr/`, `nvim/`) use store copies with `recursive = true` because `mkOutOfStoreSymlink` on a directory conflicts with Home Manager's file management when other modules also create files inside that directory.
 

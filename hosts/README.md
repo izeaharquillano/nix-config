@@ -67,7 +67,7 @@ The gaming module configures:
 - **Gamemode** for automatic CPU/GPU performance tuning
 - **MangoHud** and **GOverlay** for FPS overlay and Vulkan/OpenGL settings
 
-`jobert` also has NVIDIA-specific hardware config in `hosts/jobert/hardware.nix` (pinned kernel `linuxPackages_7_2` with `lib.mkForce`, open driver, VA-API, Wayland env vars, 32-bit OpenGL).
+`jobert` also has NVIDIA-specific hardware config in `hosts/jobert/hardware.nix` (open driver, VA-API, Wayland env vars, 32-bit OpenGL). Both hosts use the default `linuxPackages_7_2` kernel.
 
 Host-specific dotfiles (niri, hyprland, noctalia settings) live in `home/hosts/<name>/config/` and are symlinked by the host-specific HM file.
 

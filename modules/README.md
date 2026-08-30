@@ -32,7 +32,7 @@ modules/
 ## Module Types
 
 - **`core/`** - Base system config (boot, networking, nix, users, SSH) every host needs. Always imported.
-  - `system.nix` sets `boot.kernelPackages` to `linuxPackages_latest` (currently 7.2). Hosts can override this with `lib.mkForce` (e.g., jobert pins `linuxPackages_7_2`).
+  - `system.nix` sets `boot.kernelPackages` via the `mySystem.kernelPackage` option (default: `linuxPackages_7_2`). Hosts can override this in their `hardware.nix`.
   - `locale.nix` sets `time.hardwareClockInLocalTime = false` (RTC in UTC). See the main README for dual-boot Windows instructions.
   - `ssh.nix` enables OpenSSH with key-based auth only.
 - **`desktop/`** - GUI/desktop config. Only imported by desktop hosts.
