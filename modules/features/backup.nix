@@ -2,6 +2,7 @@
   pkgs,
   lib,
   config,
+  flakeRoot,
   ...
 }:
 
@@ -35,12 +36,19 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+    sops.secrets.restic-password = {
+      sopsFile = "${flakeRoot}/secrets/system/secrets.yaml";
+      owner = config.users.users.ize.name;
+      group = "users";
+      mode = "0400";
+    };
+
     services.restic.backups = {
       btrfs = {
         paths = cfg.paths;
         exclude = cfg.exclude;
         repository = cfg.repository;
-        passwordFile = "/etc/restic/password";
+        passwordFile = config.sops.secrets.restic-password.path;
         timerConfig = {
           OnCalendar = "weekly";
           Persistent = true;

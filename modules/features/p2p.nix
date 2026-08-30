@@ -2,6 +2,7 @@
   pkgs,
   lib,
   config,
+  flakeRoot,
   ...
 }:
 
@@ -14,6 +15,13 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+    sops.secrets.netbird-setup-key = {
+      sopsFile = "${flakeRoot}/secrets/system/secrets.yaml";
+      owner = "root";
+      group = "root";
+      mode = "0400";
+    };
+
     services.syncthing = {
       enable = true;
       openDefaultPorts = true;
@@ -42,7 +50,7 @@ in
 
         login = {
           enable = true;
-          setupKeyFile = "/etc/netbird/setup-key";
+          setupKeyFile = config.sops.secrets.netbird-setup-key.path;
         };
 
         openFirewall = true;

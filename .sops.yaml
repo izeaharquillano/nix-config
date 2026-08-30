@@ -1,0 +1,18 @@
+keys:
+  - &padrick ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAXNwpuUhP9UdRk4oVjl9Bzva/sWiXkiD7HMrY4NcgOZ root@padrick
+  - &jobert ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIDwOimLkLULeahLXIwCuhE3GHC/rbtbcA+8fsZQC4GG root@jobert
+
+creation_rules:
+  - path_regex: secrets/system/.*\.yaml$
+    key_groups:
+      - age:
+          - *padrick
+          - *jobert
+  - path_regex: secrets/hosts/padrick/.*\.yaml$
+    key_groups:
+      - age:
+          - *padrick
+  - path_regex: secrets/hosts/jobert/.*\.yaml$
+    key_groups:
+      - age:
+          - *jobert

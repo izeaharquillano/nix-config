@@ -54,9 +54,9 @@ home/
 
 The host's HM entry point (`home/hosts/<name>/default.nix`) imports `core/` and `desktop/`, plus any flake module inputs (niri, noctalia).
 
-Raw dotfiles in `config/` are symlinked into `~/.config/` via `xdg.configFile`. Monitor/window-manager hardware configs and host-specific settings live in `home/hosts/<name>/config/` and are symlinked using relative paths. The `hostname` is passed via `specialArgs` in `flake.nix`, allowing shared modules like `noctalia.nix` to read host-specific settings.
+Raw dotfiles in `config/` are symlinked into `~/.config/` via `xdg.configFile`. Host-specific settings live in `home/hosts/<name>/config/` and are symlinked using relative paths. The `hostname` is passed via `specialArgs` in `flake.nix`, allowing shared modules like `noctalia.nix` to read host-specific settings.
 
-For niri, the main `config.kdl` uses `include "./niri-host-settings.kdl"` to pull in the host-specific hardware file. For hyprland, `require("hypr-host-settings")` loads the host-specific `hypr-host-settings.lua`. For noctalia, `noctalia.nix` symlinks `config.toml`, generates `wallpaper.toml` (with interpolated paths), and writes `host-settings.toml` with lockscreen widgets from `home/hosts/<name>/config/noctalia-host-settings.toml`.
+For niri, the main `config.kdl` uses `include "./niri-host-settings.kdl"` to pull in host-specific settings. For hyprland, `require("hypr-host-settings")` loads the host-specific `hypr-host-settings.lua`. For noctalia, `noctalia.nix` symlinks `config.toml`, generates `wallpaper.toml` (with interpolated paths), and writes `host-settings.toml` with lockscreen widgets from `home/hosts/<name>/config/noctalia-host-settings.toml`.
 
 ## Home Manager Backup
 

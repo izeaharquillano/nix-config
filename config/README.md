@@ -32,9 +32,9 @@ xdg.configFile."kitty/kitty.conf".source = ../../config/kitty/kitty.conf;
 
 This creates a symlink at `~/.config/kitty/kitty.conf` pointing to this file.
 
-## Monitor Configs
+## Host-Specific Configs
 
-Monitor-specific configs (niri outputs, hyprland monitors) and host-specific noctalia settings live in `home/hosts/<name>/config/` rather than here. They are symlinked by the host-specific HM file (`home/hosts/<name>/default.nix`).
+Host-specific settings (niri, hyprland, noctalia) live in `home/hosts/<name>/config/` rather than here. They are symlinked by the host-specific HM file (`home/hosts/<name>/default.nix`).
 
 - **Niri**: `home/hosts/<name>/config/niri-host-settings.kdl` is symlinked to `~/.config/niri/niri-host-settings.kdl` and included by `config.kdl` via `include "./niri-host-settings.kdl"`.
 - **Hyprland**: `home/hosts/<name>/config/hypr-host-settings.lua` is symlinked to `~/.config/hypr/hypr-host-settings.lua` and loaded via `require("hypr-host-settings")`.

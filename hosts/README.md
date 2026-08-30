@@ -69,11 +69,11 @@ The gaming module configures:
 
 `jobert` also has NVIDIA-specific hardware config in `hosts/jobert/hardware.nix` (open driver, VA-API, Wayland env vars, 32-bit OpenGL).
 
-Host-specific dotfiles (monitor configs, noctalia settings) live in `home/hosts/<name>/config/` and are symlinked by the host-specific HM file.
+Host-specific dotfiles (niri, hyprland, noctalia settings) live in `home/hosts/<name>/config/` and are symlinked by the host-specific HM file.
 
 ### niri-host-settings.kdl
 
-Plain KDL file with `output` blocks defining monitor settings. Niri's `config.kdl` uses `include "./niri-host-settings.kdl"` to pull this in. Run `niri msg outputs` to find output names.
+Plain KDL file for host-specific Niri settings. Niri's `config.kdl` uses `include "./niri-host-settings.kdl"` to pull this in. Typically contains monitor/output configurations, but can include any host-specific Niri settings.
 
 ```kdl
 output "eDP-1" {
@@ -96,7 +96,7 @@ workspace "2browser" { open-on-output "DP-1"; }
 
 ### hypr-host-settings.lua
 
-Lua file defining monitor configs for Hyprland. Used via `require("hypr-host-settings")` in the main Hyprland config.
+Lua file for host-specific Hyprland settings. Used via `require("hypr-host-settings")` in the main Hyprland config. Typically contains monitor configurations, but can include any host-specific Hyprland settings.
 
 ```lua
 hl.monitor({
@@ -216,9 +216,9 @@ Services enabled in `modules/core/` or `modules/desktop/` apply to all hosts via
 }
 ```
 
-### 5. Create monitor config files
+### 5. Create host-specific config files
 
-Create `home/hosts/<name>/config/niri-host-settings.kdl` with your display outputs:
+Create `home/hosts/<name>/config/niri-host-settings.kdl` for host-specific Niri settings:
 
 ```kdl
 output "eDP-1" {
@@ -228,7 +228,7 @@ output "eDP-1" {
 }
 ```
 
-Create `home/hosts/<name>/config/hypr-host-settings.lua` for Hyprland:
+Create `home/hosts/<name>/config/hypr-host-settings.lua` for host-specific Hyprland settings:
 
 ```lua
 hl.monitor({

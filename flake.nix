@@ -40,6 +40,11 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    sops-nix = {
+      url = "github:Mic92/sops-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     treefmt-nix = {
       url = "github:numtide/treefmt-nix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -51,6 +56,7 @@
       self,
       nixpkgs,
       home-manager,
+      sops-nix,
       treefmt-nix,
       ...
     }:
@@ -79,10 +85,12 @@
           specialArgs = {
             inherit inputs mylib;
             inherit hostname;
+            flakeRoot = self;
           };
           modules = [
             ./hosts/${hostname}
             home-manager.nixosModules.home-manager
+            inputs.sops-nix.nixosModules.sops
             {
               home-manager = {
                 useGlobalPkgs = true;
