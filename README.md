@@ -140,16 +140,20 @@ nix fmt
    ```nix
    nixosConfigurations.<name> = mkHost "<name>" "x86_64-linux";
    ```
-8. First deploy (generates SSH host keys):
+8. Symlink the repo to `/etc/nixos` so the `bldflk` alias works:
+   ```bash
+   sudo ln -s /path/to/nixos-conf /etc/nixos
+   ```
+9. First deploy (generates SSH host keys):
    ```bash
    sudo nixos-rebuild switch --flake .#<name>
    ```
-9. Grab the new host's SSH public key:
-   ```bash
-   ssh-keyscan <name> 2>/dev/null | grep ssh-ed25519
-   ```
-10. Add the key to `secrets/secrets.nix` and rekey (see [Secrets Management](#adding-a-new-host))
-11. Second deploy (decrypts secrets):
+10. Grab the new host's SSH public key:
+    ```bash
+    ssh-keyscan <name> 2>/dev/null | grep ssh-ed25519
+    ```
+11. Add the key to `secrets/secrets.nix` and rekey (see [Secrets Management](#adding-a-new-host))
+12. Second deploy (decrypts secrets):
     ```bash
     sudo nixos-rebuild switch --flake .#<name>
     ```
