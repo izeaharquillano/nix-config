@@ -25,7 +25,7 @@ in
     services.syncthing = {
       enable = true;
       openDefaultPorts = true;
-      user = config.users.users.ize.name;
+      user = "ize";
       dataDir = "${config.users.users.ize.home}/Documents";
       configDir = "${config.users.users.ize.home}/.config/syncthing";
       settings = {
