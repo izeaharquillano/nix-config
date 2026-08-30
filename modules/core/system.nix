@@ -8,9 +8,9 @@
 {
   options.mySystem = {
     kernelPackage = lib.mkOption {
-      type = lib.types.package;
+      type = lib.types.attrs;
       default = pkgs.linuxPackages_7_2;
-      description = "Linux kernel package to use";
+      description = "Linux kernel packages set to use (e.g. pkgs.linuxPackages_7_2)";
     };
   };
 
