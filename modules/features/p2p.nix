@@ -15,8 +15,8 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    sops.secrets.netbird-setup-key = {
-      sopsFile = "${flakeRoot}/secrets/system/secrets.yaml";
+    age.secrets.netbird-setup-key = {
+      file = "${flakeRoot}/secrets/netbird-setup-key.age";
       owner = "root";
       group = "root";
       mode = "0400";
@@ -50,7 +50,7 @@ in
 
         login = {
           enable = true;
-          setupKeyFile = config.sops.secrets.netbird-setup-key.path;
+          setupKeyFile = config.age.secrets.netbird-setup-key.path;
         };
 
         openFirewall = true;

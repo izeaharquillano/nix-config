@@ -1,54 +1,59 @@
 # Secrets Management
 
-This directory contains encrypted secrets managed by [sops-nix](https://github.com/Mic92/sops-nix).
+This directory contains encrypted secrets managed by [agenix](https://github.com/ryantm/agenix).
 
 ## Structure
 
 ```
 secrets/
-├── system/              # Shared secrets (accessible by all hosts)
-│   └── secrets.yaml     # restic-password, netbird-setup-key
-├── hosts/
-│   ├── padrick/         # Padrick-specific secrets (empty, reserved for future use)
-│   └── jobert/          # Jobert-specific secrets (empty, reserved for future use)
+├── secrets.nix              # Public key declarations for each secret
+├── nix-access-tokens.age    # Nix/GitHub access tokens (encrypted)
+├── netbird-setup-key.age    # NetBird VPN setup key (encrypted)
+├── restic-password.age      # Restic repository password (encrypted)
 └── README.md
 ```
 
 ## Initial Setup
 
-### 1. Get SSH Host Keys
+### 1. Get SSH Host Public Keys
 
-Each host needs its SSH host public key for age decryption:
+Each host needs its SSH host public key for age encryption:
 
 ```bash
 # On each host:
-cat /etc/ssh/ssh_host_ed25519_key.pub
+ssh-keyscan <hostname> 2>/dev/null | grep ssh-ed25519
 ```
 
-### 2. Convert SSH Keys to Age
+### 2. Create `secrets/secrets.nix`
 
-```bash
-nix-shell -p ssh-to-age --run '
-echo "ssh-ed25519 AAAA... root@padrick" | ssh-to-age
-echo "ssh-ed25519 AAAA... root@jobert" | ssh-to-age
-'
+This file declares which public keys can decrypt each secret:
+
+```nix
+let
+  padrick = "ssh-ed25519 AAAA... root@padrick";
+  jobert = "ssh-ed25519 AAAA... root@jobert";
+  systems = [ padrick jobert ];
+in
+{
+  "nix-access-tokens.age".publicKeys = systems;
+  "netbird-setup-key.age".publicKeys = systems;
+  "restic-password.age".publicKeys = systems;
+}
 ```
 
 ### 3. Create Encrypted Secrets
 
 ```bash
-nix-shell -p sops ssh-to-age --run '
-AGE_KEY_PADRICK=$(echo "ssh-ed25519 AAAA... root@padrick" | ssh-to-age)
-AGE_KEY_JOBERT=$(echo "ssh-ed25519 AAAA... root@jobert" | ssh-to-age)
+# Install agenix CLI (or use nix run)
+nix profile install github:ryantm/agenix
 
-cat > /tmp/secrets.yaml << EOF
-netbird-setup-key: your-netbird-setup-key
-restic-password: your-restic-password
-EOF
-
-sops encrypt --config /dev/null --age "$AGE_KEY_PADRICK,$AGE_KEY_JOBERT" /tmp/secrets.yaml > secrets/system/secrets.yaml
-'
+# Create/edit each secret
+agenix -e nix-access-tokens.age
+agenix -e netbird-setup-key.age
+agenix -e restic-password.age
 ```
+
+Each command opens your `$EDITOR` with a temp file. Save and quit to encrypt.
 
 ### 4. Deploy
 
@@ -60,45 +65,34 @@ sudo nixos-rebuild switch --flake .#padrick
 
 1. Get the new host's SSH public key:
    ```bash
-   ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub
+   ssh-keyscan <new-host> 2>/dev/null | grep ssh-ed25519
    ```
 
-2. Convert to age key:
+2. Add the key to `secrets/secrets.nix` for each secret it should decrypt
+
+3. Re-encrypt all secrets:
    ```bash
-   echo "ssh-ed25519 AAAA... root@newhost" | ssh-to-age
+   agenix --rekey
    ```
 
-3. Decrypt the existing secrets, then re-encrypt with all recipients:
-   ```bash
-   nix-shell -p sops ssh-to-age --run '
-   AGE_KEY_PADRICK=$(echo "ssh-ed25519 AAAA... root@padrick" | ssh-to-age)
-   AGE_KEY_JOBERT=$(echo "ssh-ed25519 AAAA... root@jobert" | ssh-to-age)
-   AGE_KEY_NEWHOST=$(echo "ssh-ed25519 AAAA... root@newhost" | ssh-to-age)
-   
-   sudo SOPS_AGE_SSH_PRIVATE_KEY_FILE=/etc/ssh/ssh_host_ed25519_key sops -d secrets/system/secrets.yaml > /tmp/secrets.yaml
-   
-   sops encrypt --config /dev/null --age "$AGE_KEY_PADRICK,$AGE_KEY_JOBERT,$AGE_KEY_NEWHOST" /tmp/secrets.yaml > secrets/system/secrets.yaml
-   '
-   ```
-
-4. Deploy to the new host.
+4. Deploy to the new host
 
 ## Editing Secrets
 
 ```bash
-# Edit encrypted secrets
-sops secrets/system/secrets.yaml
+# Edit an encrypted secret (opens in $EDITOR)
+agenix -e <secret-name>.age
 
-# View decrypted secrets (requires root for SSH host key access)
-sudo SOPS_AGE_SSH_PRIVATE_KEY_FILE=/etc/ssh/ssh_host_ed25519_key sops -d secrets/system/secrets.yaml
+# Decrypt a secret to stdout (for debugging)
+agenix -d <secret-name>.age
 ```
 
 ## How It Works
 
 1. Secrets are encrypted using [age](https://github.com/FiloSottile/age) with SSH public keys
-2. Each secret in NixOS modules specifies `sopsFile` with an absolute path to the encrypted file
-3. At boot/activation, `sops-install-secrets` decrypts secrets to `/run/secrets/`
-4. NixOS services reference secrets via `config.sops.secrets.<name>.path`
+2. Each `.age` file is listed in a NixOS module via `age.secrets.<name>.file`
+3. At boot/activation, agenix decrypts secrets to `/run/agenix/<name>`
+4. NixOS services reference secrets via `config.age.secrets.<name>.path`
 5. Secrets are never stored in plaintext in the Nix store
 
 ## Troubleshooting
@@ -106,10 +100,10 @@ sudo SOPS_AGE_SSH_PRIVATE_KEY_FILE=/etc/ssh/ssh_host_ed25519_key sops -d secrets
 ### Secrets not decrypting
 
 - Check that the host's SSH private key exists at `/etc/ssh/ssh_host_ed25519_key`
-- Verify the age recipient fingerprints match: `echo "ssh-ed25519 AAAA..." | ssh-to-age`
-- Check sops-nix logs: `journalctl -u sops-nix`
+- Verify the host's public key is listed in `secrets/secrets.nix`
+- Check agenix logs: `journalctl -u agenix`
 
 ### Permission denied
 
-- Ensure the `owner` and `group` settings in the feature module's `sops.secrets` definition are correct
-- Check file permissions: `ls -la /run/secrets/`
+- Ensure the `owner` and `group` settings in the secret's definition are correct
+- Check file permissions: `ls -la /run/agenix/`

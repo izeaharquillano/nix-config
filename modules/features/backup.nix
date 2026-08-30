@@ -36,8 +36,8 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    sops.secrets.restic-password = {
-      sopsFile = "${flakeRoot}/secrets/system/secrets.yaml";
+    age.secrets.restic-password = {
+      file = "${flakeRoot}/secrets/restic-password.age";
       owner = config.users.users.ize.name;
       group = "users";
       mode = "0400";
@@ -48,7 +48,7 @@ in
         paths = cfg.paths;
         exclude = cfg.exclude;
         repository = cfg.repository;
-        passwordFile = config.sops.secrets.restic-password.path;
+        passwordFile = config.age.secrets.restic-password.path;
         timerConfig = {
           OnCalendar = "weekly";
           Persistent = true;

@@ -40,8 +40,8 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    sops-nix = {
-      url = "github:Mic92/sops-nix";
+    agenix = {
+      url = "github:ryantm/agenix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -56,7 +56,7 @@
       self,
       nixpkgs,
       home-manager,
-      sops-nix,
+      agenix,
       treefmt-nix,
       ...
     }:
@@ -90,7 +90,7 @@
           modules = [
             ./hosts/${hostname}
             home-manager.nixosModules.home-manager
-            inputs.sops-nix.nixosModules.sops
+            inputs.agenix.nixosModules.age
             {
               home-manager = {
                 useGlobalPkgs = true;

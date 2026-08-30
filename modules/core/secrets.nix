@@ -1,17 +1,14 @@
 { flakeRoot, config, ... }:
 
 {
-  sops = {
-    age.keyFile = "/var/lib/sops/age/keys.txt";
-
+  age = {
     secrets.nix-access-tokens = {
-      sopsFile = "${flakeRoot}/secrets/system/secrets.yaml";
-      mode = "0440";
-      group = config.users.groups.keys.name;
+      file = "${flakeRoot}/secrets/nix-access-tokens.age";
+      mode = "0444";
     };
   };
 
   nix.extraOptions = ''
-    !include ${config.sops.secrets.nix-access-tokens.path}
+    !include ${config.age.secrets.nix-access-tokens.path}
   '';
 }

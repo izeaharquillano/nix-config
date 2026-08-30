@@ -33,7 +33,7 @@ A multi-host NixOS configuration using flakes and Home Manager. A gruvbox themed
 │   │   ├── system.nix         # Boot, networking, nix settings (recursive-nix, warn-dirty)
 │   │   ├── locale.nix         # Timezone, locale
 │   │   ├── ssh.nix            # OpenSSH (key-based auth only)
-│   │   ├── secrets.nix        # sops-nix configuration (decrypted secrets)
+│   │   ├── secrets.nix        # agenix secret declarations (age key config, secrets)
 │   │   └── packages.nix       # Base system packages
 │   ├── desktop/               # Desktop environment (auto-imported via scanPaths)
 │   │   ├── greetd.nix         # Login manager (tuigreet)
@@ -48,12 +48,11 @@ A multi-host NixOS configuration using flakes and Home Manager. A gruvbox themed
 │   │   ├── p2p.nix            # Syncthing + NetBird
 │   │   └── backup.nix         # Restic backups (configurable paths, repository, exclude)
 │   └── security.nix           # Neovim, nix-ld, firewall, polkit
-├── secrets/                    # Encrypted secrets (sops-nix)
-│   ├── system/                # Shared secrets (accessible by all hosts)
-│   │   └── secrets.yaml       # restic-password, netbird-setup-key
-│   ├── hosts/                 # Host-specific secrets
-│   │   ├── padrick/
-│   │   └── jobert/
+├── secrets/                    # Encrypted secrets (agenix)
+│   ├── secrets.nix            # Public key declarations for each secret
+│   ├── nix-access-tokens.age  # Nix/GitHub access tokens (encrypted)
+│   ├── netbird-setup-key.age  # NetBird VPN setup key (encrypted)
+│   ├── restic-password.age    # Restic repository password (encrypted)
 │   └── README.md              # Secrets management documentation
 ├── home/                      # Home Manager modules
 │   ├── core/                  # Shell, packages, XDG (auto-imported via scanPaths)
@@ -84,9 +83,9 @@ A multi-host NixOS configuration using flakes and Home Manager. A gruvbox themed
 sudo ln -s /path/to/nixos-conf /etc/nixos
 
 # Set up secrets (first time only)
-# 1. Get your SSH host key: cat /etc/ssh/ssh_host_ed25519_key.pub
-# 2. Convert to age: echo "ssh-ed25519 AAAA..." | ssh-to-age
-# 3. Create encrypted secrets (see secrets/README.md for full command)
+# 1. Get your host's SSH public key: ssh-keyscan <hostname> 2>/dev/null | grep ssh-ed25519
+# 2. Add keys to secrets/secrets.nix
+# 3. Create encrypted secrets: agenix -e <secret-name>.age (see secrets/README.md)
 
 # Deploy for padrick
 sudo nixos-rebuild switch --flake .#padrick
@@ -115,7 +114,7 @@ nix fmt
    - `hypr-host-settings.lua` for host-specific Hyprland settings
    - `noctalia-host-settings.toml` for host-specific Noctalia settings (optional)
 9. Add a new `nixosConfigurations.<name>` entry in `flake.nix` (or add to `mkHost` calls)
-10. Add the host's SSH public key to `.sops.yaml` and re-encrypt secrets (see [Secrets Management](#secrets-management))
+10. Add the host's SSH public key to `secrets/secrets.nix` and re-encrypt secrets with `agenix --rekey` (see [Secrets Management](#secrets-management))
 11. Symlink repo to `/etc/nixos` if not already done
 12. See [hosts/README.md](hosts/README.md) for a detailed walkthrough
 
@@ -139,39 +138,39 @@ Adding a new feature: create `modules/features/<name>.nix` with `options.myfeatu
 
 ## Secrets Management
 
-This config uses [sops-nix](https://github.com/Mic92/sops-nix) for managing encrypted secrets. Secrets are encrypted with [age](https://github.com/FiloSottile/age) using SSH host keys.
+This config uses [agenix](https://github.com/ryantm/agenix) for managing encrypted secrets. Secrets are encrypted with [age](https://github.com/FiloSottile/age) using SSH host keys.
 
-The flake passes `flakeRoot = self` via `specialArgs`, allowing modules to reference files in the repo root using absolute paths (required because `.sops.yaml` path_regex doesn't match nix store paths).
+The flake passes `flakeRoot = self` via `specialArgs`, allowing modules to reference `.age` files in the repo root using absolute paths.
 
 ### Setup
 
 1. Get your host's SSH public key:
    ```bash
-   cat /etc/ssh/ssh_host_ed25519_key.pub
+   ssh-keyscan <hostname> 2>/dev/null | grep ssh-ed25519
    ```
 
-2. Add the key to `.sops.yaml` at the repo root
+2. Add the key to `secrets/secrets.nix`:
+   ```nix
+   let
+     padrick = "ssh-ed25519 AAAA... root@padrick";
+     jobert = "ssh-ed25519 AAAA... root@jobert";
+     systems = [ padrick jobert ];
+   in
+   {
+     "nix-access-tokens.age".publicKeys = systems;
+     "netbird-setup-key.age".publicKeys = systems;
+     "restic-password.age".publicKeys = systems;
+   }
+   ```
 
 3. Create/edit encrypted secrets:
    ```bash
-   nix-shell -p sops ssh-to-age --run '
-   AGE_KEY_PADRICK=$(echo "ssh-ed25519 AAAA... root@padrick" | ssh-to-age)
-   AGE_KEY_JOBERT=$(echo "ssh-ed25519 AAAA... root@jobert" | ssh-to-age)
-   echo "netbird-setup-key: your-key" > /tmp/secrets.yaml
-   sops encrypt --config /dev/null --age "$AGE_KEY_PADRICK,$AGE_KEY_JOBERT" /tmp/secrets.yaml > secrets/system/secrets.yaml
-   '
+   agenix -e nix-access-tokens.age
+   agenix -e netbird-setup-key.age
+   agenix -e restic-password.age
    ```
 
-4. Add your secrets in YAML format (only include secrets you actually use):
-   ```yaml
-   # Required if myfeatures.p2p.enable = true
-   netbird-setup-key: your-netbird-setup-key
-   
-   # Required if myfeatures.backup.enable = true
-   restic-password: your-restic-repo-password
-   ```
-
-5. Deploy:
+4. Deploy:
    ```bash
    sudo nixos-rebuild switch --flake .#<hostname>
    ```
@@ -180,27 +179,27 @@ The flake passes `flakeRoot = self` via `specialArgs`, allowing modules to refer
 
 | Secret | Required By | Purpose |
 |--------|-------------|---------|
-| `netbird-setup-key` | `myfeatures.p2p.enable = true` | NetBird VPN auto-login key |
-| `restic-password` | `myfeatures.backup.enable = true` | Restic repository password |
+| `netbird-setup-key.age` | `myfeatures.p2p.enable = true` | NetBird VPN auto-login key |
+| `restic-password.age` | `myfeatures.backup.enable = true` | Restic repository password |
 
 ### Adding a New Host
 
 1. Get the new host's SSH public key
-2. Convert it to an age key: `echo "ssh-ed25519 AAAA..." | ssh-to-age`
-3. Add the host's age key to the recipients when encrypting the secrets file
+2. Add the key to `secrets/secrets.nix` for each secret
+3. Re-encrypt: `agenix --rekey`
 4. See [secrets/README.md](secrets/README.md) for detailed instructions
 
 ### Editing Secrets
 
 ```bash
-# Edit encrypted secrets (opens decrypted view in editor)
-sops secrets/system/secrets.yaml
+# Edit an encrypted secret (opens in $EDITOR)
+agenix -e <secret-name>.age
 
-# View decrypted secrets (for debugging, requires root for SSH host key access)
-sudo SOPS_AGE_SSH_PRIVATE_KEY_FILE=/etc/ssh/ssh_host_ed25519_key sops -d secrets/system/secrets.yaml
+# Decrypt a secret to stdout (for debugging)
+agenix -d <secret-name>.age
 
-# Re-encrypt for new host keys
-sops updatekeys secrets/system/secrets.yaml
+# Re-encrypt all secrets after key changes
+agenix --rekey
 ```
 
 ## Backup
@@ -237,7 +236,7 @@ myfeatures.backup = {
    myfeatures.backup.enable = true;
    ```
 
-2. **Add the restic password to sops-nix.** See [Secrets Management](#secrets-management) for how to create and encrypt secrets. The key should be added as `restic-password` in `secrets/system/secrets.yaml`.
+2. **Add the restic password to agenix.** See [Secrets Management](#secrets-management) for how to create and encrypt secrets. Create `restic-password.age` in the `secrets/` directory.
 
 3. **Ensure the backup repository exists.** The default path is `/mnt/backup/restic-repo`. Override it via the `repository` option if using a different location (external drive, remote mount, etc.).
 
@@ -247,7 +246,7 @@ myfeatures.backup = {
    sudo nixos-rebuild switch --flake .#<hostname>
    ```
 
-**Note:** The `restic-password` secret is only required when backup is enabled. If you don't use backups, you can omit it from the secrets file.
+**Note:** The `restic-password` secret is only required when backup is enabled. If you don't use backups, you can omit it from `secrets/secrets.nix`.
 
 ### What It Does
 
@@ -361,7 +360,7 @@ Read automatically via `nix.extraOptions` in `modules/core/system.nix`. The conf
 
 ### NetBird Access Token
 
-The NetBird setup key is managed via sops-nix. See [Secrets Management](#secrets-management) for how to create and encrypt secrets. The key should be added as `netbird-setup-key` in `secrets/system/secrets.yaml`.
+The NetBird setup key is managed via agenix. See [Secrets Management](#secrets-management) for how to create and encrypt secrets. Create `netbird-setup-key.age` in the `secrets/` directory.
 
 ### Syncthing Device IDs
 
@@ -383,7 +382,7 @@ Get a device's ID from the Syncthing GUI under Actions > Show ID.
 | `home-manager` | User environment management |
 | `lanzaboote` | Secure Boot (UEFI), opt-in via `myfeatures.secureboot.enable` |
 | `nixos-hardware` | NixOS hardware modules (AMD, laptop, SSD, etc.) |
-| `sops-nix` | Encrypted secrets management (age + SSH keys) |
+| `agenix` | Encrypted secrets management (age + SSH keys) |
 | `niri` | Niri Wayland compositor |
 | `hyprland` | Hyprland Wayland compositor |
 | `noctalia` | Wayland shell/bar |
@@ -428,7 +427,7 @@ The `lib/` directory contains helper functions used throughout the config. The k
 
 - **Firewall:** Enabled system-wide with explicit port allowlists (see [Firewall](#firewall))
 - **SSH:** OpenSSH enabled with key-based auth only, root login denied (`modules/core/ssh.nix`)
-- **Secrets:** sops-nix encrypts secrets with age using SSH host keys (see [Secrets Management](#secrets-management))
+- **Secrets:** agenix encrypts secrets with age using SSH host keys (see [Secrets Management](#secrets-management))
 - **RealtimeKit:** `security.rtkit.enable` grants real-time scheduling to PipeWire for low-latency audio
 - **Polkit:** `security.polkit.enable` for privilege escalation prompts
 - **Secure Boot:** Optional via `myfeatures.secureboot.enable` (Lanzaboote)
