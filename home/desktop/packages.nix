@@ -16,7 +16,7 @@
     gparted
     discord-ptb
     pavucontrol
-    protonvpn-gui
+    proton-vpn
     nemo-with-extensions
     (bottles.override { removeWarningPopup = true; })
   ];
