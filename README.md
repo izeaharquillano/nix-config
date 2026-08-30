@@ -1,6 +1,6 @@
 # nixos-conf
 
-A multi-host NixOS configuration using flakes and Home Manager.
+A multi-host NixOS configuration using flakes and Home Manager. A gruvbox themed (mostly) configuration implemented with Noctalia, Niri, and Hyprland. 
 
 ## Desktops
 
