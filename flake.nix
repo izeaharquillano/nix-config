@@ -121,29 +121,21 @@
       nixosConfigurations.padrick = mkHost "padrick" "x86_64-linux";
       nixosConfigurations.jobert = mkHost "jobert" "x86_64-linux";
 
-      checks = forAllSystems (system: {
-        formatting = treefmtEval.${system}.config.build.check self;
-
-        padrick-eval =
-          let
-            cfg = self.nixosConfigurations.padrick.config;
-          in
-          nixpkgs.legacyPackages.${system}.runCommand "check-padrick-eval" { } ''
-            [ -n "${cfg.networking.hostName}" ] && \
-            [ -n "${cfg.mySystem.username}" ] && \
+      checks = forAllSystems (
+        system:
+        {
+          formatting = treefmtEval.${system}.config.build.check self;
+        }
+        // nixpkgs.lib.mapAttrs' (name: cfg: {
+          name = "${name}-eval";
+          value = nixpkgs.legacyPackages.${system}.runCommand "check-${name}-eval" { } ''
+            [ -n "${cfg.config.networking.hostName}" ] && \
+            [ -n "${cfg.config.mySystem.username}" ] && \
+            [ -n "${cfg.config.system.stateVersion}" ] && \
             echo "ok" > $out
           '';
-
-        jobert-eval =
-          let
-            cfg = self.nixosConfigurations.jobert.config;
-          in
-          nixpkgs.legacyPackages.${system}.runCommand "check-jobert-eval" { } ''
-            [ -n "${cfg.networking.hostName}" ] && \
-            [ -n "${cfg.mySystem.username}" ] && \
-            echo "ok" > $out
-          '';
-      });
+        }) self.nixosConfigurations
+      );
 
       formatter = forAllSystems (system: treefmtEval.${system}.config.build.wrapper);
 

@@ -268,7 +268,7 @@ Add a new `mkHost` call in the `outputs` attrset:
 nixosConfigurations.<name> = mkHost "<name>" "x86_64-linux";
 ```
 
-The `mkHost` helper handles all the boilerplate (system, specialArgs, home-manager config). See the root README for details.
+The `mkHost` helper handles all the boilerplate (system, specialArgs, home-manager config). A `{name}-eval` flake check is auto-generated from `nixosConfigurations` via `mapAttrs'`, so no separate check block is needed. See the root README for details.
 
 ### 8. Set up Secure Boot (optional, first-time only)
 

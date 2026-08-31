@@ -140,6 +140,7 @@ nix fmt
    ```nix
    nixosConfigurations.<name> = mkHost "<name>" "x86_64-linux";
    ```
+   This also auto-generates a `{name}-eval` flake check (via `mapAttrs'` over `nixosConfigurations`), so no separate check block is needed.
 8. Symlink the repo to `/etc/nixos` so the `bldflk` alias works:
    ```bash
    sudo ln -s /path/to/nixos-conf /etc/nixos
@@ -501,7 +502,7 @@ Get a device's ID from the Syncthing GUI under Actions > Show ID.
 | `nixosModules.default` | Reusable module: imports core, desktop, features; sets overlay and option defaults |
 | `overlays.default` | Nixpkgs overlay (gruvbox-material-yazi, version pinning) |
 | `packages.<system>.gruvbox-material-yazi` | Custom package exposed directly |
-| `checks.<system>` | Per-host evaluation checks + formatting |
+| `checks.<system>` | Auto-generated per-host evaluation checks (from `nixosConfigurations`) + formatting |
 | `formatter.<system>` | nixfmt + shfmt wrapper |
 | `apps.<system>.agenix` | agenix CLI as a flake app |
 | `devShells.<system>.default` | Dev shell with treefmt + agenix |
@@ -524,8 +525,8 @@ The formatter is configured with `nixfmt` for Nix files and `shfmt` for shell sc
 
 GitHub Actions runs on push/PR to `main` (`.github/workflows/ci.yml`):
 
-- **Flake checks**: `nix flake check --all-systems` (formatting + per-host evaluation checks for padrick and jobert)
-- **Dry builds**: builds each host's system toplevel (`--dry-run`) to catch evaluation errors
+- **Flake checks**: `nix flake check --all-systems` (formatting + per-host evaluation checks, auto-generated from `nixosConfigurations`)
+- **Dry builds**: builds each host's system toplevel (`--dry-run`) to catch evaluation errors (host list is hardcoded in the CI matrix and must be updated when adding/removing hosts)
 
 ## direnv
 
