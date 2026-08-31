@@ -23,10 +23,10 @@ config/
 
 ## How Dotfiles Are Consumed
 
-In `home/desktop/*.nix`, config files are consumed via `xdg.configFile` store copies:
+In `home/core/*.nix` and `home/linux/*.nix`, config files are consumed via `xdg.configFile` store copies:
 
 ```nix
-# Example from home/desktop/terminal.nix
+# Example from home/core/terminal.nix
 { ... }:
 
 {
@@ -42,12 +42,12 @@ Host-specific settings (niri, hyprland, noctalia) live in `home/hosts/<name>/con
 
 - **Niri**: `home/hosts/<name>/config/niri-host-settings.kdl` is symlinked to `~/.config/niri/niri-host-settings.kdl` and included by `config.kdl` via `include "./niri-host-settings.kdl"`.
 - **Hyprland**: `home/hosts/<name>/config/hypr-host-settings.lua` is symlinked to `~/.config/hypr/hypr-host-settings.lua` and loaded via `require("hypr-host-settings")`.
-- **Noctalia**: `home/hosts/<name>/config/noctalia-host-settings.toml` (if present) is written to `host-settings.toml` in `~/.config/noctalia/` by `home/desktop/noctalia.nix`. Wallpaper settings are in a separate Nix-generated `wallpaper.toml`.
+- **Noctalia**: `home/hosts/<name>/config/noctalia-host-settings.toml` (if present) is written to `host-settings.toml` in `~/.config/noctalia/` by `home/linux/noctalia.nix`. Wallpaper settings are in a separate Nix-generated `wallpaper.toml`.
 
 ## Adding a New Dotfile
 
 1. Place your config file(s) in `config/<app>/`
-2. Create a module in `home/desktop/<app>.nix`:
+2. Create a module in `home/core/<app>.nix` or `home/linux/<app>.nix`:
 
 For a single file:
 
@@ -72,7 +72,7 @@ For a directory:
 }
 ```
 
-3. It will be auto-imported by `scanPaths` in `home/desktop/default.nix`
+3. It will be auto-imported by `scanPaths` in `home/core/default.nix` or `home/linux/default.nix`
 
 ## Notes
 

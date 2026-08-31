@@ -13,7 +13,6 @@ A multi-host, cross-platform NixOS and macOS configuration using flakes and Home
 ```
 .
 ├── flake.nix                  # Minimal flake entry point (inputs only, outputs delegated)
-├── flake.nix.bak              # Full flake with darwin scaffold enabled (reference for macOS impl)
 ├── outputs/                   # Flake outputs (nixosConfigurations, checks, devShells, etc.)
 │   └── default.nix            # All outputs extracted here for clean separation
 ├── .envrc                     # direnv integration (use flake)
@@ -37,8 +36,7 @@ A multi-host, cross-platform NixOS and macOS configuration using flakes and Home
 │   │       ├── hardware.nix   # NVIDIA driver, pinned kernel (7.2), boot params, session vars
 │   │       ├── packages.nix
 │   │       └── services.nix   # auto-cpufreq, UPower, systemd-resolved
-│   └── darwin/                # macOS hosts
-│       └── my-macbook/        # Placeholder darwin host (for flake.nix.bak reference)
+│   └── darwin/                # macOS hosts (scaffolded, pending implementation)
 ├── modules/                   # System modules
 │   ├── nixos/                 # NixOS-specific modules
 │   │   ├── core/              # Shared by all NixOS hosts (auto-imported via scanPaths)
@@ -70,7 +68,8 @@ A multi-host, cross-platform NixOS and macOS configuration using flakes and Home
 ├── home/                      # Home Manager modules
 │   ├── core/                  # Cross-platform (shell, packages, editors, terminal)
 │   │   ├── default.nix        # Aggregator + stateVersion, username, platform-aware homeDirectory
-│   │   ├── shell.nix          # Git, bash, zsh (NixOS aliases separated), starship, zoxide
+│   │   ├── shell.nix          # Bash, zsh, git, starship, zoxide, aliases
+│   │   ├── git.nix            # Git configuration
 │   │   ├── packages.nix       # CLI tools (fd, fzf, ripgrep, opencode, etc.)
 │   │   ├── xdg.nix            # XDG user directories
 │   │   ├── terminal.nix       # Kitty terminal
@@ -86,6 +85,7 @@ A multi-host, cross-platform NixOS and macOS configuration using flakes and Home
 │   │   ├── niri.nix           # Niri config
 │   │   ├── noctalia.nix       # Noctalia lockscreen/bar
 │   │   ├── mimeapps.nix       # Nemo desktop entry + MIME associations
+│   │   ├── shell.nix          # Linux-only session variables
 │   │   ├── scripts.nix        # Utility scripts (output-scale)
 │   │   ├── packages.nix       # Desktop packages (waybar, mpv, discord-ptb, nemo, etc.)
 │   │   ├── xdg.nix            # XDG portal config (xdg-desktop-portal-*)
@@ -183,14 +183,14 @@ See [hosts/README.md](hosts/README.md) for a detailed walkthrough with code exam
 
 ## Adding a New macOS Host
 
-> **Note:** macOS (darwin) support is scaffolded in `flake.nix.bak`. Copy that file to `flake.nix` when you're ready to implement darwin. The directory layout, `mkDarwinHost` helper, `darwinModules` output, and `hosts/darwin/my-macbook/` placeholder are all wired up and ready.
+> **Note:** macOS (darwin) support is scaffolded but not yet fully implemented. The `modules/darwin/`, `home/darwin/`, and `hosts/darwin/` directories exist with placeholder files.
 
-1. Copy `flake.nix.bak` to `flake.nix` (replaces the current minimal flake)
-2. The host directory already exists at `hosts/darwin/my-macbook/` — rename it to your hostname
-3. Create `home/hosts/darwin/<name>/default.nix` importing `../core` + `../darwin`
+1. Create the host directory: `mkdir -p hosts/darwin/<name>`
+2. Create `hosts/darwin/<name>/default.nix` with macOS system settings
+3. Create `home/hosts/darwin/<name>/default.nix` importing `../../core` + `../../darwin`
 4. Add `modules/darwin/*.nix` for macOS system settings (`system.defaults.*`, `homebrew.*`, etc.)
 5. Add `home/darwin/*.nix` for macOS-specific home config (Aerospace, CmdTap, etc.)
-6. Add a `darwinConfigurations` entry using `mkDarwinHost`
+6. Add a `darwinConfigurations` entry in `outputs/default.nix` using `mkDarwinHost`
 
 ## Feature Options
 
@@ -633,7 +633,7 @@ Configured in `modules/nixos/core/system.nix`:
 ## Shell
 
 - **Primary:** Zsh with autosuggestion, syntax highlighting, completions
-- **Aliases:** NixOS-specific aliases (`bldswc`, `bldflk`, `nixgarb`, `sagenix`) separated into `nixosAliases` in `home/core/shell.nix`; cross-platform aliases (`svim`, `cat`) in `sharedAliases`
+- **Aliases:** All aliases (including NixOS-specific `bldswc`, `bldflk`, `nixgarb`, `sagenix`) defined in `home/core/shell.nix`
 - **Prompt:** Starship with Nerd Font symbols
 - **Smart cd:** Zoxide
 - **Git:** LazyGit for terminal UI

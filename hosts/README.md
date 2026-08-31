@@ -26,9 +26,7 @@ hosts/
 │       ├── hardware.nix       # NVIDIA driver, pinned kernel (7.2), boot params, session vars
 │       ├── packages.nix
 │       └── services.nix       # auto-cpufreq, UPower, systemd-resolved
-└── darwin/                    # macOS hosts
-    └── my-macbook/            # Placeholder (for flake.nix.bak reference)
-        └── default.nix
+└── darwin/                    # macOS hosts (scaffolded, pending implementation)
 ```
 
 Shared features (BTRFS, Secure Boot, gaming, virtualisation, P2P) are configured via `myfeatures.*` options in each host's `default.nix`. Feature modules live in `modules/nixos/features/` and are auto-imported via `scanPaths`.

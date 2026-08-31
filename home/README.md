@@ -9,6 +9,7 @@ home/
 ├── core/                        # Cross-platform (works on Linux + macOS)
 │   ├── default.nix              # Aggregator + stateVersion, username, platform-aware homeDirectory
 │   ├── shell.nix                # Bash, zsh, git, starship, zoxide, aliases
+│   ├── git.nix                  # Git configuration
 │   ├── packages.nix             # CLI tools (fd, fzf, ripgrep, opencode, etc.)
 │   ├── xdg.nix                  # XDG user directories
 │   ├── terminal.nix             # Kitty terminal
@@ -24,6 +25,7 @@ home/
 │   ├── niri.nix                 # Niri config
 │   ├── noctalia.nix             # Noctalia lockscreen/bar (config.toml + wallpaper.toml + host-settings.toml)
 │   ├── mimeapps.nix             # Nemo desktop entry + MIME associations
+│   ├── shell.nix                # Linux-only session variables (LESSHISTFILE, LESSKEY)
 │   ├── scripts.nix              # Utility scripts (output-scale)
 │   ├── packages.nix             # Desktop packages (waybar, mpv, discord-ptb, nemo, gvfs, etc.)
 │   ├── xdg.nix                  # XDG portal config (xdg-desktop-portal-*)
@@ -136,8 +138,8 @@ In `home/hosts/<name>/default.nix`, add host-specific settings after the imports
 
 {
   imports = [
-    ../../core
-    ../../linux
+    ../../../core
+    ../../../linux
     ./packages.nix
     inputs.niri.homeModules.niri
     inputs.noctalia.homeModules.default
@@ -164,35 +166,29 @@ Add host-specific user packages in `home/hosts/<name>/packages.nix`:
 
 ## Shell Aliases
 
-Aliases are defined in `home/core/shell.nix`. NixOS-specific aliases are separated from cross-platform ones:
+All aliases are defined in `home/core/shell.nix` and applied via `home.shellAliases`:
 
 ```nix
 let
-  sharedAliases = {
+  shellAliases = {
     svim = "sudoedit";
     cat = "bat";
-  };
-
-  nixosAliases = {
     bldswc = "sudo nixos-rebuild switch";
-    bldflk = "sudo nixos-rebuild switch --flake ~/nixos-conf#$(hostname)";
+    bldflk = "sudo nixos-rebuild switch --flake /etc/nixos#$(hostname)";
     nixgarb = "sudo nix-collect-garbage";
     sagenix = "sudo agenix -i /etc/ssh/ssh_host_ed25519_key";
-  };
-
-  zshAliases = sharedAliases // nixosAliases // {
     ls = "eza --icons=always --color=always --group-directories-first";
     ll = "eza -alF --icons=always --color=always --group-directories-first";
+    lll = "eza -al --icons=always --group-directories-first --git --color-scale=all --color-scale-mode=gradient";
     lt = "eza --tree --level=2 --icons=always --color=always";
   };
 in
 {
-  programs.bash.shellAliases = sharedAliases // nixosAliases;
-  programs.zsh.shellAliases = zshAliases;
+  home.shellAliases = shellAliases;
 }
 ```
 
-Platform-specific aliases (e.g. `nixosAliases`) live in `linux/shell.nix` and are only imported by Linux hosts.
+`home/linux/shell.nix` contains Linux-only session variables (LESSHISTFILE, LESSKEY).
 
 ## Host-Specific Packages
 
