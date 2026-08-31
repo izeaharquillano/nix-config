@@ -62,13 +62,13 @@ The host's HM entry point (`home/hosts/<name>/default.nix`) imports `core/` and 
 
 Config files in `config/` are consumed by Home Manager modules via `xdg.configFile` store copies. Directories with multiple files (like `hypr/` and `nvim/`) use `recursive = true`. Host-specific settings in `home/hosts/<name>/config/` also use store copies.
 
-The `hostname` is passed via `specialArgs` in `flake.nix`, allowing shared modules like `noctalia.nix` to read host-specific settings.
+The `hostname` is passed via `specialArgs` in `outputs/default.nix`, allowing shared modules like `noctalia.nix` to read host-specific settings.
 
 For niri, the main `config.kdl` uses `include "./niri-host-settings.kdl"` to pull in host-specific settings. For hyprland, `require("hypr-host-settings")` loads the host-specific `hypr-host-settings.lua`. For noctalia, `noctalia.nix` symlinks `config.toml`, generates `wallpaper.toml` (with interpolated paths), and writes `host-settings.toml` with lockscreen widgets from `home/hosts/<name>/config/noctalia-host-settings.toml`.
 
 ## Home Manager Backup
 
-If existing files conflict with Home Manager managed files, HM will rename them with a `.hm-bak` extension instead of failing. This is configured in `flake.nix` under the `mkNixosHost` helper:
+If existing files conflict with Home Manager managed files, HM will rename them with a `.hm-bak` extension instead of failing. This is configured in `outputs/default.nix` under the `mkNixosHost` helper:
 
 ```nix
 home-manager.backupFileExtension = "hm-bak";
@@ -148,7 +148,7 @@ In `home/hosts/<name>/default.nix`, add host-specific settings after the imports
 }
 ```
 
-Noctalia lockscreen widget settings can be placed in `home/hosts/<name>/config/noctalia-host-settings.toml`. If present, they are written to `host-settings.toml` in `~/.config/noctalia/` by `home/linux/noctalia.nix` (which uses the `hostname` arg passed from `flake.nix`). Noctalia merges all `*.toml` files alphabetically, so `config.toml` loads first, then `host-settings.toml`, then `wallpaper.toml`.
+Noctalia lockscreen widget settings can be placed in `home/hosts/<name>/config/noctalia-host-settings.toml`. If present, they are written to `host-settings.toml` in `~/.config/noctalia/` by `home/linux/noctalia.nix` (which uses the `hostname` arg passed from `outputs/default.nix`). Noctalia merges all `*.toml` files alphabetically, so `config.toml` loads first, then `host-settings.toml`, then `wallpaper.toml`.
 
 Add host-specific user packages in `home/hosts/<name>/packages.nix`:
 

@@ -1,12 +1,11 @@
-final: prev: {
-  gruvbox-material-yazi = final.callPackage ../pkgs/gruvbox-material-yazi.nix { };
+# Auto-import all overlay files in this directory.
+# Each file should have the signature: final: prev: { ... }
+final: prev:
+let
+  overlayFiles = builtins.filter (f: f != "default.nix" && f != "README.md") (
+    builtins.attrNames (builtins.readDir ./.)
+  );
 
-  # Pin specific package versions:
-  # my-package = prev.my-package.overrideAttrs (old: {
-  #   version = "1.2.3";
-  #   src = prev.fetchurl {
-  #     url = "https://example.com/package-1.2.3.tar.gz";
-  #     sha256 = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
-  #   };
-  # });
-}
+  importedOverlays = map (f: import (./. + "/${f}") final prev) overlayFiles;
+in
+builtins.foldl' (acc: overlay: acc // overlay) { } importedOverlays

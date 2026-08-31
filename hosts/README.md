@@ -26,7 +26,9 @@ hosts/
 │       ├── hardware.nix       # NVIDIA driver, pinned kernel (7.2), boot params, session vars
 │       ├── packages.nix
 │       └── services.nix       # auto-cpufreq, UPower, systemd-resolved
-└── darwin/                    # macOS hosts (placeholder)
+└── darwin/                    # macOS hosts
+    └── my-macbook/            # Placeholder (for flake.nix.bak reference)
+        └── default.nix
 ```
 
 Shared features (BTRFS, Secure Boot, gaming, virtualisation, P2P) are configured via `myfeatures.*` options in each host's `default.nix`. Feature modules live in `modules/nixos/features/` and are auto-imported via `scanPaths`.
@@ -260,7 +262,7 @@ Create `home/hosts/nixos/<name>/default.nix`:
 }
 ```
 
-### 7. Register in `flake.nix`
+### 7. Register in `outputs/default.nix`
 
 Add a new `mkNixosHost` call in the `outputs` attrset:
 

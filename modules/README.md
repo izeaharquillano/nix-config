@@ -37,7 +37,7 @@ modules/
 
 - **`nixos/core/`** - Base NixOS config (boot, networking, nix, users, SSH, firewall) every host needs. Always imported.
   - `system.nix` sets `boot.kernelPackages` via the `mySystem.kernelPackage` option (default: `linuxPackages_7_2`). Hosts can override this in their `hardware.nix`.
-  - `system.nix` defines `mySystem.username` — the single source of truth for the primary user. Set by `flake.nix` via `mySystem.username = username;`.
+  - `system.nix` defines `mySystem.username` — the single source of truth for the primary user. Set by `outputs/default.nix` via `mySystem.username = username;`.
   - `locale.nix` sets `time.hardwareClockInLocalTime = false` (RTC in UTC). See the main README for dual-boot Windows instructions.
   - `ssh.nix` enables OpenSSH with key-based auth only.
   - `security.nix` enables Neovim, nix-ld, and the firewall.

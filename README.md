@@ -12,10 +12,15 @@ A multi-host, cross-platform NixOS and macOS configuration using flakes and Home
 
 ```
 .
-├── flake.nix                  # Flake entry point (mkNixosHost + mkDarwinHost helpers)
+├── flake.nix                  # Minimal flake entry point (inputs only, outputs delegated)
+├── flake.nix.bak              # Full flake with darwin scaffold enabled (reference for macOS impl)
+├── outputs/                   # Flake outputs (nixosConfigurations, checks, devShells, etc.)
+│   └── default.nix            # All outputs extracted here for clean separation
 ├── .envrc                     # direnv integration (use flake)
 ├── lib/                       # Custom Nix library helpers (scanPaths, relativeToRoot)
-├── overlays/                  # Nixpkgs overlays (gruvbox-material-yazi)
+├── overlays/                  # Nixpkgs overlays (auto-loaded from individual files)
+│   ├── default.nix            # Auto-imports all .nix files in this directory
+│   └── packages.nix           # Package overlays (gruvbox-material-yazi, version pinning)
 ├── pkgs/                      # Custom packages (gruvbox-material-yazi.yazi)
 ├── scripts/                   # Utility scripts (output-scale)
 ├── hosts/                     # Per-host system configurations
@@ -32,7 +37,8 @@ A multi-host, cross-platform NixOS and macOS configuration using flakes and Home
 │   │       ├── hardware.nix   # NVIDIA driver, pinned kernel (7.2), boot params, session vars
 │   │       ├── packages.nix
 │   │       └── services.nix   # auto-cpufreq, UPower, systemd-resolved
-│   └── darwin/                # macOS hosts (placeholder)
+│   └── darwin/                # macOS hosts
+│       └── my-macbook/        # Placeholder darwin host (for flake.nix.bak reference)
 ├── modules/                   # System modules
 │   ├── nixos/                 # NixOS-specific modules
 │   │   ├── core/              # Shared by all NixOS hosts (auto-imported via scanPaths)
@@ -150,7 +156,7 @@ nix fmt
    - `niri-host-settings.kdl` for host-specific Niri settings
    - `hypr-host-settings.lua` for host-specific Hyprland settings
    - `noctalia-host-settings.toml` for Noctalia (optional)
-7. Add a new entry in `flake.nix`:
+7. Add a new entry in `outputs/default.nix` (inside `mkNixosHost` calls):
    ```nix
    nixosConfigurations.<name> = mkNixosHost "<name>" "x86_64-linux";
    ```
@@ -177,21 +183,14 @@ See [hosts/README.md](hosts/README.md) for a detailed walkthrough with code exam
 
 ## Adding a New macOS Host
 
-> **Note:** macOS (darwin) support is structurally scaffolded. The directory layout, `mkDarwinHost` helper, and `darwinModules` output are all wired in `flake.nix` but commented out. To add a darwin host, uncomment `nix-darwin` input, `mkDarwinHost`, and the relevant output.
+> **Note:** macOS (darwin) support is scaffolded in `flake.nix.bak`. Copy that file to `flake.nix` when you're ready to implement darwin. The directory layout, `mkDarwinHost` helper, `darwinModules` output, and `hosts/darwin/my-macbook/` placeholder are all wired up and ready.
 
-1. Create the host directory:
-
-   ```bash
-   mkdir -p hosts/darwin/<name>
-   mkdir -p home/hosts/darwin/<name>
-   ```
-
-2. Uncomment `nix-darwin` input, `mkDarwinHost`, and `darwinModules` in `flake.nix`
-3. Create `hosts/darwin/<name>/default.nix` with darwin-specific config
-4. Create `home/hosts/darwin/<name>/default.nix` importing `../core` + `../darwin`
-5. Add `modules/darwin/*.nix` for macOS system settings (`system.defaults.*`, `homebrew.*`, etc.)
-6. Add `home/darwin/*.nix` for macOS-specific home config (Aerospace, CmdTap, etc.)
-7. Add a `darwinConfigurations` entry using `mkDarwinHost`
+1. Copy `flake.nix.bak` to `flake.nix` (replaces the current minimal flake)
+2. The host directory already exists at `hosts/darwin/my-macbook/` — rename it to your hostname
+3. Create `home/hosts/darwin/<name>/default.nix` importing `../core` + `../darwin`
+4. Add `modules/darwin/*.nix` for macOS system settings (`system.defaults.*`, `homebrew.*`, etc.)
+5. Add `home/darwin/*.nix` for macOS-specific home config (Aerospace, CmdTap, etc.)
+6. Add a `darwinConfigurations` entry using `mkDarwinHost`
 
 ## Feature Options
 
@@ -521,10 +520,10 @@ Get a device's ID from the Syncthing GUI under Actions > Show ID.
 | `nixos-hardware` | NixOS hardware modules (AMD, laptop, SSD, etc.) |
 | `agenix` | Encrypted secrets management (age + SSH keys) |
 | `niri` | Niri Wayland compositor |
-| `hyprland` | Hyprland Wayland compositor |
 | `noctalia` | Wayland shell/bar |
 | `zen-browser` | Zen Browser (Firefox-based) |
 | `treefmt-nix` | Nix code formatting (nixfmt, shfmt) |
+| `pre-commit-hooks` | Git pre-commit hooks (nixfmt enforcement) |
 
 ## Flake Outputs
 
@@ -533,16 +532,16 @@ Get a device's ID from the Syncthing GUI under Actions > Show ID.
 | `nixosConfigurations.<host>` | NixOS system configurations (padrick, jobert) |
 | `darwinConfigurations` | macOS system configurations (placeholder, empty) |
 | `nixosModules.default` | Reusable module: imports nixos modules; sets overlay and option defaults |
-| `overlays.default` | Nixpkgs overlay (gruvbox-material-yazi, version pinning) |
+| `overlays.default` | Nixpkgs overlay (auto-loaded from `overlays/*.nix`) |
 | `packages.<system>.gruvbox-material-yazi` | Custom package exposed directly |
-| `checks.<system>` | Auto-generated per-host evaluation checks (from `nixosConfigurations`) + formatting |
+| `checks.<system>` | Formatting, pre-commit hooks, and per-host evaluation checks |
 | `formatter.<system>` | nixfmt + shfmt wrapper |
 | `apps.<system>.agenix` | agenix CLI as a flake app |
-| `devShells.<system>.default` | Dev shell with treefmt + agenix |
+| `devShells.<system>.default` | Dev shell with nixfmt, deadnix, statix, agenix, treefmt |
 
 ## Formatting
 
-This config uses `treefmt-nix` for consistent code formatting. Run:
+This config uses `treefmt-nix` for consistent code formatting and `pre-commit-hooks` for git-level enforcement.
 
 ```bash
 # Format all .nix files
@@ -552,7 +551,9 @@ nix fmt
 nix fmt -- --check
 ```
 
-The formatter is configured with `nixfmt` for Nix files and `shfmt` for shell scripts.
+The formatter is configured with `nixfmt` for Nix files and `shfmt` for shell scripts. Pre-commit hooks run `nixfmt` automatically on `git commit` (via `pre-commit-hooks.nix`).
+
+The dev shell includes `nixfmt`, `deadnix`, and `statix` for linting and formatting.
 
 ## CI
 
@@ -563,7 +564,13 @@ GitHub Actions runs on push/PR to `main` (`.github/workflows/ci.yml`):
 
 ## direnv
 
-The `.envrc` at the repo root contains `use flake`, which automatically loads the dev shell (treefmt + agenix) when you `cd` into the repo. Requires [direnv](https://direnv.net/) to be installed and `direnv allow` run once.
+The `.envrc` at the repo root contains `use flake`, which automatically loads the dev shell (nixfmt, deadnix, statix, agenix, treefmt) when you `cd` into the repo. Requires [direnv](https://direnv.net/) to be installed and `direnv allow` run once.
+
+If prompted to accept flake configuration settings (binary caches), add this to `~/.config/nix/nix.conf`:
+
+```
+accept-flake-config = true
+```
 
 ## Scripts
 
@@ -573,13 +580,13 @@ The `.envrc` at the repo root contains `use flake`, which automatically loads th
 
 ## Overlays & Custom Packages
 
-Custom Nix packages live in `pkgs/` and are exposed via overlays in `overlays/default.nix`. The overlay is applied globally in `flake.nix` via `nixpkgs.overlays`.
+Custom Nix packages live in `pkgs/` and are exposed via overlays in `overlays/`. The `overlays/default.nix` auto-loads all `.nix` files in the directory and composes them into a single overlay function. The overlay is applied globally in `outputs/default.nix` via `nixpkgs.overlays`.
 
 | Package | Description |
 |---|---|
 | `gruvbox-material-yazi` | Gruvbox Material theme for Yazi file manager (fetched from GitHub) |
 
-To add a new custom package: create `pkgs/<name>.nix`, add it to `overlays/default.nix`, then reference it as `pkgs.<name>` in any module.
+To add a new custom package: create `pkgs/<name>.nix`, add it to a new file in `overlays/` (e.g. `overlays/<name>.nix` with signature `final: prev: { ... }`), and it will be auto-loaded. Then reference it as `pkgs.<name>` in any module.
 
 ## Mounting SMB Shares with Nemo
 
@@ -598,6 +605,8 @@ The `lib/` directory contains helper functions used throughout the config:
 - **`scanPaths`** - Auto-imports all `.nix` files in a directory (excluding `default.nix`). Adding a new module to `modules/nixos/core/`, `modules/nixos/desktop/`, `home/core/`, or `home/linux/` only requires creating the file -- no manual import needed.
 - **`relativeToRoot`** - Converts a repo-relative path to an absolute path for use in module lists.
 - **`specialArgs`** - Documents the expected `specialArgs` passed to all modules: `hostname`, `flakeRoot`, `inputs`, `mylib`, `username`.
+
+The `vars/` directory exports user identity (`username`, `userfullname`, `useremail`) and accepts `{ lib }` for future extensibility (networking data, etc.).
 
 ## Security
 

@@ -20,8 +20,6 @@
   };
 
   config = {
-    programs.direnv.enable = true;
-
     boot = {
       kernelPackages = config.mySystem.kernelPackage;
 
@@ -33,20 +31,6 @@
     };
 
     networking.networkmanager.enable = true;
-
-    nixpkgs.config.allowUnfree = true;
-
-    nix.settings = {
-      experimental-features = [
-        "nix-command"
-        "flakes"
-        "recursive-nix"
-      ];
-      max-jobs = "auto";
-      http-connections = 50;
-      auto-optimise-store = true;
-      warn-dirty = false;
-    };
 
     nix.gc = {
       automatic = true;
