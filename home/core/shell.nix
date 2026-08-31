@@ -18,6 +18,9 @@ in
   programs.bash = {
     enable = true;
     enableCompletion = true;
+    initExtra = ''
+      bind -s '"\C-w": kill-word'
+    '';
   };
 
   programs.zsh = {
@@ -25,6 +28,11 @@ in
     enableCompletion = true;
     autosuggestion.enable = true;
     syntaxHighlighting.enable = true;
+    initExtra = ''
+      bindkey "^[[H" beginning-of-line
+      bindkey "^[[F" end-of-line
+      bindkey "^[[3~" delete-char
+    '';
   };
 
   programs.starship = {
@@ -37,6 +45,13 @@ in
     enable = true;
     enableZshIntegration = true;
     enableBashIntegration = true;
+  };
+
+  home.sessionVariables = {
+    EDITOR = "nvim";
+    VISUAL = "nvim";
+    MANPAGER = "sh -c 'col -bx | bat -l man -p'";
+    BAT_THEME = "gruvbox-dark";
   };
 
   home.shellAliases = shellAliases;
