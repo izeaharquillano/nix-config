@@ -11,7 +11,6 @@
     ];
     max-jobs = "auto";
     http-connections = 50;
-    auto-optimise-store = true;
     warn-dirty = false;
     substituters = [
       "https://nix-community.cachix.org"

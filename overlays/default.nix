@@ -1,8 +1,8 @@
-# Auto-import all overlay files in this directory.
+# Auto-import all .nix overlay files in this directory.
 # Each file should have the signature: final: prev: { ... }
 final: prev:
 let
-  overlayFiles = builtins.filter (f: f != "default.nix" && f != "README.md") (
+  overlayFiles = builtins.filter (f: f != "default.nix" && builtins.match ".*\\.nix" f != null) (
     builtins.attrNames (builtins.readDir ./.)
   );
 

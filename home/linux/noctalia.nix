@@ -23,9 +23,6 @@ in
 
       [wallpaper.last]
       path = "${wp}"
-
-      [wallpaper.monitors.eDP-1]
-      path = "${wp}"
     '';
 
   xdg.configFile."noctalia/host-settings.toml".text = hostSettings;

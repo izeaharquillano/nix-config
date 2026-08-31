@@ -85,7 +85,6 @@ A multi-host, cross-platform NixOS and macOS configuration using flakes and Home
 │   │   ├── niri.nix           # Niri config
 │   │   ├── noctalia.nix       # Noctalia lockscreen/bar
 │   │   ├── mimeapps.nix       # Nemo desktop entry + MIME associations
-│   │   ├── shell.nix          # Linux-only session variables
 │   │   ├── scripts.nix        # Utility scripts (output-scale)
 │   │   ├── packages.nix       # Desktop packages (waybar, mpv, discord-ptb, nemo, etc.)
 │   │   ├── xdg.nix            # XDG portal config (xdg-desktop-portal-*)
@@ -580,7 +579,7 @@ accept-flake-config = true
 
 ## Overlays & Custom Packages
 
-Custom Nix packages live in `pkgs/` and are exposed via overlays in `overlays/`. The `overlays/default.nix` auto-loads all `.nix` files in the directory and composes them into a single overlay function. The overlay is applied globally in `outputs/default.nix` via `nixpkgs.overlays`.
+Custom Nix packages live in `pkgs/` and are exposed via overlays in `overlays/`. The `overlays/default.nix` auto-loads all `.nix` files in the directory (filtering for `.nix` suffix) and composes them into a single overlay function. The overlay is applied globally in `outputs/default.nix` via `nixpkgs.overlays`.
 
 | Package | Description |
 |---|---|
@@ -627,7 +626,7 @@ Configured in `modules/nixos/core/system.nix`:
 - `mySystem.username`: Primary user username (default: `"ize"`). Used throughout modules for user-specific paths and groups.
 - `experimental-features`: `nix-command`, `flakes`, `recursive-nix`
 - `warn-dirty = false`: Suppresses dirty tree warnings during rebuilds
-- `auto-optimise-store = true`: Deduplicates store paths weekly
+- `nix.optimise`: Automatic store path deduplication weekly
 - `gc`: Automatic garbage collection weekly, deletes generations older than 14 days
 
 ## Shell

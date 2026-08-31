@@ -25,7 +25,6 @@ home/
 │   ├── niri.nix                 # Niri config
 │   ├── noctalia.nix             # Noctalia lockscreen/bar (config.toml + wallpaper.toml + host-settings.toml)
 │   ├── mimeapps.nix             # Nemo desktop entry + MIME associations
-│   ├── shell.nix                # Linux-only session variables (LESSHISTFILE, LESSKEY)
 │   ├── scripts.nix              # Utility scripts (output-scale)
 │   ├── packages.nix             # Desktop packages (waybar, mpv, discord-ptb, nemo, gvfs, etc.)
 │   ├── xdg.nix                  # XDG portal config (xdg-desktop-portal-*)
@@ -188,7 +187,7 @@ in
 }
 ```
 
-`home/linux/shell.nix` contains Linux-only session variables (LESSHISTFILE, LESSKEY).
+`home/core/shell.nix` contains all shell configuration (Bash, Zsh, Starship, Zoxide, aliases).
 
 ## Host-Specific Packages
 
