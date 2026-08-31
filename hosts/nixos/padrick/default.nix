@@ -8,9 +8,9 @@
 
 {
   imports = [
-    ../../modules/core
-    ../../modules/desktop
-    ../../modules/features
+    ../../../modules/nixos/core
+    ../../../modules/nixos/desktop
+    ../../../modules/nixos/features
     ./hardware-configuration.nix
     ./packages.nix
     ./services.nix

@@ -1,58 +1,64 @@
 # Home Manager Modules
 
-User-level configuration managed by Home Manager.
+User-level configuration managed by Home Manager, organized by platform.
 
 ## Structure
 
 ```
 home/
-├── core/                    # Shared across all hosts
-│   ├── default.nix          # Aggregator + stateVersion, username
-│   ├── shell.nix            # Bash, zsh, git, starship, zoxide, aliases (shared via let)
-│   ├── packages.nix         # CLI tools (fd, fzf, btop, ripgrep, opencode, etc.)
-│   └── xdg.nix              # XDG user directories + portal config
-├── desktop/                 # Desktop/GUI app configs
-│   ├── default.nix          # Aggregator
-│   ├── gtk.nix              # GTK theme, cursor
-│   ├── terminal.nix         # Kitty terminal
-│   ├── hyprland.nix         # Hyprland config (store copy, recursive)
-│   ├── niri.nix             # Niri config
-│   ├── noctalia.nix         # Noctalia lockscreen/bar (config.toml + wallpaper.toml + host-settings.toml)
-│   ├── nvim.nix             # Neovim LazyVim config (store copy, recursive)
-│   ├── mimeapps.nix         # Nemo desktop entry + MIME associations
-│   ├── obsidian.nix         # Obsidian
-│   ├── scripts.nix          # Utility scripts (output-scale)
-│   ├── starship.nix         # Starship prompt
-│   ├── yazi.nix             # Yazi file manager + gruvbox theme
-│   ├── tmux.nix             # Tmux config
-│   ├── packages.nix         # Desktop packages (ncdu, waybar, mpv, discord-ptb, nemo, gvfs, etc.)
-│   └── zen-browser.nix      # Zen Browser
-└── hosts/
-    ├── padrick/
-    │   ├── default.nix      # Host-specific HM: imports core + desktop
-    │   ├── packages.nix     # btop
-    │   └── config/          # Host-specific dotfiles (niri, hyprland, noctalia)
-    │       ├── niri-host-settings.kdl
-    │       ├── hypr-host-settings.lua
-    │       └── noctalia-host-settings.toml
-    └── jobert/
-        ├── default.nix
-        ├── packages.nix     # btop-cuda, chromium, prismlauncher
-        └── config/
-            ├── niri-host-settings.kdl
-            ├── hypr-host-settings.lua
-            └── noctalia-host-settings.toml
+├── core/                        # Cross-platform (works on Linux + macOS)
+│   ├── default.nix              # Aggregator + stateVersion, username, platform-aware homeDirectory
+│   ├── shell.nix                # Bash, zsh, git, starship, zoxide, aliases
+│   ├── packages.nix             # CLI tools (fd, fzf, ripgrep, opencode, etc.)
+│   ├── xdg.nix                  # XDG user directories
+│   ├── terminal.nix             # Kitty terminal
+│   ├── nvim.nix                 # Neovim LazyVim config (store copy, recursive)
+│   ├── starship.nix             # Starship prompt
+│   ├── yazi.nix                 # Yazi file manager + gruvbox theme
+│   ├── tmux.nix                 # Tmux config
+│   └── obsidian.nix             # Obsidian
+├── linux/                       # Linux-only home modules
+│   ├── default.nix              # Aggregator
+│   ├── gtk.nix                  # GTK theme, cursor
+│   ├── hyprland.nix             # Hyprland config (store copy, recursive)
+│   ├── niri.nix                 # Niri config
+│   ├── noctalia.nix             # Noctalia lockscreen/bar (config.toml + wallpaper.toml + host-settings.toml)
+│   ├── mimeapps.nix             # Nemo desktop entry + MIME associations
+│   ├── scripts.nix              # Utility scripts (output-scale)
+│   ├── packages.nix             # Desktop packages (waybar, mpv, discord-ptb, nemo, gvfs, etc.)
+│   ├── xdg.nix                  # XDG portal config (xdg-desktop-portal-*)
+│   └── zen-browser.nix          # Zen Browser
+├── darwin/                      # macOS-only home modules (placeholder)
+│   └── default.nix
+└── hosts/                       # Host-specific HM overrides
+    ├── nixos/
+    │   ├── padrick/
+    │   │   ├── default.nix      # Imports core + linux, symlinks host configs
+    │   │   ├── packages.nix     # btop
+    │   │   └── config/          # Host-specific dotfiles (niri, hyprland, noctalia)
+    │   │       ├── niri-host-settings.kdl
+    │   │       ├── hypr-host-settings.lua
+    │   │       └── noctalia-host-settings.toml
+    │   └── jobert/
+    │       ├── default.nix
+    │       ├── packages.nix     # btop-cuda, chromium, prismlauncher
+    │       └── config/
+    │           ├── niri-host-settings.kdl
+    │           ├── hypr-host-settings.lua
+    │           └── noctalia-host-settings.toml
+    └── darwin/                  # macOS host-specific HM (placeholder)
 ```
 
 ## Module Types
 
-- **`core/`** - Essential user config (shell, packages). Always imported.
-- **`desktop/`** - GUI applications and dotfiles. Only for desktop hosts.
+- **`core/`** - Cross-platform user config (shell, packages, editors, terminal). Always imported on all platforms.
+- **`linux/`** - Linux-only GUI applications and dotfiles (GTK, Wayland compositors, portals). Only for Linux desktop hosts.
+- **`darwin/`** - macOS-only home modules (placeholder). Will contain Aerospace, CmdTap, etc.
 - **`hosts/<name>/`** - Host-specific overrides, flake input imports, and hardware config symlinks.
 
 ## How It Works
 
-The host's HM entry point (`home/hosts/<name>/default.nix`) imports `core/` and `desktop/`, plus any flake module inputs (niri, noctalia).
+The host's HM entry point (`home/hosts/<name>/default.nix`) imports `core/` and the platform-specific directory (`linux/` or `darwin/`), plus any flake module inputs (niri, noctalia).
 
 Config files in `config/` are consumed by Home Manager modules via `xdg.configFile` store copies. Directories with multiple files (like `hypr/` and `nvim/`) use `recursive = true`. Host-specific settings in `home/hosts/<name>/config/` also use store copies.
 
@@ -62,7 +68,7 @@ For niri, the main `config.kdl` uses `include "./niri-host-settings.kdl"` to pul
 
 ## Home Manager Backup
 
-If existing files conflict with Home Manager managed files, HM will rename them with a `.hm-bak` extension instead of failing. This is configured in `flake.nix` under the `mkHost` helper:
+If existing files conflict with Home Manager managed files, HM will rename them with a `.hm-bak` extension instead of failing. This is configured in `flake.nix` under the `mkNixosHost` helper:
 
 ```nix
 home-manager.backupFileExtension = "hm-bak";
@@ -72,11 +78,11 @@ Clean up `.hm-bak` files manually after verifying the new config works.
 
 ## Mounting SMB Shares with Nemo
 
-Nemo is the default file manager. `gvfs` and `nemo-with-extensions` are installed, and `services.gvfs` is enabled system-wide in `modules/desktop/services.nix`. To mount a share: click `File` > `Connect to Server`, set the type to `Windows share`, enter the details, and connect.
+Nemo is the default file manager. `gvfs` and `nemo-with-extensions` are installed, and `services.gvfs` is enabled system-wide in `modules/nixos/desktop/services.nix`. To mount a share: click `File` > `Connect to Server`, set the type to `Windows share`, enter the details, and connect.
 
 ## Adding a Module
 
-1. Create a `.nix` file in `home/core/` or `home/desktop/`
+1. Create a `.nix` file in `home/core/` (cross-platform) or `home/linux/` (Linux-only)
 2. It will be auto-imported by `scanPaths` in `default.nix`
 3. Follow the Home Manager module pattern:
 
@@ -94,7 +100,7 @@ Nemo is the default file manager. `gvfs` and `nemo-with-extensions` are installe
 ## Adding a Dotfile
 
 1. Place the config file in `config/<app>/`
-2. Create or update a module in `home/desktop/`:
+2. Create or update a module in `home/core/` or `home/linux/`:
 
 For a single file:
 
@@ -131,7 +137,7 @@ In `home/hosts/<name>/default.nix`, add host-specific settings after the imports
 {
   imports = [
     ../../core
-    ../../desktop
+    ../../linux
     ./packages.nix
     inputs.niri.homeModules.niri
     inputs.noctalia.homeModules.default
@@ -142,7 +148,7 @@ In `home/hosts/<name>/default.nix`, add host-specific settings after the imports
 }
 ```
 
-Noctalia lockscreen widget settings can be placed in `home/hosts/<name>/config/noctalia-host-settings.toml`. If present, they are written to `host-settings.toml` in `~/.config/noctalia/` by `home/desktop/noctalia.nix` (which uses the `hostname` arg passed from `flake.nix`). Noctalia merges all `*.toml` files alphabetically, so `config.toml` loads first, then `host-settings.toml`, then `wallpaper.toml`.
+Noctalia lockscreen widget settings can be placed in `home/hosts/<name>/config/noctalia-host-settings.toml`. If present, they are written to `host-settings.toml` in `~/.config/noctalia/` by `home/linux/noctalia.nix` (which uses the `hostname` arg passed from `flake.nix`). Noctalia merges all `*.toml` files alphabetically, so `config.toml` loads first, then `host-settings.toml`, then `wallpaper.toml`.
 
 Add host-specific user packages in `home/hosts/<name>/packages.nix`:
 
@@ -158,29 +164,35 @@ Add host-specific user packages in `home/hosts/<name>/packages.nix`:
 
 ## Shell Aliases
 
-Aliases are defined in `home/core/shell.nix` using a `let` binding to avoid duplication between bash and zsh:
+Aliases are defined in `home/core/shell.nix`. NixOS-specific aliases are separated from cross-platform ones:
 
 ```nix
 let
   sharedAliases = {
     svim = "sudoedit";
     cat = "bat";
+  };
+
+  nixosAliases = {
     bldswc = "sudo nixos-rebuild switch";
     bldflk = "sudo nixos-rebuild switch --flake ~/nixos-conf#$(hostname)";
     nixgarb = "sudo nix-collect-garbage";
+    sagenix = "sudo agenix -i /etc/ssh/ssh_host_ed25519_key";
   };
 
-  zshAliases = sharedAliases // {
+  zshAliases = sharedAliases // nixosAliases // {
     ls = "eza --icons=always --color=always --group-directories-first";
     ll = "eza -alF --icons=always --color=always --group-directories-first";
     lt = "eza --tree --level=2 --icons=always --color=always";
   };
 in
 {
-  programs.bash.shellAliases = sharedAliases;
+  programs.bash.shellAliases = sharedAliases // nixosAliases;
   programs.zsh.shellAliases = zshAliases;
 }
 ```
+
+When a macOS host is added, `nixosAliases` can be made conditional or replaced with platform-specific aliases.
 
 ## Host-Specific Packages
 

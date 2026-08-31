@@ -1,39 +1,39 @@
 # Hosts
 
-Each subdirectory here represents a NixOS machine. The host's `default.nix` is the entry point that imports shared modules and applies host-specific overrides.
+Each subdirectory represents a machine. NixOS hosts live under `nixos/`, macOS hosts under `darwin/`. The host's `default.nix` is the entry point that imports shared modules and applies host-specific overrides.
 
 ## Current Hosts
 
-| Host | Type | Hardware | Purpose |
-|---|---|---|---|
-| `padrick` | Laptop | AMD, BTRFS, Wayland | Daily use |
-| `jobert` | Gaming Laptop | AMD + NVIDIA, BTRFS, Wayland | Work/gaming |
+| Host | Platform | Type | Hardware | Purpose |
+|---|---|---|---|---|
+| `padrick` | NixOS | Laptop | AMD, BTRFS, Wayland | Daily use |
+| `jobert` | NixOS | Gaming Laptop | AMD + NVIDIA, BTRFS, Wayland | Work/gaming |
 
-## Hardware Config Pattern
-
-Each host directory contains hardware-specific config files:
+## Directory Layout
 
 ```
-hosts/padrick/
-├── default.nix                 # Host NixOS config (imports modules, enables features)
-├── hardware-configuration.nix  # Auto-generated hardware scan
-├── hardware.nix                # Kernel params, swap, VA-API
-├── packages.nix                # Host-specific system packages
-└── services.nix                # TLP, UPower, mic-mute LED sync
-
-hosts/jobert/
-├── default.nix
-├── hardware-configuration.nix
-├── hardware.nix                # NVIDIA driver, pinned kernel (7.2), boot params, session vars
-├── packages.nix
-└── services.nix                # auto-cpufreq, UPower, systemd-resolved
+hosts/
+├── nixos/                     # NixOS hosts
+│   ├── padrick/
+│   │   ├── default.nix        # Host NixOS config (imports modules, enables features)
+│   │   ├── hardware-configuration.nix  # Auto-generated hardware scan
+│   │   ├── hardware.nix       # Kernel params, swap, VA-API
+│   │   ├── packages.nix       # Host-specific system packages
+│   │   └── services.nix       # TLP, UPower, mic-mute LED sync
+│   └── jobert/
+│       ├── default.nix
+│       ├── hardware-configuration.nix
+│       ├── hardware.nix       # NVIDIA driver, pinned kernel (7.2), boot params, session vars
+│       ├── packages.nix
+│       └── services.nix       # auto-cpufreq, UPower, systemd-resolved
+└── darwin/                    # macOS hosts (placeholder)
 ```
 
-Shared features (BTRFS, Secure Boot, gaming, virtualisation, P2P) are configured via `myfeatures.*` options in each host's `default.nix`. Feature modules live in `modules/features/` and are auto-imported via `scanPaths`.
+Shared features (BTRFS, Secure Boot, gaming, virtualisation, P2P) are configured via `myfeatures.*` options in each host's `default.nix`. Feature modules live in `modules/nixos/features/` and are auto-imported via `scanPaths`.
 
 ### padrick: Daily Use ThinkPad
 
-`padrick` enables core features in `hosts/padrick/default.nix`:
+`padrick` enables core features in `hosts/nixos/padrick/default.nix`:
 
 ```nix
 myfeatures = {
@@ -46,7 +46,7 @@ myfeatures = {
 
 ### jobert: Gaming & Virtualization
 
-`jobert` enables gaming and VM features via options in `hosts/jobert/default.nix`:
+`jobert` enables gaming and VM features via options in `hosts/nixos/jobert/default.nix`:
 
 ```nix
 myfeatures = {
@@ -67,9 +67,9 @@ The gaming module configures:
 - **Gamemode** for automatic CPU/GPU performance tuning
 - **MangoHud** and **GOverlay** for FPS overlay and Vulkan/OpenGL settings
 
-`jobert` also has NVIDIA-specific hardware config in `hosts/jobert/hardware.nix` (open driver, VA-API, Wayland env vars, 32-bit OpenGL). Both hosts use the default `linuxPackages_7_2` kernel.
+`jobert` also has NVIDIA-specific hardware config in `hosts/nixos/jobert/hardware.nix` (open driver, VA-API, Wayland env vars, 32-bit OpenGL). Both hosts use the default `linuxPackages_7_2` kernel.
 
-Host-specific dotfiles (niri, hyprland, noctalia settings) live in `home/hosts/<name>/config/` and are symlinked by the host-specific HM file.
+Host-specific dotfiles (niri, hyprland, noctalia settings) live in `home/hosts/nixos/<name>/config/` and are symlinked by the host-specific HM file.
 
 ### niri-host-settings.kdl
 
@@ -114,13 +114,13 @@ hl.monitor({
 })
 ```
 
-## Adding a New Host
+## Adding a New NixOS Host
 
 ### 1. Create the host directory
 
 ```bash
-mkdir -p hosts/<name>
-mkdir -p home/hosts/<name>/config
+mkdir -p hosts/nixos/<name>
+mkdir -p home/hosts/nixos/<name>/config
 ```
 
 ### 2. Add hardware configuration
@@ -133,20 +133,20 @@ sudo nixos-generate-config --show-hardware-config > hardware-configuration.nix
 
 Or copy from an existing host and modify.
 
-### 3. Create `hosts/<name>/default.nix`
+### 3. Create `hosts/nixos/<name>/default.nix`
 
 ```nix
 { config, pkgs, lib, inputs, ... }:
 
 {
   imports = [
-    ../../modules/core              # Base system config (includes SSH, firewall, neovim)
-    ../../modules/desktop           # Desktop environment (skip for servers)
-    ../../modules/features          # Optional feature modules (auto-imported)
+    ../../modules/nixos/core      # Base system config (includes SSH, firewall, neovim)
+    ../../modules/nixos/desktop   # Desktop environment (skip for servers)
+    ../../modules/nixos/features  # Optional feature modules (auto-imported)
     ./hardware-configuration.nix
-    ./packages.nix                  # Host-specific system packages
-    ./services.nix                  # Host-specific services
-    ./hardware.nix                  # Host-specific hardware (kernel params, swap, GPU)
+    ./packages.nix                # Host-specific system packages
+    ./services.nix                # Host-specific services
+    ./hardware.nix                # Host-specific hardware (kernel params, swap, GPU)
   ];
 
   networking.hostName = "<name>";
@@ -165,7 +165,7 @@ Or copy from an existing host and modify.
 }
 ```
 
-### 4. Create `hosts/<name>/services.nix`
+### 4. Create `hosts/nixos/<name>/services.nix`
 
 Host-specific services that differ from the shared desktop modules. For laptops, include power management and hardware-specific services:
 
@@ -199,13 +199,13 @@ For desktops, this file can be minimal or omitted entirely.
 
 ### Disabling Services Per Host
 
-Services enabled in `modules/core/` or `modules/desktop/` apply to all hosts via `scanPaths`. To disable a service on a specific host, use `lib.mkForce` in the host's `default.nix`:
+Services enabled in `modules/nixos/core/` or `modules/nixos/desktop/` apply to all hosts via `scanPaths`. To disable a service on a specific host, use `lib.mkForce` in the host's `default.nix`:
 
 ```nix
 { lib, ... }:
 
 {
-  # Disable syncthing and netbird (modules/features/p2p.nix)
+  # Disable syncthing and netbird (modules/nixos/features/p2p.nix)
   services.syncthing.enable = lib.mkForce false;
   services.netbird.enable = lib.mkForce false;
 
@@ -216,7 +216,7 @@ Services enabled in `modules/core/` or `modules/desktop/` apply to all hosts via
 
 ### 5. Create host-specific config files
 
-Create `home/hosts/<name>/config/niri-host-settings.kdl` for host-specific Niri settings:
+Create `home/hosts/nixos/<name>/config/niri-host-settings.kdl` for host-specific Niri settings:
 
 ```kdl
 output "eDP-1" {
@@ -226,7 +226,7 @@ output "eDP-1" {
 }
 ```
 
-Create `home/hosts/<name>/config/hypr-host-settings.lua` for host-specific Hyprland settings:
+Create `home/hosts/nixos/<name>/config/hypr-host-settings.lua` for host-specific Hyprland settings:
 
 ```lua
 hl.monitor({
@@ -237,11 +237,11 @@ hl.monitor({
 })
 ```
 
-Optionally, create `home/hosts/<name>/config/noctalia-host-settings.toml` for Noctalia host specific configurations. If present, it is written to `host-settings.toml` in `~/.config/noctalia/` by `home/desktop/noctalia.nix`.
+Optionally, create `home/hosts/nixos/<name>/config/noctalia-host-settings.toml` for Noctalia host specific configurations. If present, it is written to `host-settings.toml` in `~/.config/noctalia/` by `home/linux/noctalia.nix`.
 
 ### 6. Add Home Manager config
 
-Create `home/hosts/<name>/default.nix`:
+Create `home/hosts/nixos/<name>/default.nix`:
 
 ```nix
 { config, inputs, ... }:
@@ -249,7 +249,7 @@ Create `home/hosts/<name>/default.nix`:
 {
   imports = [
     ../../core
-    ../../desktop
+    ../../linux
     ./packages.nix
     inputs.niri.homeModules.niri
     inputs.noctalia.homeModules.default
@@ -262,13 +262,13 @@ Create `home/hosts/<name>/default.nix`:
 
 ### 7. Register in `flake.nix`
 
-Add a new `mkHost` call in the `outputs` attrset:
+Add a new `mkNixosHost` call in the `outputs` attrset:
 
 ```nix
-nixosConfigurations.<name> = mkHost "<name>" "x86_64-linux";
+nixosConfigurations.<name> = mkNixosHost "<name>" "x86_64-linux";
 ```
 
-The `mkHost` helper handles all the boilerplate (system, specialArgs, home-manager config). A `{name}-eval` flake check is auto-generated from `nixosConfigurations` via `mapAttrs'`, so no separate check block is needed. See the root README for details.
+The `mkNixosHost` helper handles all the boilerplate (system, specialArgs, home-manager config). A `{name}-eval` flake check is auto-generated from `nixosConfigurations` via `mapAttrs'`, so no separate check block is needed. See the root README for details.
 
 ### 8. Set up Secure Boot (optional, first-time only)
 
@@ -301,7 +301,7 @@ SSH host keys are generated on first boot. Grab the key:
 ssh-keyscan <name> 2>/dev/null | grep ssh-ed25519
 ```
 
-Add it to `secrets/secrets.nix` and rekey (see [Secrets Management](../README.md#adding-a-new-host) in the main README).
+Add it to `secrets/nixos.nix` and rekey (see [Secrets Management](../README.md#adding-a-new-host) in the main README).
 
 ### 11. Second deploy (decrypts secrets)
 
@@ -329,4 +329,4 @@ sudo agenix -i /etc/ssh/ssh_host_ed25519_key -e nix-access-tokens.age
 
 Add the token in the format: `access-tokens = github.com=ghp_GithubTokenHere`
 
-The token is automatically included in Nix configuration via `nix.extraOptions` in `modules/core/secrets.nix`.
+The token is automatically included in Nix configuration via `nix.extraOptions` in `modules/nixos/core/secrets.nix`.

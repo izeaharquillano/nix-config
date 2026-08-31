@@ -5,7 +5,7 @@
 }:
 
 let
-  hostSettings = builtins.readFile (../hosts/${hostname}/config/noctalia-host-settings.toml);
+  hostSettings = builtins.readFile (../hosts/nixos/${hostname}/config/noctalia-host-settings.toml);
 in
 {
   programs.noctalia.enable = true;

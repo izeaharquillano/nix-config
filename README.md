@@ -1,6 +1,6 @@
 # nixos-conf
 
-A multi-host NixOS configuration using flakes and Home Manager. A gruvbox themed (mostly) configuration implemented with Noctalia, Niri, and Hyprland. 
+A multi-host, cross-platform NixOS and macOS configuration using flakes and Home Manager. A gruvbox themed (mostly) configuration implemented with Noctalia, Niri, and Hyprland.
 
 ## Desktops
 
@@ -12,83 +12,97 @@ A multi-host NixOS configuration using flakes and Home Manager. A gruvbox themed
 
 ```
 .
-├── flake.nix                  # Flake entry point (mkHost helper, passes hostname via specialArgs)
+├── flake.nix                  # Flake entry point (mkNixosHost helper, darwinConfigurations placeholder)
 ├── .envrc                     # direnv integration (use flake)
-├── lib/                       # Custom Nix library helpers (scanPaths)
+├── lib/                       # Custom Nix library helpers (scanPaths, relativeToRoot)
 ├── overlays/                  # Nixpkgs overlays (gruvbox-material-yazi)
 ├── pkgs/                      # Custom packages (gruvbox-material-yazi.yazi)
 ├── scripts/                   # Utility scripts (output-scale)
-├── hosts/                     # Per-host NixOS system configurations
-│   ├── padrick/               # ThinkPad T14 AMD Gen1 (daily use)
-│   │   ├── default.nix        # Host config (imports modules, enables features)
-│   │   ├── hardware-configuration.nix
-│   │   ├── hardware.nix       # Kernel params, swap, VA-API
-│   │   ├── packages.nix       # Host-specific system packages
-│   │   └── services.nix       # TLP, UPower, mic-mute LED sync
-│   └── jobert/                # AMD + NVIDIA gaming laptop
-│       ├── default.nix
-│       ├── hardware-configuration.nix
-│       ├── hardware.nix       # NVIDIA driver, pinned kernel (7.2), boot params, session vars
-│       ├── packages.nix
-│       └── services.nix       # auto-cpufreq, UPower, systemd-resolved
-├── modules/                   # NixOS system modules
-│   ├── core/                  # Shared by all hosts (auto-imported via scanPaths)
-│   │   ├── system.nix         # Boot, networking, nix settings, user accounts, kernelPackage option
-│   │   ├── locale.nix         # Timezone, locale
-│   │   ├── ssh.nix            # OpenSSH (key-based auth only)
-│   │   ├── secrets.nix        # agenix secret declarations, identityPaths, token include
-│   │   ├── security.nix       # Neovim, nix-ld, firewall
-│   │   └── packages.nix       # Base system packages
-│   ├── desktop/               # Desktop environment (auto-imported via scanPaths)
-│   │   ├── greetd.nix         # Login manager (tuigreet)
-│   │   ├── niri.nix           # Niri Wayland compositor
-│   │   └── services.nix       # Pipewire, fonts, rtkit, bluetooth
-│   ├── features/              # Optional feature modules (mkEnableOption, auto-imported)
-│   │   ├── btrfs.nix          # BTRFS compression/tuning options (myfeatures.btrfs.enable)
-│   │   ├── secureboot.nix     # UEFI Secure Boot via Lanzaboote
-│   │   ├── gaming.nix         # Steam, Gamescope, Gamemode, MangoHud
-│   │   ├── vm.nix             # QEMU/KVM + virt-manager
-│   │   ├── zswap.nix          # Zswap with zstd compression
-│   │   └── p2p.nix            # Syncthing + NetBird
-├── secrets/                    # Encrypted secrets (agenix)
-│   ├── secrets.nix            # Public key declarations for each secret
+├── hosts/                     # Per-host system configurations
+│   ├── nixos/                 # NixOS hosts
+│   │   ├── padrick/           # ThinkPad T14 AMD Gen1 (daily use)
+│   │   │   ├── default.nix    # Host config (imports modules, enables features)
+│   │   │   ├── hardware-configuration.nix
+│   │   │   ├── hardware.nix   # Kernel params, swap, VA-API
+│   │   │   ├── packages.nix   # Host-specific system packages
+│   │   │   └── services.nix   # TLP, UPower, mic-mute LED sync
+│   │   └── jobert/            # AMD + NVIDIA gaming laptop
+│   │       ├── default.nix
+│   │       ├── hardware-configuration.nix
+│   │       ├── hardware.nix   # NVIDIA driver, pinned kernel (7.2), boot params, session vars
+│   │       ├── packages.nix
+│   │       └── services.nix   # auto-cpufreq, UPower, systemd-resolved
+│   └── darwin/                # macOS hosts (placeholder)
+├── modules/                   # System modules
+│   ├── nixos/                 # NixOS-specific modules
+│   │   ├── core/              # Shared by all NixOS hosts (auto-imported via scanPaths)
+│   │   │   ├── system.nix     # Boot, networking, nix settings, user accounts, kernelPackage option
+│   │   │   ├── locale.nix     # Timezone, locale
+│   │   │   ├── ssh.nix        # OpenSSH (key-based auth only)
+│   │   │   ├── secrets.nix    # agenix secret declarations, identityPaths, token include
+│   │   │   ├── security.nix   # Neovim, nix-ld, firewall
+│   │   │   └── packages.nix   # Base system packages
+│   │   ├── desktop/           # Desktop environment (auto-imported via scanPaths)
+│   │   │   ├── greetd.nix     # Login manager (tuigreet)
+│   │   │   ├── niri.nix       # Niri Wayland compositor
+│   │   │   └── services.nix   # Pipewire, fonts, rtkit, bluetooth
+│   │   ├── features/          # Optional feature modules (mkEnableOption, auto-imported)
+│   │   │   ├── btrfs.nix      # BTRFS compression/tuning options (myfeatures.btrfs.enable)
+│   │   │   ├── secureboot.nix # UEFI Secure Boot via Lanzaboote
+│   │   │   ├── gaming.nix     # Steam, Gamescope, Gamemode, MangoHud
+│   │   │   ├── vm.nix         # QEMU/KVM + virt-manager
+│   │   │   ├── zswap.nix      # Zswap with zstd compression
+│   │   │   └── p2p.nix        # Syncthing + NetBird
+│   │   └── default.nix        # Aggregator (imports core, desktop, features)
+│   └── darwin/                # macOS-specific modules (placeholder)
+│       └── default.nix
+├── secrets/                   # Encrypted secrets (agenix)
+│   ├── nixos.nix              # NixOS public key declarations for each secret
+│   ├── darwin.nix             # macOS public key declarations (placeholder)
 │   ├── nix-access-tokens.age  # Nix/GitHub access tokens (encrypted)
 │   └── netbird-setup-key.age  # NetBird VPN setup key (encrypted)
 ├── home/                      # Home Manager modules
-│   ├── core/                  # Shell, packages, XDG (auto-imported via scanPaths)
-│   │   ├── shell.nix          # Git, bash, zsh (shared aliases via let binding), starship, zoxide
-│   │   ├── packages.nix       # CLI tools (fd, fzf, btop, ripgrep, opencode, etc.)
-│   │   └── xdg.nix            # XDG user directories + portal config
-│   ├── desktop/               # GUI app configs (auto-imported via scanPaths)
-│   │   ├── gtk.nix            # GTK theme, cursor
+│   ├── core/                  # Cross-platform (shell, packages, editors, terminal)
+│   │   ├── default.nix        # Aggregator + stateVersion, username, platform-aware homeDirectory
+│   │   ├── shell.nix          # Git, bash, zsh (NixOS aliases separated), starship, zoxide
+│   │   ├── packages.nix       # CLI tools (fd, fzf, ripgrep, opencode, etc.)
+│   │   ├── xdg.nix            # XDG user directories
 │   │   ├── terminal.nix       # Kitty terminal
-│   │   ├── hyprland.nix       # Hyprland config (store copy, recursive)
-│   │   ├── niri.nix           # Niri config
-│   │   ├── noctalia.nix       # Noctalia lockscreen/bar
 │   │   ├── nvim.nix           # Neovim LazyVim config (store copy, recursive)
-│   │   ├── mimeapps.nix       # Nemo desktop entry + MIME associations
-│   │   ├── obsidian.nix       # Obsidian
-│   │   ├── scripts.nix        # Utility scripts (output-scale)
 │   │   ├── starship.nix       # Starship prompt
 │   │   ├── yazi.nix           # Yazi file manager + gruvbox theme
 │   │   ├── tmux.nix           # Tmux config
-│   │   ├── packages.nix       # Desktop packages (ncdu, waybar, mpv, discord-ptb, nemo, etc.)
+│   │   └── obsidian.nix       # Obsidian
+│   ├── linux/                 # Linux-only home modules
+│   │   ├── default.nix        # Aggregator
+│   │   ├── gtk.nix            # GTK theme, cursor
+│   │   ├── hyprland.nix       # Hyprland config (store copy, recursive)
+│   │   ├── niri.nix           # Niri config
+│   │   ├── noctalia.nix       # Noctalia lockscreen/bar
+│   │   ├── mimeapps.nix       # Nemo desktop entry + MIME associations
+│   │   ├── scripts.nix        # Utility scripts (output-scale)
+│   │   ├── packages.nix       # Desktop packages (waybar, mpv, discord-ptb, nemo, etc.)
+│   │   ├── xdg.nix            # XDG portal config (xdg-desktop-portal-*)
 │   │   └── zen-browser.nix    # Zen Browser
+│   ├── darwin/                # macOS-only home modules (placeholder)
+│   │   └── default.nix
 │   └── hosts/                 # Host-specific HM overrides
-│       ├── padrick/
-│       │   ├── default.nix    # Imports core + desktop, symlinks host configs
-│       │   ├── packages.nix   # btop
-│       │   └── config/        # Host-specific dotfiles
-│       │       ├── niri-host-settings.kdl
-│       │       ├── hypr-host-settings.lua
-│       │       └── noctalia-host-settings.toml
-│       └── jobert/
-│           ├── default.nix
-│           ├── packages.nix   # btop-cuda, chromium, prismlauncher
-│           └── config/
-│               ├── niri-host-settings.kdl
-│               ├── hypr-host-settings.lua
-│               └── noctalia-host-settings.toml
+│       ├── nixos/
+│       │   ├── padrick/
+│       │   │   ├── default.nix    # Imports core + linux, symlinks host configs
+│       │   │   ├── packages.nix   # btop
+│       │   │   └── config/        # Host-specific dotfiles
+│       │   │       ├── niri-host-settings.kdl
+│       │   │       ├── hypr-host-settings.lua
+│       │   │       └── noctalia-host-settings.toml
+│       │   └── jobert/
+│       │       ├── default.nix
+│       │       ├── packages.nix   # btop-cuda, chromium, prismlauncher
+│       │       └── config/
+│       │           ├── niri-host-settings.kdl
+│       │           ├── hypr-host-settings.lua
+│       │           └── noctalia-host-settings.toml
+│       └── darwin/                # macOS host-specific HM (placeholder)
 ├── config/                    # Shared raw dotfiles (nvim, hypr, niri, kitty, tmux, noctalia)
 └── .github/workflows/ci.yml  # CI: flake checks + dry builds for all hosts
 ```
@@ -98,7 +112,7 @@ A multi-host NixOS configuration using flakes and Home Manager. A gruvbox themed
 ```bash
 # Set up secrets (first time only)
 # 1. Get your host's SSH public key: ssh-keyscan <hostname> 2>/dev/null | grep ssh-ed25519
-# 2. Add keys to secrets/secrets.nix
+# 2. Add keys to secrets/nixos.nix
 # 3. Create encrypted secrets: sudo agenix -i /etc/ssh/ssh_host_ed25519_key -e <secret-name>.age
 
 # Deploy for padrick
@@ -114,31 +128,31 @@ nix build .#nixosConfigurations.padrick.config.system.build.toplevel
 nix fmt
 ```
 
-## Adding a New Host
+## Adding a New NixOS Host
 
 1. Create the host directory and generate hardware config:
 
    ```bash
-   mkdir -p hosts/<name>
-   mkdir -p home/hosts/<name>/config
+   mkdir -p hosts/nixos/<name>
+   mkdir -p home/hosts/nixos/<name>/config
    ```
 
 2. On the target machine, generate the hardware config:
 
    ```bash
-   sudo nixos-generate-config --show-hardware-config > hosts/<name>/hardware-configuration.nix
+   sudo nixos-generate-config --show-hardware-config > hosts/nixos/<name>/hardware-configuration.nix
    ```
 
-3. Create `hosts/<name>/default.nix` (see [hosts/README.md](hosts/README.md) for a template)
-4. Create `hosts/<name>/hardware.nix`, `packages.nix`, `services.nix`
-5. Create `home/hosts/<name>/default.nix` and `packages.nix`
-6. Create `home/hosts/<name>/config/` with monitor configs:
+3. Create `hosts/nixos/<name>/default.nix` (see [hosts/README.md](hosts/README.md) for a template)
+4. Create `hosts/nixos/<name>/hardware.nix`, `packages.nix`, `services.nix`
+5. Create `home/hosts/nixos/<name>/default.nix` and `packages.nix`
+6. Create `home/hosts/nixos/<name>/config/` with monitor configs:
    - `niri-host-settings.kdl` for host-specific Niri settings
    - `hypr-host-settings.lua` for host-specific Hyprland settings
    - `noctalia-host-settings.toml` for Noctalia (optional)
 7. Add a new entry in `flake.nix`:
    ```nix
-   nixosConfigurations.<name> = mkHost "<name>" "x86_64-linux";
+   nixosConfigurations.<name> = mkNixosHost "<name>" "x86_64-linux";
    ```
    This also auto-generates a `{name}-eval` flake check (via `mapAttrs'` over `nixosConfigurations`), so no separate check block is needed.
 8. Symlink the repo to `/etc/nixos` so the `bldflk` alias works:
@@ -153,7 +167,7 @@ nix fmt
     ```bash
     ssh-keyscan <name> 2>/dev/null | grep ssh-ed25519
     ```
-11. Add the key to `secrets/secrets.nix` and rekey (see [Secrets Management](#adding-a-new-host))
+11. Add the key to `secrets/nixos.nix` and rekey (see [Secrets Management](#secrets-management))
 12. Second deploy (decrypts secrets):
     ```bash
     sudo nixos-rebuild switch --flake .#<name>
@@ -161,9 +175,26 @@ nix fmt
 
 See [hosts/README.md](hosts/README.md) for a detailed walkthrough with code examples.
 
+## Adding a New macOS Host
+
+> **Note:** macOS (darwin) support is scaffolded but not yet functional. To add a darwin host, you'll need to add `nix-darwin` as a flake input and uncomment the darwin-related placeholders.
+
+1. Create the host directory:
+
+   ```bash
+   mkdir -p hosts/darwin/<name>
+   mkdir -p home/hosts/darwin/<name>
+   ```
+
+2. Create `hosts/darwin/<name>/default.nix` with darwin-specific config
+3. Create `home/hosts/darwin/<name>/default.nix` importing `../core` + `../darwin`
+4. Add `modules/darwin/*.nix` for macOS system settings (`system.defaults.*`, `homebrew.*`, etc.)
+5. Add `home/darwin/*.nix` for macOS-specific home config (Aerospace, CmdTap, etc.)
+6. Uncomment and configure a `darwinConfigurations` entry in `flake.nix`
+
 ## Feature Options
 
-Optional features are gated behind `mkEnableOption` in `modules/features/`. Enable them in your host's `default.nix`:
+Optional features are gated behind `mkEnableOption` in `modules/nixos/features/`. Enable them in your host's `default.nix`:
 
 ```nix
 myfeatures = {
@@ -177,18 +208,18 @@ myfeatures = {
 };
 ```
 
-Adding a new feature: create `modules/features/<name>.nix` with `options.myfeatures.<name>.enable = lib.mkEnableOption "..."` and gate the config with `lib.mkIf cfg.enable`. It's auto-imported via `scanPaths`.
+Adding a new feature: create `modules/nixos/features/<name>.nix` with `options.myfeatures.<name>.enable = lib.mkEnableOption "..."` and gate the config with `lib.mkIf cfg.enable`. It's auto-imported via `scanPaths`.
 
 ## Secrets Management
 
 This config uses [agenix](https://github.com/ryantm/agenix) for managing encrypted secrets. Secrets are encrypted with [age](https://github.com/FiloSottile/age) using SSH host keys.
 
-The flake passes `flakeRoot = self` via `specialArgs`, allowing modules to reference `.age` files in the repo root using absolute store paths. The `age.identityPaths` option is explicitly set in `modules/core/secrets.nix` to `/etc/ssh/ssh_host_ed25519_key`.
+The flake passes `flakeRoot = self` via `specialArgs`, allowing modules to reference `.age` files in the repo root using absolute store paths. The `age.identityPaths` option is explicitly set in `modules/nixos/core/secrets.nix` to `/etc/ssh/ssh_host_ed25519_key`.
 
 ### How It Works
 
 1. Secrets are encrypted with age using SSH public keys from each host
-2. `secrets/secrets.nix` maps each `.age` file to the public keys that can decrypt it
+2. `secrets/nixos.nix` maps each `.age` file to the public keys that can decrypt it
 3. Feature modules declare `age.secrets.<name>` pointing to the `.age` file
 4. At boot, agenix decrypts secrets to `/run/agenix/` with the specified mode/owner
 5. Services reference the decrypted path via `config.age.secrets.<name>.path`
@@ -200,7 +231,7 @@ The flake passes `flakeRoot = self` via `specialArgs`, allowing modules to refer
    ssh-keyscan <hostname> 2>/dev/null | grep ssh-ed25519
    ```
 
-2. Add the key to `secrets/secrets.nix`:
+2. Add the key to `secrets/nixos.nix`:
    ```nix
    let
      padrick = "ssh-ed25519 AAAA... root@padrick";
@@ -239,7 +270,7 @@ The flake passes `flakeRoot = self` via `specialArgs`, allowing modules to refer
    ```
    This opens `$EDITOR`. Write the secret, save, and quit to encrypt.
 
-2. Declare public keys in `secrets/secrets.nix`:
+2. Declare public keys in `secrets/nixos.nix`:
    ```nix
    {
      # ...existing secrets...
@@ -266,7 +297,7 @@ The flake passes `flakeRoot = self` via `specialArgs`, allowing modules to refer
 
 ### Removing a Secret
 
-1. Remove the declaration from `secrets/secrets.nix`
+1. Remove the declaration from `secrets/nixos.nix`
 2. Delete the `.age` file: `rm secrets/<secret-name>.age`
 3. Remove all `age.secrets.<secret-name>` declarations from module files
 4. Re-encrypt (clears orphaned references): `sudo agenix -i /etc/ssh/ssh_host_ed25519_key --rekey`
@@ -302,7 +333,7 @@ sudo agenix -i /etc/ssh/ssh_host_ed25519_key --rekey
    cat /etc/ssh/ssh_host_ed25519_key.pub
    ```
 
-3. Add the key as a binding in `secrets/secrets.nix`:
+3. Add the key as a binding in `secrets/nixos.nix`:
    ```nix
    let
      newhost = "ssh-ed25519 AAAA... root@newhost";
@@ -322,14 +353,14 @@ sudo agenix -i /etc/ssh/ssh_host_ed25519_key --rekey
 
 ### Resetting a Host (Lost SSH Keys)
 
-If a host's SSH host key is lost or regenerated (e.g., after reinstalling), you need to update the key in `secrets/secrets.nix` and re-encrypt.
+If a host's SSH host key is lost or regenerated (e.g., after reinstalling), you need to update the key in `secrets/nixos.nix` and re-encrypt.
 
 1. Get the new SSH public key from the host:
    ```bash
    ssh-keyscan <hostname> 2>/dev/null | grep ssh-ed25519
    ```
 
-2. Update the key binding in `secrets/secrets.nix`:
+2. Update the key binding in `secrets/nixos.nix`:
    ```nix
    let
      # Replace the old key with the new one
@@ -367,7 +398,7 @@ sudo nix run .#agenix -- -i /etc/ssh/ssh_host_ed25519_key -e <secret>.age
 
 ## Host-Specific Packages
 
-**System packages** in `hosts/<name>/packages.nix`:
+**System packages** in `hosts/nixos/<name>/packages.nix`:
 
 ```nix
 { pkgs, ... }:
@@ -379,7 +410,7 @@ sudo nix run .#agenix -- -i /etc/ssh/ssh_host_ed25519_key -e <secret>.age
 }
 ```
 
-**User packages** in `home/hosts/<name>/packages.nix`:
+**User packages** in `home/hosts/nixos/<name>/packages.nix`:
 
 ```nix
 { pkgs, ... }:
@@ -391,11 +422,11 @@ sudo nix run .#agenix -- -i /etc/ssh/ssh_host_ed25519_key -e <secret>.age
 }
 ```
 
-Shared packages live in `modules/core/packages.nix` (system) and `home/core/packages.nix` (user).
+Shared packages live in `modules/nixos/core/packages.nix` (system) and `home/core/packages.nix` (user).
 
 ## Firewall
 
-The firewall is enabled system-wide in `modules/core/security.nix` via `networking.firewall`. It blocks all inbound connections by default except for explicitly allowed ports.
+The firewall is enabled system-wide in `modules/nixos/core/security.nix` via `networking.firewall`. It blocks all inbound connections by default except for explicitly allowed ports.
 
 ### Open Ports
 
@@ -407,7 +438,7 @@ Syncthing ports are opened automatically when `myfeatures.p2p.enable = true` via
 
 ### Adding Ports
 
-To open additional ports, edit `modules/core/security.nix`:
+To open additional ports, edit `modules/nixos/core/security.nix`:
 
 ```nix
 networking.firewall = {
@@ -432,7 +463,7 @@ This must be done before any files are written to the directory. If Steam is alr
 
 ### Dual Boot with Windows
 
-This config sets `time.hardwareClockInLocalTime = false` in `modules/core/locale.nix`, which means the hardware clock is stored in UTC. Windows assumes the hardware clock is local time by default, so time will be wrong when switching between OSes.
+This config sets `time.hardwareClockInLocalTime = false` in `modules/nixos/core/locale.nix`, which means the hardware clock is stored in UTC. Windows assumes the hardware clock is local time by default, so time will be wrong when switching between OSes.
 
 To fix this, run the following command in an **elevated Command Prompt** (Run as Administrator) on Windows:
 
@@ -454,7 +485,7 @@ agenix -e nix-access-tokens.age
 # access-tokens = github.com=ghp_GithubTokenHere
 ```
 
-The token is automatically included in Nix configuration via `nix.extraOptions` in `modules/core/secrets.nix`. On first boot, an activation script ensures the token file exists before Nix reads it.
+The token is automatically included in Nix configuration via `nix.extraOptions` in `modules/nixos/core/secrets.nix`. On first boot, an activation script ensures the token file exists before Nix reads it.
 
 ### NetBird Access Token
 
@@ -469,7 +500,7 @@ The key is automatically decrypted to `/run/agenix/netbird-setup-key` and refere
 
 ### Syncthing Device IDs
 
-Syncthing device IDs are configured inline in `modules/features/p2p.nix`. To change the server device ID, edit the `devices` attrset:
+Syncthing device IDs are configured inline in `modules/nixos/features/p2p.nix`. To change the server device ID, edit the `devices` attrset:
 
 ```nix
 services.syncthing.settings.devices = {
@@ -499,7 +530,8 @@ Get a device's ID from the Syncthing GUI under Actions > Show ID.
 | Output | Purpose |
 |---|---|
 | `nixosConfigurations.<host>` | NixOS system configurations (padrick, jobert) |
-| `nixosModules.default` | Reusable module: imports core, desktop, features; sets overlay and option defaults |
+| `darwinConfigurations` | macOS system configurations (placeholder, empty) |
+| `nixosModules.default` | Reusable module: imports nixos modules; sets overlay and option defaults |
 | `overlays.default` | Nixpkgs overlay (gruvbox-material-yazi, version pinning) |
 | `packages.<system>.gruvbox-material-yazi` | Custom package exposed directly |
 | `checks.<system>` | Auto-generated per-host evaluation checks (from `nixosConfigurations`) + formatting |
@@ -536,7 +568,7 @@ The `.envrc` at the repo root contains `use flake`, which automatically loads th
 
 | Script | Description |
 |---|---|
-| `scripts/output-scale` | Scale (zoom) the focused output. Supports Niri and Hyprland. Cycles between scales, or accepts `+`/`-`/specific value. Installed to `$PATH` via `home/desktop/scripts.nix`. |
+| `scripts/output-scale` | Scale (zoom) the focused output. Supports Niri and Hyprland. Cycles between scales, or accepts `+`/`-`/specific value. Installed to `$PATH` via `home/linux/scripts.nix`. |
 
 ## Overlays & Custom Packages
 
@@ -562,13 +594,14 @@ SMB network shares can be mounted directly from the Nemo file manager. `gvfs` an
 
 The `lib/` directory contains helper functions used throughout the config:
 
-- **`scanPaths`** - Auto-imports all `.nix` files in a directory (excluding `default.nix`). Adding a new module to `modules/core/`, `modules/desktop/`, `home/core/`, or `home/desktop/` only requires creating the file -- no manual import needed.
-- **`specialArgsDoc`** - Documents the expected `specialArgs` passed to all modules: `hostname`, `flakeRoot`, `inputs`, `mylib`, `username`.
+- **`scanPaths`** - Auto-imports all `.nix` files in a directory (excluding `default.nix`). Adding a new module to `modules/nixos/core/`, `modules/nixos/desktop/`, `home/core/`, or `home/linux/` only requires creating the file -- no manual import needed.
+- **`relativeToRoot`** - Converts a repo-relative path to an absolute path for use in module lists.
+- **`specialArgs`** - Documents the expected `specialArgs` passed to all modules: `hostname`, `flakeRoot`, `inputs`, `mylib`, `username`.
 
 ## Security
 
-- **Firewall:** Enabled system-wide with explicit port allowlists (see [Firewall](#firewall) in `modules/core/security.nix`)
-- **SSH:** OpenSSH enabled with key-based auth only, root login denied (`modules/core/ssh.nix`)
+- **Firewall:** Enabled system-wide with explicit port allowlists (see [Firewall](#firewall) in `modules/nixos/core/security.nix`)
+- **SSH:** OpenSSH enabled with key-based auth only, root login denied (`modules/nixos/core/ssh.nix`)
 - **Secrets:** agenix encrypts secrets with age using SSH host keys (see [Secrets Management](#secrets-management))
 - **RealtimeKit:** `security.rtkit.enable` grants real-time scheduling to PipeWire for low-latency audio
 - **Polkit:** `security.polkit.enable` for privilege escalation prompts
@@ -578,7 +611,7 @@ The `lib/` directory contains helper functions used throughout the config:
 
 ## Nix Settings
 
-Configured in `modules/core/system.nix`:
+Configured in `modules/nixos/core/system.nix`:
 
 - `mySystem.kernelPackage`: Configurable kernel packages set (default: `linuxPackages_7_2`). Hosts can override via `mySystem.kernelPackage = pkgs.linuxPackages_xxx;` in their `hardware.nix`.
 - `mySystem.username`: Primary user username (default: `"ize"`). Used throughout modules for user-specific paths and groups.
@@ -590,7 +623,7 @@ Configured in `modules/core/system.nix`:
 ## Shell
 
 - **Primary:** Zsh with autosuggestion, syntax highlighting, completions
-- **Aliases:** Shared aliases extracted to `let` binding in `home/core/shell.nix`, with zsh-only aliases (`ls`/`ll`/`lt` → `eza`) in a separate attrset
+- **Aliases:** NixOS-specific aliases (`bldswc`, `bldflk`, `nixgarb`, `sagenix`) separated into `nixosAliases` in `home/core/shell.nix`; cross-platform aliases (`svim`, `cat`) in `sharedAliases`
 - **Prompt:** Starship with Nerd Font symbols
 - **Smart cd:** Zoxide
 - **Git:** LazyGit for terminal UI

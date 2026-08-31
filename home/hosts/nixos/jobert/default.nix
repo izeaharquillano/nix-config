@@ -2,8 +2,8 @@
 
 {
   imports = [
-    ../../core
-    ../../desktop
+    ../../../core
+    ../../../linux
     ./packages.nix
     inputs.niri.homeModules.niri
     inputs.noctalia.homeModules.default

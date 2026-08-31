@@ -1,6 +1,7 @@
 {
   config,
   mylib,
+  pkgs,
   username,
   ...
 }:
@@ -10,5 +11,9 @@
 
   home.stateVersion = "26.05";
   home.username = username;
-  home.homeDirectory = "/home/${config.home.username}";
+  home.homeDirectory =
+    if pkgs.stdenv.hostPlatform.isDarwin then
+      "/Users/${config.home.username}"
+    else
+      "/home/${config.home.username}";
 }

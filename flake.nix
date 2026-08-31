@@ -66,6 +66,7 @@
 
       forAllSystems = nixpkgs.lib.genAttrs [
         "x86_64-linux"
+        "aarch64-darwin"
       ];
 
       treefmtEval = forAllSystems (
@@ -78,7 +79,7 @@
         }
       );
 
-      mkHost =
+      mkNixosHost =
         hostname: system:
         nixpkgs.lib.nixosSystem {
           inherit system;
@@ -92,7 +93,7 @@
             flakeRoot = self;
           };
           modules = [
-            ./hosts/${hostname}
+            ./hosts/nixos/${hostname}
             home-manager.nixosModules.home-manager
             inputs.agenix.nixosModules.age
             {
@@ -102,7 +103,7 @@
                 useGlobalPkgs = true;
                 useUserPackages = true;
                 backupFileExtension = "hm-bak";
-                users.${username} = import ./home/hosts/${hostname};
+                users.${username} = import ./home/hosts/nixos/${hostname};
                 extraSpecialArgs = {
                   inherit
                     inputs
@@ -118,8 +119,16 @@
         };
     in
     {
-      nixosConfigurations.padrick = mkHost "padrick" "x86_64-linux";
-      nixosConfigurations.jobert = mkHost "jobert" "x86_64-linux";
+      nixosConfigurations.padrick = mkNixosHost "padrick" "x86_64-linux";
+      nixosConfigurations.jobert = mkNixosHost "jobert" "x86_64-linux";
+
+      # Placeholder for future macOS/darwin hosts.
+      # Uncomment and configure when adding a darwin host.
+      # darwinConfigurations.my-macbook = inputs.nix-darwin.lib.darwinSystem {
+      #   system = "aarch64-darwin";
+      #   modules = [ ./hosts/darwin/my-macbook ];
+      # };
+      darwinConfigurations = { };
 
       checks = forAllSystems (
         system:
@@ -159,9 +168,7 @@
       nixosModules = {
         default = {
           imports = [
-            ./modules/core
-            ./modules/desktop
-            ./modules/features
+            ./modules/nixos
           ];
 
           config = {
@@ -172,6 +179,14 @@
           };
         };
       };
+
+      # Placeholder for future darwin modules.
+      # darwinModules = {
+      #   default = {
+      #     imports = [ ./modules/darwin ];
+      #     config = { nixpkgs.overlays = [ (import ./overlays) ]; };
+      #   };
+      # };
 
       packages = forAllSystems (system: {
         gruvbox-material-yazi =
