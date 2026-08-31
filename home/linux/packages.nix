@@ -4,6 +4,7 @@
   home.packages = with pkgs; [
     # utils
     ncdu
+    xdg-user-dirs
     waybar
     wl-clipboard
     brightnessctl

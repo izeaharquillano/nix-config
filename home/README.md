@@ -192,7 +192,7 @@ in
 }
 ```
 
-When a macOS host is added, `nixosAliases` can be made conditional or replaced with platform-specific aliases.
+Platform-specific aliases (e.g. `nixosAliases`) live in `linux/shell.nix` and are only imported by Linux hosts.
 
 ## Host-Specific Packages
 

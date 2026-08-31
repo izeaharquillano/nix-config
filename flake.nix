@@ -49,6 +49,12 @@
       url = "github:numtide/treefmt-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    # Uncomment when adding a darwin host.
+    # nix-darwin = {
+    #   url = "github:LnL7/nix-darwin";
+    #   inputs.nixpkgs.follows = "nixpkgs";
+    # };
   };
 
   outputs =
@@ -117,17 +123,44 @@
             }
           ];
         };
+      # Uncomment when adding a darwin host.
+      # mkDarwinHost =
+      #   hostname: system:
+      #   inputs.nix-darwin.lib.darwinSystem {
+      #     inherit system;
+      #     specialArgs = {
+      #       inherit inputs mylib hostname username;
+      #       flakeRoot = self;
+      #     };
+      #     modules = [
+      #       ./hosts/darwin/${hostname}
+      #       inputs.agenix.darwinModules.age
+      #       {
+      #         mySystem.username = username;
+      #         nixpkgs.overlays = [ (import ./overlays) ];
+      #       }
+      #       home-manager.darwinModules.home-manager
+      #       {
+      #         home-manager = {
+      #           useGlobalPkgs = true;
+      #           useUserPackages = true;
+      #           users.${username} = import ./home/hosts/darwin/${hostname};
+      #           extraSpecialArgs = {
+      #             inherit inputs mylib hostname username;
+      #             flakeRoot = self;
+      #           };
+      #         };
+      #       }
+      #     ];
+      #   };
+
     in
     {
       nixosConfigurations.padrick = mkNixosHost "padrick" "x86_64-linux";
       nixosConfigurations.jobert = mkNixosHost "jobert" "x86_64-linux";
 
-      # Placeholder for future macOS/darwin hosts.
-      # Uncomment and configure when adding a darwin host.
-      # darwinConfigurations.my-macbook = inputs.nix-darwin.lib.darwinSystem {
-      #   system = "aarch64-darwin";
-      #   modules = [ ./hosts/darwin/my-macbook ];
-      # };
+      # Uncomment when adding a darwin host.
+      # darwinConfigurations.my-macbook = mkDarwinHost "my-macbook" "aarch64-darwin";
       darwinConfigurations = { };
 
       checks = forAllSystems (
@@ -144,6 +177,15 @@
             echo "ok" > $out
           '';
         }) self.nixosConfigurations
+        # Uncomment when adding a darwin host.
+        # // nixpkgs.lib.mapAttrs' (name: cfg: {
+        #     name = "${name}-eval";
+        #     value = nixpkgs.legacyPackages.${system}.runCommand "check-${name}-eval" { } ''
+        #       [ -n "${cfg.config.system.hosts.${name}.systemName}" ] && \
+        #       [ -n "${cfg.config.mySystem.username}" ] && \
+        #       echo "ok" > $out
+        #     '';
+        #   }) self.darwinConfigurations
       );
 
       formatter = forAllSystems (system: treefmtEval.${system}.config.build.wrapper);
@@ -180,11 +222,14 @@
         };
       };
 
-      # Placeholder for future darwin modules.
+      # Uncomment when adding a darwin host.
       # darwinModules = {
       #   default = {
       #     imports = [ ./modules/darwin ];
-      #     config = { nixpkgs.overlays = [ (import ./overlays) ]; };
+      #     config = {
+      #       nixpkgs.overlays = [ (import ./overlays) ];
+      #       mySystem.username = nixpkgs.lib.mkDefault "ize";
+      #     };
       #   };
       # };
 

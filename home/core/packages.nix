@@ -14,7 +14,6 @@
     unzip
     starship
     tealdeer
-    xdg-user-dirs
     bat
 
     # terminal tools

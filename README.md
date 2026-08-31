@@ -12,7 +12,7 @@ A multi-host, cross-platform NixOS and macOS configuration using flakes and Home
 
 ```
 .
-├── flake.nix                  # Flake entry point (mkNixosHost helper, darwinConfigurations placeholder)
+├── flake.nix                  # Flake entry point (mkNixosHost + mkDarwinHost helpers)
 ├── .envrc                     # direnv integration (use flake)
 ├── lib/                       # Custom Nix library helpers (scanPaths, relativeToRoot)
 ├── overlays/                  # Nixpkgs overlays (gruvbox-material-yazi)
@@ -177,7 +177,7 @@ See [hosts/README.md](hosts/README.md) for a detailed walkthrough with code exam
 
 ## Adding a New macOS Host
 
-> **Note:** macOS (darwin) support is scaffolded but not yet functional. To add a darwin host, you'll need to add `nix-darwin` as a flake input and uncomment the darwin-related placeholders.
+> **Note:** macOS (darwin) support is structurally scaffolded. The directory layout, `mkDarwinHost` helper, and `darwinModules` output are all wired in `flake.nix` but commented out. To add a darwin host, uncomment `nix-darwin` input, `mkDarwinHost`, and the relevant output.
 
 1. Create the host directory:
 
@@ -186,11 +186,12 @@ See [hosts/README.md](hosts/README.md) for a detailed walkthrough with code exam
    mkdir -p home/hosts/darwin/<name>
    ```
 
-2. Create `hosts/darwin/<name>/default.nix` with darwin-specific config
-3. Create `home/hosts/darwin/<name>/default.nix` importing `../core` + `../darwin`
-4. Add `modules/darwin/*.nix` for macOS system settings (`system.defaults.*`, `homebrew.*`, etc.)
-5. Add `home/darwin/*.nix` for macOS-specific home config (Aerospace, CmdTap, etc.)
-6. Uncomment and configure a `darwinConfigurations` entry in `flake.nix`
+2. Uncomment `nix-darwin` input, `mkDarwinHost`, and `darwinModules` in `flake.nix`
+3. Create `hosts/darwin/<name>/default.nix` with darwin-specific config
+4. Create `home/hosts/darwin/<name>/default.nix` importing `../core` + `../darwin`
+5. Add `modules/darwin/*.nix` for macOS system settings (`system.defaults.*`, `homebrew.*`, etc.)
+6. Add `home/darwin/*.nix` for macOS-specific home config (Aerospace, CmdTap, etc.)
+7. Add a `darwinConfigurations` entry using `mkDarwinHost`
 
 ## Feature Options
 
