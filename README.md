@@ -429,9 +429,9 @@ The firewall is enabled system-wide in `modules/nixos/core/security.nix` via `ne
 
 ### Open Ports
 
-| Port | Protocol | Service |
-|------|----------|---------|
-| 51820 | UDP | NetBird (WireGuard) |
+| Port | Protocol | Service | Condition |
+|------|----------|---------|-----------|
+| 51820 | UDP | NetBird (WireGuard) | `myfeatures.p2p.enable = true` |
 
 Syncthing ports are opened automatically when `myfeatures.p2p.enable = true` via `services.syncthing.openDefaultPorts`.
 
@@ -442,11 +442,12 @@ To open additional ports, edit `modules/nixos/core/security.nix`:
 ```nix
 networking.firewall = {
   allowedTCPPorts = [ 8080 ];
-  allowedUDPPorts = [ 51820 ];
   # or use ranges:
   # allowedTCPPortRanges = [ { from = 8000; to = 8100; } ];
 };
 ```
+
+Feature-specific ports should be added to their respective feature modules (e.g., NetBird's UDP 51820 is in `modules/nixos/features/p2p.nix`).
 
 ## Optional Setup
 
@@ -560,6 +561,7 @@ GitHub Actions runs on push/PR to `main` (`.github/workflows/ci.yml`):
 
 - **Flake checks**: `nix flake check --all-systems` (formatting + per-host evaluation checks, auto-generated from `nixosConfigurations`)
 - **Dry builds**: builds each host's system toplevel (`--dry-run`) to catch evaluation errors (host list is hardcoded in the CI matrix and must be updated when adding/removing hosts)
+- **Full builds**: builds each host's system toplevel (after checks pass) to catch runtime/build errors
 
 ## direnv
 
@@ -579,7 +581,7 @@ accept-flake-config = true
 
 ## Overlays & Custom Packages
 
-Custom Nix packages live in `pkgs/` and are exposed via overlays in `overlays/`. The `overlays/default.nix` auto-loads all `.nix` files in the directory (filtering for `.nix` suffix) and composes them into a single overlay function. The overlay is applied globally in `outputs/default.nix` via `nixpkgs.overlays`.
+Custom Nix packages live in `pkgs/` and are exposed via overlays in `overlays/`. The `overlays/default.nix` auto-loads all `.nix` files in the directory (filtering for `.nix` suffix) and composes them into a single overlay function. Note: overlays cannot use `mylib.scanPaths` because they run inside the overlay function (`final: prev:`) where lib is not in scope, so manual filtering is used. The overlay is applied globally in `outputs/default.nix` via `nixpkgs.overlays`.
 
 | Package | Description |
 |---|---|
@@ -620,11 +622,13 @@ The `vars/` directory exports user identity (`username`, `userfullname`, `userem
 
 ## Nix Settings
 
-Configured in `modules/nixos/core/system.nix`:
+Configured in `modules/base/nix.nix` and `modules/nixos/core/system.nix`:
 
 - `mySystem.kernelPackage`: Configurable kernel packages set (default: `linuxPackages_7_2`). Hosts can override via `mySystem.kernelPackage = pkgs.linuxPackages_xxx;` in their `hardware.nix`.
 - `mySystem.username`: Primary user username (default: `"ize"`). Used throughout modules for user-specific paths and groups.
 - `experimental-features`: `nix-command`, `flakes`, `recursive-nix`
+- `sandbox = true`: Enables Nix sandbox for reproducible builds
+- `trusted-users`: `root` and `@wheel` group for non-root Nix operations
 - `warn-dirty = false`: Suppresses dirty tree warnings during rebuilds
 - `nix.optimise`: Automatic store path deduplication weekly
 - `gc`: Automatic garbage collection weekly, deletes generations older than 14 days
@@ -632,7 +636,7 @@ Configured in `modules/nixos/core/system.nix`:
 ## Shell
 
 - **Primary:** Zsh with autosuggestion, syntax highlighting, completions
-- **Aliases:** All aliases (including NixOS-specific `bldswc`, `bldflk`, `nixgarb`, `sagenix`) defined in `home/core/shell.nix`
+- **Aliases:** All aliases (including NixOS-specific `bldswc`, `bldflk`, `nixgc`, `sagenix`) defined in `home/core/shell.nix`
 - **Prompt:** Starship with Nerd Font symbols
 - **Smart cd:** Zoxide
 - **Git:** LazyGit for terminal UI

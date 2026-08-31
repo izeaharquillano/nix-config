@@ -40,7 +40,7 @@ modules/
   - `system.nix` defines `mySystem.username` — the single source of truth for the primary user. Set by `outputs/default.nix` via `mySystem.username = username;`.
   - `locale.nix` sets `time.hardwareClockInLocalTime = false` (RTC in UTC). See the main README for dual-boot Windows instructions.
   - `ssh.nix` enables OpenSSH with key-based auth only.
-  - `security.nix` enables Neovim, nix-ld, and the firewall.
+  - `security.nix` enables Neovim, nix-ld, and the firewall (base rules only; feature-specific ports are in their respective modules).
 - **`nixos/desktop/`** - GUI/desktop config. Only imported by desktop NixOS hosts.
 - **`nixos/features/`** - Optional features gated behind `mkEnableOption`. Auto-imported via `scanPaths`; enable per host with `myfeatures.<name>.enable`.
 - **`darwin/`** - macOS-specific system config (placeholder). Will contain `system.defaults.*`, `homebrew.*`, etc. when a darwin host is added.
@@ -111,6 +111,7 @@ myfeatures.p2p.enable = true;
 This enables:
 - **Syncthing** with default ports open for sync and discovery
 - **NetBird** VPN with automatic login via setup key (`/etc/netbird/setup-key`)
+- **Firewall**: Opens UDP port 51820 for NetBird WireGuard
 
 Syncthing paths use `config.users.users.${config.mySystem.username}.home` dynamically rather than hardcoded paths.
 

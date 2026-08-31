@@ -9,11 +9,6 @@
   networking.firewall = {
     enable = true;
     allowPing = true;
-    allowedTCPPorts = [
-    ];
-    allowedUDPPorts = [
-      51820 # netbird wireguard
-    ];
   };
 
   programs = {

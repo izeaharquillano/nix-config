@@ -12,6 +12,11 @@
     max-jobs = "auto";
     http-connections = 50;
     warn-dirty = false;
+    sandbox = true;
+    trusted-users = [
+      "root"
+      "@wheel"
+    ];
     substituters = [
       "https://nix-community.cachix.org"
     ];

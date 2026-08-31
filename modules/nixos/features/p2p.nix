@@ -15,6 +15,8 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+    networking.firewall.allowedUDPPorts = [ 51820 ];
+
     age.secrets.netbird-setup-key = {
       file = "${flakeRoot}/secrets/netbird-setup-key.age";
       owner = "root";
