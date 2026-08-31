@@ -12,6 +12,7 @@ modules/
 │   ├── locale.nix       # Timezone, i18n/locale settings, hardware clock (UTC)
 │   ├── ssh.nix          # OpenSSH (key-based auth only, root login denied)
 │   ├── secrets.nix      # agenix secret declarations (age key config, secrets)
+│   ├── security.nix     # Neovim, nix-ld, firewall
 │   └── packages.nix     # System-wide packages
 ├── desktop/             # Desktop environment (auto-imported via scanPaths)
 │   ├── default.nix      # Aggregator (auto-imported via scanPaths)
@@ -26,18 +27,18 @@ modules/
 │   ├── gaming.nix       # Steam, Gamescope, Gamemode (myfeatures.gaming.enable)
 │   ├── zswap.nix        # Zswap with zstd compression (myfeatures.zswap.enable)
 │   └── p2p.nix          # Syncthing + NetBird (myfeatures.p2p.enable)
-└── security.nix         # Neovim, nix-ld, firewall
 ```
 
 ## Module Types
 
-- **`core/`** - Base system config (boot, networking, nix, users, SSH) every host needs. Always imported.
+- **`core/`** - Base system config (boot, networking, nix, users, SSH, firewall) every host needs. Always imported.
   - `system.nix` sets `boot.kernelPackages` via the `mySystem.kernelPackage` option (default: `linuxPackages_7_2`). Hosts can override this in their `hardware.nix`.
+  - `system.nix` also defines `mySystem.username` (default: `"ize"`) used throughout modules.
   - `locale.nix` sets `time.hardwareClockInLocalTime = false` (RTC in UTC). See the main README for dual-boot Windows instructions.
   - `ssh.nix` enables OpenSSH with key-based auth only.
+  - `security.nix` enables Neovim, nix-ld, and the firewall.
 - **`desktop/`** - GUI/desktop config. Only imported by desktop hosts.
 - **`features/`** - Optional features gated behind `mkEnableOption`. Auto-imported via `scanPaths`; enable per host with `myfeatures.<name>.enable`.
-- **`security.nix`** - Neovim, nix-ld, firewall. Imported separately for flexibility.
 
 ## Feature Options
 
@@ -66,7 +67,7 @@ This enables:
 - **Syncthing** with default ports open for sync and discovery
 - **NetBird** VPN with automatic login via setup key (`/etc/netbird/setup-key`)
 
-Syncthing paths use `config.users.users.ize.home` dynamically rather than hardcoded paths.
+Syncthing paths use `config.users.users.${config.mySystem.username}.home` dynamically rather than hardcoded paths.
 
 ### Adding a new feature
 

@@ -10,7 +10,6 @@
   imports = [
     ../../modules/core
     ../../modules/desktop
-    ../../modules/security.nix
     ../../modules/features
     ./hardware-configuration.nix
     ./packages.nix

@@ -62,6 +62,7 @@
     }:
     let
       mylib = import ./lib { lib = nixpkgs.lib; };
+      username = "ize";
 
       forAllSystems = nixpkgs.lib.genAttrs [
         "x86_64-linux"
@@ -82,7 +83,12 @@
         nixpkgs.lib.nixosSystem {
           inherit system;
           specialArgs = {
-            inherit inputs mylib hostname;
+            inherit
+              inputs
+              mylib
+              hostname
+              username
+              ;
             flakeRoot = self;
           };
           modules = [
@@ -95,9 +101,14 @@
                 useGlobalPkgs = true;
                 useUserPackages = true;
                 backupFileExtension = "hm-bak";
-                users.ize = import ./home/hosts/${hostname};
+                users.${username} = import ./home/hosts/${hostname};
                 extraSpecialArgs = {
-                  inherit inputs mylib hostname;
+                  inherit
+                    inputs
+                    mylib
+                    hostname
+                    username
+                    ;
                   flakeRoot = self;
                 };
               };
@@ -128,6 +139,24 @@
           inputsFrom = [ treefmtEval.${system}.config.build.devShell ];
           packages = [ agenix.packages.${system}.default ];
         };
+      });
+
+      overlays.default = import ./overlays;
+
+      nixosModules = {
+        default = {
+          imports = [
+            ./modules/core
+            ./modules/desktop
+            ./modules/features
+          ];
+        };
+      };
+
+      packages = forAllSystems (system: {
+        gruvbox-material-yazi =
+          nixpkgs.legacyPackages.${system}.callPackage ./pkgs/gruvbox-material-yazi.nix
+            { };
       });
     };
 }

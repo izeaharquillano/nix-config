@@ -140,9 +140,8 @@ Or copy from an existing host and modify.
 
 {
   imports = [
-    ../../modules/core              # Base system config (includes SSH)
+    ../../modules/core              # Base system config (includes SSH, firewall, neovim)
     ../../modules/desktop           # Desktop environment (skip for servers)
-    ../../modules/security.nix      # Neovim, nix-ld, firewall
     ../../modules/features          # Optional feature modules (auto-imported)
     ./hardware-configuration.nix
     ./packages.nix                  # Host-specific system packages

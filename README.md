@@ -37,6 +37,7 @@ A multi-host NixOS configuration using flakes and Home Manager. A gruvbox themed
 │   │   ├── locale.nix         # Timezone, locale
 │   │   ├── ssh.nix            # OpenSSH (key-based auth only)
 │   │   ├── secrets.nix        # agenix secret declarations, identityPaths, token include
+│   │   ├── security.nix       # Neovim, nix-ld, firewall
 │   │   └── packages.nix       # Base system packages
 │   ├── desktop/               # Desktop environment (auto-imported via scanPaths)
 │   │   ├── greetd.nix         # Login manager (tuigreet)
@@ -49,7 +50,6 @@ A multi-host NixOS configuration using flakes and Home Manager. A gruvbox themed
 │   │   ├── vm.nix             # QEMU/KVM + virt-manager
 │   │   ├── zswap.nix          # Zswap with zstd compression
 │   │   └── p2p.nix            # Syncthing + NetBird
-│   └── security.nix           # Neovim, nix-ld, firewall
 ├── secrets/                    # Encrypted secrets (agenix)
 │   ├── secrets.nix            # Public key declarations for each secret
 │   ├── nix-access-tokens.age  # Nix/GitHub access tokens (encrypted)
@@ -167,6 +167,7 @@ Optional features are gated behind `mkEnableOption` in `modules/features/`. Enab
 ```nix
 myfeatures = {
   btrfs.enable = true;       # BTRFS compression/tuning (compress=zstd:3, noatime, ssd)
+  btrfs.mountPaths = [ "/" "/home" "/nix" ];  # Paths to apply options to (default)
   secureboot.enable = true;  # UEFI Secure Boot via Lanzaboote
   vm.enable = true;          # QEMU/KVM + virt-manager
   gaming.enable = true;      # Steam, Gamescope, Gamemode, MangoHud
@@ -393,7 +394,7 @@ Shared packages live in `modules/core/packages.nix` (system) and `home/core/pack
 
 ## Firewall
 
-The firewall is enabled system-wide in `modules/security.nix` via `networking.firewall`. It blocks all inbound connections by default except for explicitly allowed ports.
+The firewall is enabled system-wide in `modules/core/security.nix` via `networking.firewall`. It blocks all inbound connections by default except for explicitly allowed ports.
 
 ### Open Ports
 
@@ -405,7 +406,7 @@ Syncthing ports are opened automatically when `myfeatures.p2p.enable = true` via
 
 ### Adding Ports
 
-To open additional ports, edit `modules/security.nix`:
+To open additional ports, edit `modules/core/security.nix`:
 
 ```nix
 networking.firewall = {
@@ -545,11 +546,14 @@ SMB network shares can be mounted directly from the Nemo file manager. `gvfs` an
 
 ## Custom Library
 
-The `lib/` directory contains helper functions used throughout the config. The key helper is `scanPaths`, which auto-imports all `.nix` files in a directory (excluding `default.nix`). Adding a new module to `modules/core/`, `modules/desktop/`, `home/core/`, or `home/desktop/` only requires creating the file -- no manual import needed.
+The `lib/` directory contains helper functions used throughout the config:
+
+- **`scanPaths`** - Auto-imports all `.nix` files in a directory (excluding `default.nix`). Adding a new module to `modules/core/`, `modules/desktop/`, `home/core/`, or `home/desktop/` only requires creating the file -- no manual import needed.
+- **`specialArgsDoc`** - Documents the expected `specialArgs` passed to all modules: `hostname`, `flakeRoot`, `inputs`, `mylib`, `username`.
 
 ## Security
 
-- **Firewall:** Enabled system-wide with explicit port allowlists (see [Firewall](#firewall))
+- **Firewall:** Enabled system-wide with explicit port allowlists (see [Firewall](#firewall) in `modules/core/security.nix`)
 - **SSH:** OpenSSH enabled with key-based auth only, root login denied (`modules/core/ssh.nix`)
 - **Secrets:** agenix encrypts secrets with age using SSH host keys (see [Secrets Management](#secrets-management))
 - **RealtimeKit:** `security.rtkit.enable` grants real-time scheduling to PipeWire for low-latency audio
@@ -563,6 +567,7 @@ The `lib/` directory contains helper functions used throughout the config. The k
 Configured in `modules/core/system.nix`:
 
 - `mySystem.kernelPackage`: Configurable kernel packages set (default: `linuxPackages_7_2`). Hosts can override via `mySystem.kernelPackage = pkgs.linuxPackages_xxx;` in their `hardware.nix`.
+- `mySystem.username`: Primary user username (default: `"ize"`). Used throughout modules for user-specific paths and groups.
 - `experimental-features`: `nix-command`, `flakes`, `recursive-nix`
 - `warn-dirty = false`: Suppresses dirty tree warnings during rebuilds
 - `auto-optimise-store = true`: Deduplicates store paths weekly

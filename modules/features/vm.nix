@@ -28,7 +28,7 @@ in
 
     programs.virt-manager.enable = true;
 
-    users.users.ize.extraGroups = [ "libvirtd" ];
+    users.users.${config.mySystem.username}.extraGroups = [ "libvirtd" ];
 
     environment.systemPackages = with pkgs; [
       virt-viewer

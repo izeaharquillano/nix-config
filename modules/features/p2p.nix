@@ -25,16 +25,16 @@ in
     services.syncthing = {
       enable = true;
       openDefaultPorts = true;
-      user = "ize";
-      dataDir = "${config.users.users.ize.home}/Documents";
-      configDir = "${config.users.users.ize.home}/.config/syncthing";
+      user = config.mySystem.username;
+      dataDir = "${config.users.users.${config.mySystem.username}.home}/Documents";
+      configDir = "${config.users.users.${config.mySystem.username}.home}/.config/syncthing";
       settings = {
         devices = {
           "Server".id = "JDJRA5Z-2BXVR3Z-GTHRJND-AIJLXZW-TAMJRXF-CYYTJMM-6LKWWT7-QCD32AA";
         };
         folders = {
           "Obsidian" = {
-            path = "${config.users.users.ize.home}/Documents/obsidian";
+            path = "${config.users.users.${config.mySystem.username}.home}/Documents/obsidian";
             devices = [ "Server" ];
           };
         };

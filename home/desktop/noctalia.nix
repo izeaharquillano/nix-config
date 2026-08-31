@@ -5,9 +5,7 @@
 }:
 
 let
-  hostSettingsFile = ../hosts/${hostname}/config/noctalia-host-settings.toml;
-  hostSettings =
-    if builtins.pathExists hostSettingsFile then builtins.readFile hostSettingsFile else "";
+  hostSettings = builtins.readFile (../hosts/${hostname}/config/noctalia-host-settings.toml);
 in
 {
   programs.noctalia.enable = true;

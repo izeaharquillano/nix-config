@@ -7,6 +7,12 @@
 
 {
   options.mySystem = {
+    username = lib.mkOption {
+      type = lib.types.str;
+      default = "ize";
+      description = "Primary user username";
+    };
+
     kernelPackage = lib.mkOption {
       type = lib.types.attrs;
       default = pkgs.linuxPackages_7_2;
@@ -55,9 +61,9 @@
       dates = [ "weekly" ];
     };
 
-    users.users."ize" = {
+    users.users.${config.mySystem.username} = {
       isNormalUser = true;
-      description = "ize";
+      description = "Primary user";
       extraGroups = [
         "networkmanager"
         "wheel"
