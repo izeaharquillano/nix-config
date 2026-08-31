@@ -1,6 +1,15 @@
 {
   description = "An Epic NixOS Configuration";
 
+  nixConfig = {
+    extra-substituters = [
+      "https://nix-community.cachix.org"
+    ];
+    extra-trusted-public-keys = [
+      "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
+    ];
+  };
+
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
 
@@ -68,7 +77,8 @@
     }:
     let
       mylib = import ./lib { lib = nixpkgs.lib; };
-      username = "ize";
+      myvars = import ./vars;
+      username = myvars.username;
 
       forAllSystems = nixpkgs.lib.genAttrs [
         "x86_64-linux"
@@ -93,6 +103,7 @@
             inherit
               inputs
               mylib
+              myvars
               hostname
               username
               ;
@@ -114,6 +125,7 @@
                   inherit
                     inputs
                     mylib
+                    myvars
                     hostname
                     username
                     ;
@@ -129,7 +141,7 @@
       #   inputs.nix-darwin.lib.darwinSystem {
       #     inherit system;
       #     specialArgs = {
-      #       inherit inputs mylib hostname username;
+      #       inherit inputs mylib myvars hostname username;
       #       flakeRoot = self;
       #     };
       #     modules = [
@@ -146,7 +158,7 @@
       #           useUserPackages = true;
       #           users.${username} = import ./home/hosts/darwin/${hostname};
       #           extraSpecialArgs = {
-      #             inherit inputs mylib hostname username;
+      #             inherit inputs mylib myvars hostname username;
       #             flakeRoot = self;
       #           };
       #         };
@@ -216,7 +228,7 @@
           config = {
             nixpkgs.overlays = [ (import ./overlays) ];
 
-            mySystem.username = nixpkgs.lib.mkDefault "ize";
+            mySystem.username = nixpkgs.lib.mkDefault myvars.username;
             mySystem.kernelPackage = nixpkgs.lib.mkDefault nixpkgs.linuxPackages_7_2;
           };
         };
@@ -228,7 +240,7 @@
       #     imports = [ ./modules/darwin ];
       #     config = {
       #       nixpkgs.overlays = [ (import ./overlays) ];
-      #       mySystem.username = nixpkgs.lib.mkDefault "ize";
+      #       mySystem.username = nixpkgs.lib.mkDefault myvars.username;
       #     };
       #   };
       # };

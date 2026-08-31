@@ -23,5 +23,6 @@
   #   flakeRoot - path    - Flake root (self) for referencing repo files
   #   inputs    - attrset - Flake inputs (nixpkgs, home-manager, etc.)
   #   mylib     - attrset - Custom library functions (scanPaths, relativeToRoot)
+  #   myvars    - attrset - User identity vars (username, userfullname, useremail)
   #   username  - string  - Primary user username (e.g. "ize")
 }
