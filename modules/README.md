@@ -33,12 +33,52 @@ modules/
 
 - **`core/`** - Base system config (boot, networking, nix, users, SSH, firewall) every host needs. Always imported.
   - `system.nix` sets `boot.kernelPackages` via the `mySystem.kernelPackage` option (default: `linuxPackages_7_2`). Hosts can override this in their `hardware.nix`.
-  - `system.nix` also defines `mySystem.username` (default: `"ize"`) used throughout modules.
+  - `system.nix` defines `mySystem.username` — the single source of truth for the primary user. Set by `flake.nix` via `mySystem.username = username;`.
   - `locale.nix` sets `time.hardwareClockInLocalTime = false` (RTC in UTC). See the main README for dual-boot Windows instructions.
   - `ssh.nix` enables OpenSSH with key-based auth only.
   - `security.nix` enables Neovim, nix-ld, and the firewall.
 - **`desktop/`** - GUI/desktop config. Only imported by desktop hosts.
 - **`features/`** - Optional features gated behind `mkEnableOption`. Auto-imported via `scanPaths`; enable per host with `myfeatures.<name>.enable`.
+
+## Using as an External Module
+
+The `nixosModules.default` output can be consumed by other flakes:
+
+```nix
+{
+  inputs = {
+    nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
+    nixos-conf.url = "github:ize/nixos-conf";
+  };
+
+  outputs = { self, nixpkgs, nixos-conf, ... }: {
+    nixosConfigurations.myhost = nixpkgs.lib.nixosSystem {
+      system = "x86_64-linux";
+      modules = [
+        nixos-conf.nixosModules.default
+        {
+          # Required: set specialArgs for the modules
+          specialArgs = {
+            hostname = "myhost";
+            username = "myuser";
+            flakeRoot = ./.;
+            inputs = inputs;
+            mylib = nixos-conf.legacyPackages.x86_64-linux.mylib or {};
+          };
+
+          # Optional: override defaults
+          mySystem.username = "myuser";
+          mySystem.kernelPackage = pkgs.linuxPackages_latest;
+
+          networking.hostName = "myhost";
+        }
+      ];
+    };
+  };
+}
+```
+
+The module sets up the overlay and provides defaults for `mySystem.username` and `mySystem.kernelPackage`.
 
 ## Feature Options
 

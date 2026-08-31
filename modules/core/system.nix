@@ -9,7 +9,6 @@
   options.mySystem = {
     username = lib.mkOption {
       type = lib.types.str;
-      default = "ize";
       description = "Primary user username";
     };
 

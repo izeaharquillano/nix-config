@@ -493,6 +493,19 @@ Get a device's ID from the Syncthing GUI under Actions > Show ID.
 | `zen-browser` | Zen Browser (Firefox-based) |
 | `treefmt-nix` | Nix code formatting (nixfmt, shfmt) |
 
+## Flake Outputs
+
+| Output | Purpose |
+|---|---|
+| `nixosConfigurations.<host>` | NixOS system configurations (padrick, jobert) |
+| `nixosModules.default` | Reusable module: imports core, desktop, features; sets overlay and option defaults |
+| `overlays.default` | Nixpkgs overlay (gruvbox-material-yazi, version pinning) |
+| `packages.<system>.gruvbox-material-yazi` | Custom package exposed directly |
+| `checks.<system>` | Per-host evaluation checks + formatting |
+| `formatter.<system>` | nixfmt + shfmt wrapper |
+| `apps.<system>.agenix` | agenix CLI as a flake app |
+| `devShells.<system>.default` | Dev shell with treefmt + agenix |
+
 ## Formatting
 
 This config uses `treefmt-nix` for consistent code formatting. Run:
@@ -511,7 +524,7 @@ The formatter is configured with `nixfmt` for Nix files and `shfmt` for shell sc
 
 GitHub Actions runs on push/PR to `main` (`.github/workflows/ci.yml`):
 
-- **Flake checks**: `nix flake check --all-systems` (formatting, etc.)
+- **Flake checks**: `nix flake check --all-systems` (formatting + per-host evaluation checks for padrick and jobert)
 - **Dry builds**: builds each host's system toplevel (`--dry-run`) to catch evaluation errors
 
 ## direnv

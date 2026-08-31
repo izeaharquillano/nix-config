@@ -96,6 +96,7 @@
             home-manager.nixosModules.home-manager
             inputs.agenix.nixosModules.age
             {
+              mySystem.username = username;
               nixpkgs.overlays = [ (import ./overlays) ];
               home-manager = {
                 useGlobalPkgs = true;
@@ -122,6 +123,26 @@
 
       checks = forAllSystems (system: {
         formatting = treefmtEval.${system}.config.build.check self;
+
+        padrick-eval =
+          let
+            cfg = self.nixosConfigurations.padrick.config;
+          in
+          nixpkgs.legacyPackages.${system}.runCommand "check-padrick-eval" { } ''
+            [ -n "${cfg.networking.hostName}" ] && \
+            [ -n "${cfg.mySystem.username}" ] && \
+            echo "ok" > $out
+          '';
+
+        jobert-eval =
+          let
+            cfg = self.nixosConfigurations.jobert.config;
+          in
+          nixpkgs.legacyPackages.${system}.runCommand "check-jobert-eval" { } ''
+            [ -n "${cfg.networking.hostName}" ] && \
+            [ -n "${cfg.mySystem.username}" ] && \
+            echo "ok" > $out
+          '';
       });
 
       formatter = forAllSystems (system: treefmtEval.${system}.config.build.wrapper);
@@ -150,6 +171,13 @@
             ./modules/desktop
             ./modules/features
           ];
+
+          config = {
+            nixpkgs.overlays = [ (import ./overlays) ];
+
+            mySystem.username = nixpkgs.lib.mkDefault "ize";
+            mySystem.kernelPackage = nixpkgs.lib.mkDefault nixpkgs.linuxPackages_7_2;
+          };
         };
       };
 
