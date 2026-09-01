@@ -133,6 +133,83 @@ nix build .#nixosConfigurations.padrick.config.system.build.toplevel
 nix fmt
 ```
 
+## Updating
+
+### Update All Flake Inputs
+
+Update all inputs (nixpkgs, home-manager, etc.) to their latest revisions:
+
+```bash
+nix flake update
+```
+
+To update a specific input:
+
+```bash
+nix flake update nixpkgs
+nix flake update home-manager
+nix flake update niri
+```
+
+After updating, rebuild:
+
+```bash
+sudo nixos-rebuild switch --flake .#<hostname>
+```
+
+### Update a Specific Package
+
+To update a single package (e.g. `ripgrep`) to the latest version in your pinned nixpkgs:
+
+1. Check if a newer version exists:
+   ```bash
+   nix search nixpkgs#ripgrep
+   ```
+
+2. If you want the absolute latest (possibly newer than your pinned nixpkgs), update nixpkgs first:
+   ```bash
+   nix flake update nixpkgs
+   sudo nixos-rebuild switch --flake .#<hostname>
+   ```
+
+3. To pin a specific package to a particular nixpkgs revision, add an overlay in `overlays/`:
+   ```nix
+   # overlays/ripgrep.nix
+   final: prev: {
+     ripgrep = prev.ripgrep.overrideAttrs (old: {
+       version = "14.1.1";
+       src = final.fetchFromGitHub {
+         owner = "BurntSushi";
+         repo = "ripgrep";
+         rev = "14.1.1";
+         sha256 = "sha256-...";
+       };
+     });
+   }
+   ```
+
+### Roll Back to a Previous Generation
+
+If a rebuild went wrong, roll back:
+
+```bash
+# List generations
+sudo nix-env --list-generations --profile /nix/var/nix/profiles/system
+
+# Switch to a previous generation
+sudo nixos-rebuild switch --flake .#<hostname> --profile /nix/var/nix/profiles/system
+
+# Or use the bootloader menu to select a previous generation
+```
+
+### Clean Up Old Generations
+
+Older generations are automatically garbage-collected weekly (14-day retention, configured in `modules/nixos/core/system.nix`). To manually clean:
+
+```bash
+sudo nix-collect-garbage -d
+```
+
 ## Adding a New NixOS Host
 
 1. Create the host directory and generate hardware config:
@@ -618,13 +695,13 @@ The `vars/` directory exports user identity (`username`, `userfullname`, `userem
 - **Polkit:** `security.polkit.enable` for privilege escalation prompts
 - **Secure Boot:** Optional via `myfeatures.secureboot.enable` (Lanzaboote)
 - **nix-ld:** Enabled for LazyVim compatibility (allows running unpatched binaries)
-- **Kernel:** Configurable per host via `mySystem.kernelPackage` option (default: `linuxPackages_7_2`). Override in host's `hardware.nix` with `mySystem.kernelPackage = pkgs.linuxPackages_xxx;`.
+- **Kernel:** Configurable per host via `mySystem.kernelPackage` option (default: `linuxPackages_latest`). Override in host's `hardware.nix` with `mySystem.kernelPackage = pkgs.linuxPackages_xxx;`.
 
 ## Nix Settings
 
 Configured in `modules/base/nix.nix` and `modules/nixos/core/system.nix`:
 
-- `mySystem.kernelPackage`: Configurable kernel packages set (default: `linuxPackages_7_2`). Hosts can override via `mySystem.kernelPackage = pkgs.linuxPackages_xxx;` in their `hardware.nix`.
+- `mySystem.kernelPackage`: Configurable kernel packages set (default: `linuxPackages_latest`). Hosts can override via `mySystem.kernelPackage = pkgs.linuxPackages_xxx;` in their `hardware.nix`.
 - `mySystem.username`: Primary user username (default: `"ize"`). Used throughout modules for user-specific paths and groups.
 - `experimental-features`: `nix-command`, `flakes`, `recursive-nix`
 - `sandbox = true`: Enables Nix sandbox for reproducible builds

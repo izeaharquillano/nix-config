@@ -61,7 +61,7 @@ let
           home-manager = {
             useGlobalPkgs = true;
             useUserPackages = true;
-            backupFileExtension = "hm-bak";
+            backupFileExtension = null;
             users.${username} = import ../home/hosts/nixos/${hostname};
             extraSpecialArgs = {
               inherit
@@ -142,7 +142,7 @@ in
         nixpkgs.overlays = [ (import ../overlays) ];
 
         mySystem.username = lib.mkDefault myvars.username;
-        mySystem.kernelPackage = lib.mkDefault nixpkgs.linuxPackages_7_2;
+        mySystem.kernelPackage = lib.mkDefault nixpkgs.linuxPackages_latest;
       };
     };
   };

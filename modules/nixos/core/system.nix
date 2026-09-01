@@ -14,8 +14,8 @@
 
     kernelPackage = lib.mkOption {
       type = lib.types.attrs;
-      default = pkgs.linuxPackages_7_2;
-      description = "Linux kernel packages set to use (e.g. pkgs.linuxPackages_7_2)";
+      default = pkgs.linuxPackages_latest;
+      description = "Linux kernel packages set to use (e.g. pkgs.linuxPackages_latest)";
     };
   };
 
