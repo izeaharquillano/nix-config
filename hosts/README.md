@@ -41,6 +41,7 @@ myfeatures = {
   secureboot.enable = true;  # UEFI Secure Boot
   zswap.enable = true;       # Zswap with zstd compression
   p2p.enable = true;         # Syncthing + NetBird
+  docker.enable = true;      # Docker container runtime
 };
 ```
 
@@ -56,6 +57,7 @@ myfeatures = {
   p2p.enable = true;         # Syncthing + NetBird
   vm.enable = true;          # QEMU/KVM + virt-manager
   gaming.enable = true;      # Steam, Gamescope, Gamemode, MangoHud
+  docker.enable = true;      # Docker container runtime
 };
 ```
 

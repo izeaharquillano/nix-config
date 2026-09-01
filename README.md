@@ -56,7 +56,8 @@ A multi-host, cross-platform NixOS and macOS configuration using flakes and Home
 │   │   │   ├── gaming.nix     # Steam, Gamescope, Gamemode, MangoHud
 │   │   │   ├── vm.nix         # QEMU/KVM + virt-manager
 │   │   │   ├── zswap.nix      # Zswap with zstd compression
-│   │   │   └── p2p.nix        # Syncthing + NetBird
+│   │   │   ├── p2p.nix        # Syncthing + NetBird
+│   │   │   └── docker.nix     # Docker container runtime (rootless)
 │   │   └── default.nix        # Aggregator (imports core, desktop, features)
 │   └── darwin/                # macOS-specific modules (placeholder)
 │       └── default.nix
@@ -281,6 +282,7 @@ myfeatures = {
   gaming.enable = true;      # Steam, Gamescope, Gamemode, MangoHud
   zswap.enable = true;       # Zswap with zstd compression
   p2p.enable = true;         # Syncthing + NetBird VPN
+  docker.enable = true;      # Docker container runtime (rootless, auto-prune)
 };
 ```
 

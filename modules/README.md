@@ -97,6 +97,7 @@ myfeatures = {
   gaming.enable = true;      # Steam, Gamescope, Gamemode, MangoHud
   zswap.enable = true;       # Zswap with zstd compression
   p2p.enable = true;         # Syncthing + NetBird VPN
+  docker.enable = true;      # Docker container runtime (rootless, auto-prune)
 };
 ```
 

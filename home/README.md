@@ -187,7 +187,7 @@ in
 }
 ```
 
-`home/core/shell.nix` contains all shell configuration (Bash, Zsh, Starship, Zoxide, aliases).
+`home/core/shell.nix` contains all shell configuration (Bash, Zsh, Starship, Zoxide, aliases, session variables like `EDITOR`, `VISUAL`, `MANPAGER`, `BAT_THEME`).
 
 ## Host-Specific Packages
 
