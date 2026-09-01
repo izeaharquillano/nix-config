@@ -1,81 +1,32 @@
 # Config
 
-Raw application configuration files (dotfiles) consumed by Home Manager via `xdg.configFile`.
-
-## Contents
-
-```
-config/
-├── kitty/kitty.conf     # Kitty terminal config
-├── hypr/                # Hyprland Lua config (keybinds, rules, plugins)
-│   ├── hyprland.lua     # Main config (requires hypr-host-settings, animations, etc.)
-│   ├── keybindings.lua  # Key bindings
-│   ├── windowrules.lua  # Window rules
-│   ├── animations.lua   # Animation config
-│   └── plugins/         # Hyprland plugins (hyprbars)
-├── niri/
-│   └── config.kdl       # Niri config (includes niri-host-settings.kdl)
-├── noctalia/config.toml # Noctalia Wayland bar/shell (symlinked, wallpaper in wallpaper.toml)
-├── nvim/                # Neovim LazyVim config (Lua)
-├── starship.toml        # Starship prompt config
-└── tmux/tmux.conf       # Tmux config
-```
+Raw application configuration files (dotfiles) consumed by Home Manager via `xdg.configFile` store copies. These are **not** Nix modules — for Nix-native configuration, use `programs.<name>` in Home Manager modules instead.
 
 ## How Dotfiles Are Consumed
 
-In `home/core/*.nix` and `home/linux/*.nix`, config files are consumed via `xdg.configFile` store copies:
+In `home/core/*.nix` and `home/linux/*.nix`, config files are referenced via `xdg.configFile`:
 
 ```nix
-# Example from home/core/terminal.nix
-{ ... }:
+# Single file
+xdg.configFile."kitty/kitty.conf".source = ../../config/kitty/kitty.conf;
 
-{
-  xdg.configFile."kitty/kitty.conf".source = ../../config/kitty/kitty.conf;
-}
+# Directory (hypr/, nvim/)
+xdg.configFile."hypr" = {
+  source = ../../config/hypr;
+  recursive = true;
+};
 ```
-
-Directories with multiple files (like `hypr/` and `nvim/`) use `recursive = true`.
 
 ## Host-Specific Configs
 
-Host-specific settings (niri, hyprland, noctalia) live in `home/hosts/<name>/config/` rather than here. They are store-copied by the host-specific HM file (`home/hosts/<name>/default.nix`).
+Host-specific settings live in `home/hosts/<name>/config/` and are store-copied by the host's HM file:
 
-- **Niri**: `home/hosts/<name>/config/niri-host-settings.kdl` is symlinked to `~/.config/niri/niri-host-settings.kdl` and included by `config.kdl` via `include "./niri-host-settings.kdl"`.
-- **Hyprland**: `home/hosts/<name>/config/hypr-host-settings.lua` is symlinked to `~/.config/hypr/hypr-host-settings.lua` and loaded via `require("hypr-host-settings")`.
-- **Noctalia**: `home/hosts/<name>/config/noctalia-host-settings.toml` (if present) is written to `host-settings.toml` in `~/.config/noctalia/` by `home/linux/noctalia.nix`. Wallpaper settings are in a separate Nix-generated `wallpaper.toml`.
+- **Niri**: `niri-host-settings.kdl` — included by `config.kdl` via `include "./niri-host-settings.kdl"`
+- **Hyprland**: `hypr-host-settings.lua` — loaded via `require("hypr-host-settings")`
+- **Noctalia**: `noctalia-host-settings.toml` — written to `host-settings.toml` by `home/linux/noctalia.nix`
 
 ## Adding a New Dotfile
 
-1. Place your config file(s) in `config/<app>/`
-2. Create a module in `home/core/<app>.nix` or `home/linux/<app>.nix`:
-
-For a single file:
-
-```nix
-{ ... }:
-
-{
-  xdg.configFile."app/config".source = ../../config/app/config;
-}
-```
-
-For a directory:
-
-```nix
-{ ... }:
-
-{
-  xdg.configFile."app" = {
-    source = ../../config/app;
-    recursive = true;
-  };
-}
-```
-
-3. It will be auto-imported by `scanPaths` in `home/core/default.nix` or `home/linux/default.nix`
-
-## Notes
-
-- These are **not** Nix modules -- they are plain config files
-- Individual files and directories are consumed as store copies
-- For Nix-native app configuration, use `programs.<name>` in Home Manager modules instead
+1. Place config file(s) in `config/<app>/`
+2. Create a module in `home/core/<app>.nix` or `home/linux/<app>.nix` with the appropriate `xdg.configFile` reference
+3. It will be auto-imported by `scanPaths` in `default.nix`
