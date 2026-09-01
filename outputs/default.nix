@@ -61,7 +61,8 @@ let
           home-manager = {
             useGlobalPkgs = true;
             useUserPackages = true;
-            backupFileExtension = null;
+            backupFileExtension = "hm-bak";
+            overwriteBackup = true;
             users.${username} = import ../home/hosts/nixos/${hostname};
             extraSpecialArgs = {
               inherit
