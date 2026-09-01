@@ -14,6 +14,7 @@
     gvfs
     mpv
     qimgv
+    dosbox
     gparted
     discord-ptb
     pavucontrol
