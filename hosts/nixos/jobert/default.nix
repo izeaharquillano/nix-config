@@ -29,6 +29,7 @@
     p2p.enable = true;
     vm.enable = true;
     gaming.enable = true;
+    docker.enable = true;
   };
 
   system.stateVersion = "26.05";

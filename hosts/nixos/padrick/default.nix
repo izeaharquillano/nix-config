@@ -25,6 +25,7 @@
     secureboot.enable = true;
     zswap.enable = true;
     p2p.enable = true;
+    docker.enable = true;
   };
 
   system.stateVersion = "26.05";
