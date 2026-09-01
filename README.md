@@ -637,8 +637,7 @@ The dev shell includes `nixfmt`, `deadnix`, and `statix` for linting and formatt
 GitHub Actions runs on push/PR to `main` (`.github/workflows/ci.yml`):
 
 - **Flake checks**: `nix flake check --all-systems` (formatting + per-host evaluation checks, auto-generated from `nixosConfigurations`)
-- **Dry builds**: builds each host's system toplevel (`--dry-run`) to catch evaluation errors (host list is hardcoded in the CI matrix and must be updated when adding/removing hosts)
-- **Full builds**: builds each host's system toplevel (after checks pass) to catch runtime/build errors
+- **Dry builds**: builds each host's system toplevel (`--dry-run`) to catch evaluation errors
 
 ## direnv
 
