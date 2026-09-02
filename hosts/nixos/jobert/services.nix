@@ -26,5 +26,14 @@
     criticalPowerAction = "PowerOff";
   };
 
+  services.logind.settings.Login = {
+    HandleLidSwitch = "suspend";
+    HandleLidSwitchExternalPower = "suspend";
+    HandleLidSwitchDocked = "ignore";
+    IdleAction = "suspend";
+    IdleActionSec = "30min";
+    LidSwitchIgnoreInhibited = "yes";
+  };
+
   services.resolved.enable = true;
 }
