@@ -14,7 +14,7 @@
     ./hardware-configuration.nix
     ./packages.nix
     ./services.nix
-    ./hardware.nix
+    ./host-settings.nix
     inputs.nixos-hardware.nixosModules.common-cpu-amd
     inputs.nixos-hardware.nixosModules.common-pc-laptop
     inputs.nixos-hardware.nixosModules.common-pc-ssd

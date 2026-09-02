@@ -16,9 +16,10 @@
     qimgv
     dosbox
     gparted
+    localsend
+    proton-vpn
     discord-ptb
     pavucontrol
-    proton-vpn
     nemo-with-extensions
     (bottles.override { removeWarningPopup = true; })
   ];

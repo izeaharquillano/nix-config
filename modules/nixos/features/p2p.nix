@@ -11,7 +11,7 @@ let
 in
 {
   options.myfeatures.p2p = {
-    enable = lib.mkEnableOption "P2P services (netbird, syncthing)";
+    enable = lib.mkEnableOption "P2P services (netbird, syncthing, localsend)";
   };
 
   config = lib.mkIf cfg.enable {
@@ -58,6 +58,11 @@ in
         openFirewall = true;
         openInternalFirewall = true;
       };
+    };
+
+    programs.localsend = {
+      enable = true;
+      openFirewall = true;
     };
   };
 }
