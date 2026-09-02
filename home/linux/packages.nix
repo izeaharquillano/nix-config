@@ -14,13 +14,11 @@
     gvfs
     mpv
     qimgv
-    dosbox
     gparted
     localsend
     proton-vpn
     discord-ptb
     pavucontrol
     nemo-with-extensions
-    (bottles.override { removeWarningPopup = true; })
   ];
 }

@@ -10,7 +10,7 @@ let
 in
 {
   options.myfeatures.vm = {
-    enable = lib.mkEnableOption "QEMU/KVM virtualization with virt-manager";
+    enable = lib.mkEnableOption "QEMU/KVM, virt-manager, bottles";
   };
 
   config = lib.mkIf cfg.enable {
@@ -35,6 +35,8 @@ in
       spice
       spice-vdagent
       spice-gtk
+      dosbox
+      (bottles.override { removeWarningPopup = true; })
     ];
   };
 }
