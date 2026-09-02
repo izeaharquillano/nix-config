@@ -18,6 +18,7 @@ myfeatures = {
   zswap.enable = true;
   p2p.enable = true;
   docker.enable = true;
+  vm.enable = true;
 };
 ```
 
@@ -35,7 +36,7 @@ myfeatures = {
 };
 ```
 
-The gaming module configures Steam (with remote play + dedicated server firewall rules), Proton GE, Gamescope, Gamemode, MangoHud, and GOverlay. NVIDIA-specific hardware config is in `hosts/nixos/jobert/hardware.nix` (open driver, VA-API, Wayland env vars, 32-bit OpenGL).
+The gaming module configures Steam (with remote play + dedicated server firewall rules), Proton GE, Gamescope, Gamemode, MangoHud, and GOverlay. NVIDIA-specific hardware config is in `hosts/nixos/jobert/host-settings.nix` (open driver, VA-API, Wayland env vars, 32-bit OpenGL).
 
 ## Adding a New NixOS Host
 
@@ -65,7 +66,7 @@ sudo nixos-generate-config --show-hardware-config > hosts/nixos/<name>/hardware-
     ./hardware-configuration.nix
     ./packages.nix
     ./services.nix
-    ./hardware.nix
+    ./host-settings.nix
   ];
 
   networking.hostName = "<name>";
@@ -173,7 +174,7 @@ sbctl status
 ```bash
 sudo nixos-rebuild switch --flake .#<name>
 ssh-keyscan <name> 2>/dev/null | grep ssh-ed25519
-# Add key to secrets/nixos.nix and rekey (see root README)
+# Add key to secrets/secrets.nix and rekey (see root README)
 sudo nixos-rebuild switch --flake .#<name>
 ```
 

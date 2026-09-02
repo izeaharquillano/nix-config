@@ -65,7 +65,7 @@ sudo nix-collect-garbage -d
 
 See [hosts/README.md](hosts/README.md) for the full walkthrough with code templates (hardware config, default.nix, services, Home Manager, Secure Boot enrollment, secrets setup).
 
-**TL;DR:** create `hosts/nixos/<name>/` and `home/hosts/nixos/<name>/`, register in `outputs/default.nix` with `mkNixosHost "<name>" "x86_64-linux"`, deploy, add the host key to `secrets/nixos.nix`, rekey, deploy again.
+**TL;DR:** create `hosts/nixos/<name>/` and `home/hosts/nixos/<name>/`, register in `outputs/default.nix` with `mkNixosHost "<name>" "x86_64-linux"`, deploy, add the host key to `secrets/secrets.nix`, rekey, deploy again.
 
 ## Feature Options
 
@@ -75,10 +75,10 @@ Optional features are gated behind `mkEnableOption` in `modules/nixos/features/`
 myfeatures = {
   btrfs.enable = true;       # BTRFS compression/tuning
   secureboot.enable = true;  # UEFI Secure Boot via Lanzaboote
-  vm.enable = true;          # QEMU/KVM + virt-manager
+  vm.enable = true;          # QEMU/KVM, virt-manager, Bottles, DOSBox
   gaming.enable = true;      # Steam, Gamescope, Gamemode, MangoHud
   zswap.enable = true;       # Zswap with zstd compression
-  p2p.enable = true;         # Syncthing + NetBird VPN
+  p2p.enable = true;         # Syncthing, NetBird VPN, LocalSend
   docker.enable = true;      # Docker (rootless, auto-prune)
 };
 ```
@@ -90,7 +90,7 @@ This config uses [agenix](https://github.com/ryantm/agenix) for encrypted secret
 ### How It Works
 
 1. Secrets are encrypted with age using SSH public keys from each host
-2. `secrets/nixos.nix` maps each `.age` file to the public keys that can decrypt it
+2. `secrets/secrets.nix` maps each `.age` file to the public keys that can decrypt it
 3. Feature modules declare `age.secrets.<name>` pointing to the `.age` file
 4. At boot, agenix decrypts secrets to `/run/agenix/` with the specified mode/owner
 5. Services reference the decrypted path via `config.age.secrets.<name>.path`
@@ -118,7 +118,7 @@ sudo agenix -i /etc/ssh/ssh_host_ed25519_key --rekey
 ### Adding a Secret
 
 1. Create: `sudo agenix -i /etc/ssh/ssh_host_ed25519_key -e <secret-name>.age`
-2. Declare keys in `secrets/nixos.nix`: `"<secret-name>.age".publicKeys = systems;`
+2. Declare keys in `secrets/secrets.nix`: `"<secret-name>.age".publicKeys = systems;`
 3. Rekey: `sudo agenix -i /etc/ssh/ssh_host_ed25519_key --rekey`
 4. Reference in a module:
    ```nix
@@ -136,12 +136,12 @@ SSH host keys are generated on first boot, so two passes are needed:
 
 1. First deploy (generates keys): `sudo nixos-rebuild switch --flake .#newhost`
 2. Grab the key: `ssh-keyscan newhost 2>/dev/null | grep ssh-ed25519`
-3. Add to `secrets/nixos.nix` and rekey
+3. Add to `secrets/secrets.nix` and rekey
 4. Second deploy (decrypts secrets): `sudo nixos-rebuild switch --flake .#newhost`
 
 ### Resetting a Host (Lost SSH Keys)
 
-Update the key binding in `secrets/nixos.nix` with the new host key, then `sudo agenix -i /etc/ssh/ssh_host_ed25519_key --rekey` and redeploy. If the lost host was the only one with access, re-create the secret from another host or backup.
+Update the key binding in `secrets/secrets.nix` with the new host key, then `sudo agenix -i /etc/ssh/ssh_host_ed25519_key --rekey` and redeploy. If the lost host was the only one with access, re-create the secret from another host or backup.
 
 ## Flake Inputs
 

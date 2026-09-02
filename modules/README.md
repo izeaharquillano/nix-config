@@ -59,17 +59,17 @@ Enable optional features in `hosts/nixos/<name>/default.nix`:
 myfeatures = {
   btrfs.enable = true;       # BTRFS compression/tuning (compress=zstd:3, noatime, ssd)
   secureboot.enable = true;  # UEFI Secure Boot via Lanzaboote
-  vm.enable = true;          # QEMU/KVM + virt-manager
+  vm.enable = true;          # QEMU/KVM, virt-manager, Bottles, DOSBox
   gaming.enable = true;      # Steam, Gamescope, Gamemode, MangoHud
   zswap.enable = true;       # Zswap with zstd compression
-  p2p.enable = true;         # Syncthing + NetBird VPN
+  p2p.enable = true;         # Syncthing, NetBird VPN, LocalSend
   docker.enable = true;      # Docker (rootless, auto-prune)
 };
 ```
 
 ### P2P Feature
 
-The `p2p` feature module configures Syncthing and NetBird. Enable with `myfeatures.p2p.enable = true`. This opens UDP 51820 for NetBird WireGuard, enables Syncthing with default sync/discovery ports, and auto-starts NetBird via setup key.
+The `p2p` feature module configures Syncthing, NetBird, and LocalSend. Enable with `myfeatures.p2p.enable = true`. This opens UDP 51820 for NetBird WireGuard, enables Syncthing with default sync/discovery ports, auto-starts NetBird via setup key, and enables LocalSend with firewall access.
 
 ### Adding a New Feature
 
