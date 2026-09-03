@@ -12,7 +12,7 @@ System-level configuration split into reusable modules, organized by platform.
   - `security.nix` — Neovim, nix-ld, firewall (base rules)
   - `packages.nix` — Base system packages
 - **`nixos/desktop/`** — GUI/desktop config (greetd, Niri, PipeWire, fonts). Only for desktop hosts.
-- **`nixos/features/`** — Optional features gated behind `mkEnableOption`. Auto-imported via `scanPaths`.
+- **`features/`** — Optional features gated behind `mkEnableOption`. Auto-imported via `scanPaths`.
 - **`darwin/`** — macOS system config (placeholder).
 
 All directories use `scanPaths` for auto-import — create a `.nix` file and it's picked up automatically.
@@ -56,7 +56,7 @@ The `nixosModules.default` output can be consumed by other flakes:
 Enable optional features in `hosts/nixos/<name>/default.nix`:
 
 ```nix
-sysfeatures = {
+features = {
   btrfs.enable = true;       # BTRFS compression/tuning (compress=zstd:3, noatime, ssd)
   secureboot.enable = true;  # UEFI Secure Boot via Lanzaboote
   vm.enable = true;          # QEMU/KVM, virt-manager, Bottles, DOSBox
@@ -69,20 +69,20 @@ sysfeatures = {
 
 ### P2P Feature
 
-The `p2p` feature module configures Syncthing, NetBird, and LocalSend. Enable with `sysfeatures.p2p.enable = true`. This opens UDP 51820 for NetBird WireGuard, enables Syncthing with default sync/discovery ports, auto-starts NetBird via setup key, and enables LocalSend with firewall access.
+The `p2p` feature module configures Syncthing, NetBird, and LocalSend. Enable with `features.p2p.enable = true`. This opens UDP 51820 for NetBird WireGuard, enables Syncthing with default sync/discovery ports, auto-starts NetBird via setup key, and enables LocalSend with firewall access.
 
 ### Adding a New Feature
 
-Create `modules/nixos/features/<name>.nix`. It's auto-imported by `scanPaths`:
+Create `modules/features/<name>.nix`. It's auto-imported by `scanPaths`:
 
 ```nix
 { pkgs, lib, config, ... }:
 
 let
-  cfg = config.sysfeatures.<name>;
+  cfg = config.features.<name>;
 in
 {
-  options.sysfeatures.<name> = {
+  options.features.<name> = {
     enable = lib.mkEnableOption "Description of the feature";
   };
 

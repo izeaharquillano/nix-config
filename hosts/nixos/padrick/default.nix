@@ -10,7 +10,7 @@
   imports = [
     ../../../modules/nixos/core
     ../../../modules/nixos/desktop
-    ../../../modules/nixos/features
+    ../../../modules/features
     ./hardware-configuration.nix
     ./packages.nix
     ./services.nix
@@ -20,7 +20,7 @@
 
   networking.hostName = "padrick";
 
-  sysfeatures = {
+  features = {
     btrfs.enable = true;
     secureboot.enable = true;
     zswap.enable = true;

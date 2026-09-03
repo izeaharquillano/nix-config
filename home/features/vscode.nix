@@ -6,7 +6,7 @@
 }:
 
 let
-  enabled = lib.attrByPath [ "sysfeatures" "vscode" "enable" ] false osConfig;
+  enabled = lib.attrByPath [ "features" "vscode" "enable" ] false osConfig;
 in
 lib.mkIf enabled {
   programs.vscode = {

@@ -5,10 +5,10 @@
 }:
 
 let
-  cfg = config.sysfeatures.docker;
+  cfg = config.features.docker;
 in
 {
-  options.sysfeatures.docker = {
+  options.features.docker = {
     enable = lib.mkEnableOption "Docker container runtime";
   };
 

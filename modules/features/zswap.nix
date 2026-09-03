@@ -1,10 +1,10 @@
 { lib, config, ... }:
 
 let
-  cfg = config.sysfeatures.zswap;
+  cfg = config.features.zswap;
 in
 {
-  options.sysfeatures.zswap = {
+  options.features.zswap = {
     enable = lib.mkEnableOption "Zswap tuning with zstd compression";
   };
 

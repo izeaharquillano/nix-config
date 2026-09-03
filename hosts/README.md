@@ -12,7 +12,7 @@ Each subdirectory represents a machine. NixOS hosts live under `nixos/`, macOS h
 ### padrick: Daily Use ThinkPad
 
 ```nix
-sysfeatures = {
+features = {
   btrfs.enable = true;
   secureboot.enable = true;
   zswap.enable = true;
@@ -25,7 +25,7 @@ sysfeatures = {
 ### jobert: Gaming & Virtualization
 
 ```nix
-sysfeatures = {
+features = {
   btrfs.enable = true;
   secureboot.enable = true;
   zswap.enable = true;
@@ -62,7 +62,7 @@ sudo nixos-generate-config --show-hardware-config > hosts/nixos/<name>/hardware-
   imports = [
     ../../modules/nixos/core
     ../../modules/nixos/desktop   # skip for servers
-    ../../modules/nixos/features
+    ../../modules/features
     ./hardware-configuration.nix
     ./packages.nix
     ./services.nix
@@ -71,7 +71,7 @@ sudo nixos-generate-config --show-hardware-config > hosts/nixos/<name>/hardware-
 
   networking.hostName = "<name>";
 
-  sysfeatures = {
+  features = {
     btrfs.enable = true;
     secureboot.enable = true;
     zswap.enable = true;
@@ -145,6 +145,7 @@ Optionally, create `noctalia-host-settings.toml` for Noctalia lockscreen widgets
   imports = [
     ../../core
     ../../linux
+    ../../features
     ./packages.nix
     inputs.niri.homeModules.niri
     inputs.noctalia.homeModules.default

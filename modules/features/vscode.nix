@@ -1,7 +1,7 @@
 { lib, ... }:
 
 {
-  options.sysfeatures.vscode = {
+  options.features.vscode = {
     enable = lib.mkEnableOption "VS Code editor";
   };
 }

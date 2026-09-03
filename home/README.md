@@ -6,6 +6,7 @@ User-level configuration managed by Home Manager, organized by platform.
 
 - **`core/`** — Cross-platform (shell, cli, dev, editors, notes, terminal). Always imported.
 - **`linux/`** — Linux-only GUI apps and dotfiles (WM configs, desktop, web, wayland-utils, desktop-apps).
+- **`features/`** — Toggleable features that read from `osConfig.features.*`. Auto-imported via `scanPaths`.
 - **`darwin/`** — macOS-only home modules (placeholder).
 - **`hosts/<name>/`** — Host-specific overrides, flake input imports, and hardware config symlinks.
 
@@ -13,7 +14,7 @@ All directories use `scanPaths` for auto-import — create a `.nix` file and it'
 
 ## How It Works
 
-The host's HM entry point (`home/hosts/<name>/default.nix`) imports `core/` and the platform directory (`linux/` or `darwin/`), plus flake module inputs (niri, noctalia).
+The host's HM entry point (`home/hosts/<name>/default.nix`) imports `core/`, the platform directory (`linux/` or `darwin/`), `features/`, plus flake module inputs (niri, noctalia).
 
 Config files in `config/` are consumed via `xdg.configFile` store copies. Host-specific settings in `home/hosts/<name>/config/` also use store copies. The `hostname` is passed via `specialArgs`, allowing modules like `noctalia.nix` to read host-specific settings.
 
@@ -49,6 +50,7 @@ In `home/hosts/<name>/default.nix`, add host-specific settings after the imports
   imports = [
     ../../../core
     ../../../linux
+    ../../../features
     ./packages.nix
     inputs.niri.homeModules.niri
     inputs.noctalia.homeModules.default
