@@ -1,0 +1,7 @@
+{
+    "workbench.colorTheme": "Gruvbox Dark Medium",
+    "editor.fontFamily": "JetbrainsMono NF",
+    "editor.fontSize": 16,
+    "vim.vimrc.enable": true,
+    "vim.vimrc.path": "~/.config/vscode/.vimrc",
+}

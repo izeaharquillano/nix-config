@@ -27,6 +27,7 @@
     p2p.enable = true;
     docker.enable = true;
     vm.enable = true;
+    editors.enable = true;
   };
 
   system.stateVersion = "26.05";
