@@ -1,6 +1,12 @@
-{ myvars, ... }:
+{ pkgs, myvars, ... }:
 
 {
+  home.packages = with pkgs; [
+    gcc
+    lazygit
+    opencode
+  ];
+
   programs.git = {
     enable = true;
     settings = {
@@ -10,4 +16,6 @@
       };
     };
   };
+
+  programs.npm.enable = true;
 }

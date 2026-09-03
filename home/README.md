@@ -4,8 +4,8 @@ User-level configuration managed by Home Manager, organized by platform.
 
 ## Module Types
 
-- **`core/`** — Cross-platform (shell, packages, editors, terminal). Always imported.
-- **`linux/`** — Linux-only GUI apps and dotfiles (GTK, Wayland compositors, portals).
+- **`core/`** — Cross-platform (shell, cli, dev, editors, notes, terminal). Always imported.
+- **`linux/`** — Linux-only GUI apps and dotfiles (WM configs, desktop, web, wayland-utils, desktop-apps).
 - **`darwin/`** — macOS-only home modules (placeholder).
 - **`hosts/<name>/`** — Host-specific overrides, flake input imports, and hardware config symlinks.
 
