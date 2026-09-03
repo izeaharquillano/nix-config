@@ -7,7 +7,8 @@
       runtimeInputs = with pkgs; [ jq ];
       text = builtins.readFile ../../scripts/output-scale;
     })
-  ] ++ (with pkgs; [
+  ]
+  ++ (with pkgs; [
     ncdu
     xdg-user-dirs
     waybar
