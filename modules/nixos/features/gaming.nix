@@ -6,10 +6,10 @@
 }:
 
 let
-  cfg = config.myfeatures.gaming;
+  cfg = config.sysfeatures.gaming;
 in
 {
-  options.myfeatures.gaming = {
+  options.sysfeatures.gaming = {
     enable = lib.mkEnableOption "Gaming stack (Steam, Gamescope, Gamemode, MangoHud)";
   };
 

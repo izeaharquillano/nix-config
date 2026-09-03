@@ -7,10 +7,10 @@
 }:
 
 let
-  cfg = config.myfeatures.p2p;
+  cfg = config.sysfeatures.p2p;
 in
 {
-  options.myfeatures.p2p = {
+  options.sysfeatures.p2p = {
     enable = lib.mkEnableOption "P2P services (netbird, syncthing, localsend)";
   };
 

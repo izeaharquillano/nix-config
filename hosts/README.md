@@ -12,7 +12,7 @@ Each subdirectory represents a machine. NixOS hosts live under `nixos/`, macOS h
 ### padrick: Daily Use ThinkPad
 
 ```nix
-myfeatures = {
+sysfeatures = {
   btrfs.enable = true;
   secureboot.enable = true;
   zswap.enable = true;
@@ -25,7 +25,7 @@ myfeatures = {
 ### jobert: Gaming & Virtualization
 
 ```nix
-myfeatures = {
+sysfeatures = {
   btrfs.enable = true;
   secureboot.enable = true;
   zswap.enable = true;
@@ -71,7 +71,7 @@ sudo nixos-generate-config --show-hardware-config > hosts/nixos/<name>/hardware-
 
   networking.hostName = "<name>";
 
-  myfeatures = {
+  sysfeatures = {
     btrfs.enable = true;
     secureboot.enable = true;
     zswap.enable = true;

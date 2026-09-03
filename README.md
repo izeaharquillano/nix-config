@@ -72,7 +72,7 @@ See [hosts/README.md](hosts/README.md) for the full walkthrough with code templa
 Optional features are gated behind `mkEnableOption` in `modules/nixos/features/`. See [modules/README.md](modules/README.md) for details and templates.
 
 ```nix
-myfeatures = {
+sysfeatures = {
   btrfs.enable = true;       # BTRFS compression/tuning
   secureboot.enable = true;  # UEFI Secure Boot via Lanzaboote
   vm.enable = true;          # QEMU/KVM, virt-manager, Bottles, DOSBox
@@ -113,7 +113,7 @@ sudo agenix -i /etc/ssh/ssh_host_ed25519_key --rekey
 | Secret | Required By | Purpose |
 |--------|-------------|---------|
 | `nix-access-tokens.age` | Always | Nix/GitHub access tokens for private flakes |
-| `netbird-setup-key.age` | `myfeatures.p2p.enable = true` | NetBird VPN auto-login key |
+| `netbird-setup-key.age` | `sysfeatures.p2p.enable = true` | NetBird VPN auto-login key |
 
 ### Adding a Secret
 
@@ -199,7 +199,7 @@ The `vars/` directory exports user identity (`username`, `userfullname`, `userem
 - **SSH:** Key-based auth only, root login denied (`modules/nixos/core/ssh.nix`)
 - **Secrets:** agenix with age + SSH host keys (see [Secrets Management](#secrets-management))
 - **RealtimeKit:** Grants real-time scheduling to PipeWire
-- **Secure Boot:** Optional via `myfeatures.secureboot.enable` (Lanzaboote)
+- **Secure Boot:** Optional via `sysfeatures.secureboot.enable` (Lanzaboote)
 - **nix-ld:** Enabled for LazyVim compatibility
 
 ## Nix Settings

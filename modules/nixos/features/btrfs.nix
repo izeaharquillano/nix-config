@@ -1,7 +1,7 @@
 { lib, config, ... }:
 
 let
-  cfg = config.myfeatures.btrfs;
+  cfg = config.sysfeatures.btrfs;
 
   btrfsOpts = [
     "compress=zstd:3"
@@ -11,7 +11,7 @@ let
   ];
 in
 {
-  options.myfeatures.btrfs = {
+  options.sysfeatures.btrfs = {
     enable = lib.mkEnableOption "BTRFS mount options with zstd compression";
 
     mountPaths = lib.mkOption {

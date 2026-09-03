@@ -4,6 +4,7 @@
   imports = [
     ../../../core
     ../../../linux
+    ../../../features
     ./packages.nix
     inputs.niri.homeModules.niri
     inputs.noctalia.homeModules.default

@@ -54,6 +54,11 @@
     };
   };
 
+  qt = {
+    enable = true;
+    style.name = "adwaita-dark";
+  };
+
   dconf.settings = {
     "org/gnome/desktop/interface" = {
       color-scheme = "prefer-dark";

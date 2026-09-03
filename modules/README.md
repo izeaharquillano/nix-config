@@ -56,7 +56,7 @@ The `nixosModules.default` output can be consumed by other flakes:
 Enable optional features in `hosts/nixos/<name>/default.nix`:
 
 ```nix
-myfeatures = {
+sysfeatures = {
   btrfs.enable = true;       # BTRFS compression/tuning (compress=zstd:3, noatime, ssd)
   secureboot.enable = true;  # UEFI Secure Boot via Lanzaboote
   vm.enable = true;          # QEMU/KVM, virt-manager, Bottles, DOSBox
@@ -69,7 +69,7 @@ myfeatures = {
 
 ### P2P Feature
 
-The `p2p` feature module configures Syncthing, NetBird, and LocalSend. Enable with `myfeatures.p2p.enable = true`. This opens UDP 51820 for NetBird WireGuard, enables Syncthing with default sync/discovery ports, auto-starts NetBird via setup key, and enables LocalSend with firewall access.
+The `p2p` feature module configures Syncthing, NetBird, and LocalSend. Enable with `sysfeatures.p2p.enable = true`. This opens UDP 51820 for NetBird WireGuard, enables Syncthing with default sync/discovery ports, auto-starts NetBird via setup key, and enables LocalSend with firewall access.
 
 ### Adding a New Feature
 
@@ -79,10 +79,10 @@ Create `modules/nixos/features/<name>.nix`. It's auto-imported by `scanPaths`:
 { pkgs, lib, config, ... }:
 
 let
-  cfg = config.myfeatures.<name>;
+  cfg = config.sysfeatures.<name>;
 in
 {
-  options.myfeatures.<name> = {
+  options.sysfeatures.<name> = {
     enable = lib.mkEnableOption "Description of the feature";
   };
 

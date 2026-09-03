@@ -20,7 +20,7 @@
 
   networking.hostName = "padrick";
 
-  myfeatures = {
+  sysfeatures = {
     btrfs.enable = true;
     secureboot.enable = true;
     zswap.enable = true;

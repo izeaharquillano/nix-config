@@ -7,14 +7,14 @@
 }:
 
 let
-  cfg = config.myfeatures.secureboot;
+  cfg = config.sysfeatures.secureboot;
 in
 {
   imports = [
     inputs.lanzaboote.nixosModules.lanzaboote
   ];
 
-  options.myfeatures.secureboot = {
+  options.sysfeatures.secureboot = {
     enable = lib.mkEnableOption "UEFI Secure Boot via Lanzaboote";
   };
 

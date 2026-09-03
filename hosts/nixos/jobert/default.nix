@@ -22,7 +22,7 @@
 
   networking.hostName = "jobert";
 
-  myfeatures = {
+  sysfeatures = {
     btrfs.enable = true;
     secureboot.enable = true;
     zswap.enable = true;

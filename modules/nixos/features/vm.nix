@@ -6,10 +6,10 @@
 }:
 
 let
-  cfg = config.myfeatures.vm;
+  cfg = config.sysfeatures.vm;
 in
 {
-  options.myfeatures.vm = {
+  options.sysfeatures.vm = {
     enable = lib.mkEnableOption "QEMU/KVM, virt-manager, bottles";
   };
 
