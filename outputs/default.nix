@@ -58,7 +58,10 @@ let
         inputs.agenix.nixosModules.age
         {
           mySystem.username = username;
-          nixpkgs.overlays = [ (import ../overlays) ];
+          nixpkgs.overlays = [
+            (import ../overlays)
+            inputs.nix-alien.overlays.default
+          ];
           home-manager = {
             useGlobalPkgs = true;
             useUserPackages = true;
@@ -99,7 +102,10 @@ let
         inputs.agenix.nixosModules.age
         {
           mySystem.username = username;
-          nixpkgs.overlays = [ (import ../overlays) ];
+          nixpkgs.overlays = [
+            (import ../overlays)
+            inputs.nix-alien.overlays.default
+          ];
         }
       ];
     };
@@ -205,7 +211,10 @@ in
       ];
 
       config = {
-        nixpkgs.overlays = [ (import ../overlays) ];
+        nixpkgs.overlays = [
+          (import ../overlays)
+          inputs.nix-alien.overlays.default
+        ];
 
         mySystem.username = lib.mkDefault myvars.username;
         mySystem.kernelPackage = lib.mkDefault nixpkgs.linuxPackages_latest;

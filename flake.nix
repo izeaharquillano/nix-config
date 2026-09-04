@@ -54,6 +54,10 @@
       url = "github:cachix/git-hooks.nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    nix-alien = {
+      url = "github:thiagokokada/nix-alien";
+    };
   };
 
   outputs = inputs: import ./outputs inputs;
