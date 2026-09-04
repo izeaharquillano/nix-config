@@ -1,4 +1,4 @@
-# nixos-conf
+# nix-config
 
 A multi-host, cross-platform NixOS and macOS configuration using flakes and Home Manager. A gruvbox themed (mostly) configuration implemented with Noctalia, Niri, and Hyprland.
 
@@ -11,7 +11,7 @@ A multi-host, cross-platform NixOS and macOS configuration using flakes and Home
 ## Overview
 
 ```
-nixos-conf/
+nix-config/
 ├── flake.nix              # Entry point (inputs only, outputs delegated)
 ├── outputs/               # Flake outputs (nixosConfigurations, checks, devShells)
 ├── lib/                   # Custom helpers (scanPaths, relativeToRoot)

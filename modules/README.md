@@ -25,21 +25,21 @@ The `nixosModules.default` output can be consumed by other flakes:
 {
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
-    nixos-conf.url = "github:ize/nixos-conf";
+    nix-config.url = "github:ize/nix-config";
   };
 
-  outputs = { self, nixpkgs, nixos-conf, ... }: {
+  outputs = { self, nixpkgs, nix-config, ... }: {
     nixosConfigurations.myhost = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
       modules = [
-        nixos-conf.nixosModules.default
+        nix-config.nixosModules.default
         {
           specialArgs = {
             hostname = "myhost";
             username = "myuser";
             flakeRoot = ./.;
             inputs = inputs;
-            mylib = nixos-conf.legacyPackages.x86_64-linux.mylib or {};
+            mylib = nix-config.legacyPackages.x86_64-linux.mylib or {};
           };
 
           mySystem.username = "myuser";
