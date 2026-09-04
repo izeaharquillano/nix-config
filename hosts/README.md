@@ -8,6 +8,7 @@ Each subdirectory represents a machine. NixOS hosts live under `nixos/`, macOS h
 |---|---|---|---|---|
 | `padrick` | NixOS | Laptop | AMD, BTRFS, Wayland | Daily use |
 | `jobert` | NixOS | Gaming Laptop | AMD + NVIDIA, BTRFS, Wayland | Work/gaming |
+| `server-example` | NixOS | Server | (placeholder) | Example server skeleton |
 
 ### padrick: Daily Use ThinkPad
 
@@ -38,7 +39,7 @@ features = {
 
 The gaming module configures Steam (with remote play + dedicated server firewall rules), Proton GE, Gamescope, Gamemode, MangoHud, and GOverlay. NVIDIA-specific hardware config is in `hosts/nixos/jobert/host-settings.nix` (open driver, VA-API, Wayland env vars, 32-bit OpenGL).
 
-## Adding a New NixOS Host
+## Adding a New Desktop Host
 
 ### 1. Create the host directory
 
@@ -60,9 +61,8 @@ sudo nixos-generate-config --show-hardware-config > hosts/nixos/<name>/hardware-
 
 {
   imports = [
-    ../../modules/nixos/core
-    ../../modules/nixos/desktop   # skip for servers
-    ../../modules/features
+    ../../../modules/nixos/desktop.nix
+    ../../../modules/features
     ./hardware-configuration.nix
     ./packages.nix
     ./services.nix
@@ -143,9 +143,8 @@ Optionally, create `noctalia-host-settings.toml` for Noctalia lockscreen widgets
 
 {
   imports = [
-    ../../core
-    ../../linux
-    ../../features
+    ../../../linux/gui.nix
+    ../../../base/features
     ./packages.nix
     inputs.niri.homeModules.niri
     inputs.noctalia.homeModules.default
@@ -178,6 +177,47 @@ ssh-keyscan <name> 2>/dev/null | grep ssh-ed25519
 # Add key to secrets/secrets.nix and rekey (see root README)
 sudo nixos-rebuild switch --flake .#<name>
 ```
+
+## Adding a New Server Host
+
+### 1. Create the host directory
+
+```bash
+mkdir -p hosts/nixos/<name>
+```
+
+### 2. Generate hardware config
+
+```bash
+sudo nixos-generate-config --show-hardware-config > hosts/nixos/<name>/hardware-configuration.nix
+```
+
+### 3. Create `hosts/nixos/<name>/default.nix`
+
+```nix
+{ config, pkgs, lib, ... }:
+
+{
+  imports = [
+    ../../../modules/nixos/server
+    ./hardware-configuration.nix
+  ];
+
+  networking.hostName = "<name>";
+
+  programs.zsh.enable = true;
+
+  system.stateVersion = "26.05";
+}
+```
+
+### 4. Register in `outputs/default.nix`
+
+```nix
+nixosConfigurations.<name> = mkNixosServerHost "<name>" "x86_64-linux";
+```
+
+No home-manager is included for servers. If you want headless HM tools, import `home/linux/core.nix` in a home-manager entry and add a `mkNixosServerHost` variant with HM.
 
 ## Disabling Services Per Host
 

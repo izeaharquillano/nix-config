@@ -4,18 +4,46 @@ System-level configuration split into reusable modules, organized by platform.
 
 ## Module Types
 
-- **`nixos/core/`** — Base NixOS config (boot, networking, nix, users, SSH, firewall). Always imported.
+- **`base/`** — Cross-platform NixOS config (nix settings, direnv). Shared between NixOS and Darwin.
+- **`nixos/base/`** — Core NixOS config (boot, networking, nix, users, SSH, firewall). Always imported.
   - `system.nix` — Boot, networking, nix settings, `mySystem.kernelPackage` and `mySystem.username` options
   - `locale.nix` — Timezone, locale, hardware clock (UTC)
   - `ssh.nix` — OpenSSH (key-based auth only, root login denied)
   - `secrets.nix` — agenix secret declarations
   - `security.nix` — Neovim, nix-ld, firewall (base rules)
   - `packages.nix` — Base system packages
-- **`nixos/desktop/`** — GUI/desktop config (greetd, Niri, PipeWire, fonts). Only for desktop hosts.
+- **`nixos/desktop.nix`** — Entry point for desktop/GUI hosts. Imports `nixos/base/` + `nixos/desktop/`.
+- **`nixos/desktop/`** — GUI/desktop modules (greetd, Niri, PipeWire, fonts).
+- **`nixos/server/`** — Entry point for headless server hosts. Imports `nixos/base/` + server-specific modules.
 - **`features/`** — Optional features gated behind `mkEnableOption`. Auto-imported via `scanPaths`.
 - **`darwin/`** — macOS system config (placeholder).
 
 All directories use `scanPaths` for auto-import — create a `.nix` file and it's picked up automatically.
+
+## Adding a Desktop Host
+
+Import `modules/nixos/desktop.nix` (which layers `nixos/base/` + `nixos/desktop/`):
+
+```nix
+imports = [
+  ../../../modules/nixos/desktop.nix
+  ../../../modules/features
+  ./hardware-configuration.nix
+];
+```
+
+## Adding a Server Host
+
+Import `modules/nixos/server` (which layers `nixos/base/` + server modules):
+
+```nix
+imports = [
+  ../../../modules/nixos/server
+  ./hardware-configuration.nix
+];
+```
+
+Then register with `mkNixosServerHost` in `outputs/default.nix` (no home-manager).
 
 ## Using as an External Module
 

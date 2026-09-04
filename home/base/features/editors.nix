@@ -18,7 +18,7 @@ lib.mkIf enabled {
       jnoortheen.nix-ide
     ];
   };
+  xdg.configFile."Code/User/settings.json".source = ../../../config/vscode/settings.json;
 
-  xdg.configFile."Code/User/settings.json".source = ../../config/vscode/settings.json;
-  xdg.configFile."vscode/.vimrc".source = ../../config/vscode/.vimrc;
+  xdg.configFile."vscode/.vimrc".source = ../../../config/vscode/.vimrc;
 }

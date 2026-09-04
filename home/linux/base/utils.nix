@@ -5,7 +5,7 @@
     (pkgs.writeShellApplication {
       name = "output-scale";
       runtimeInputs = with pkgs; [ jq ];
-      text = builtins.readFile ../../scripts/output-scale;
+      text = builtins.readFile ../../../scripts/output-scale;
     })
   ]
   ++ (with pkgs; [

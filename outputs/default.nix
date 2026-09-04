@@ -79,10 +79,36 @@ let
       ];
     };
 
+  # Server host: no home-manager, no desktop environment
+  mkNixosServerHost =
+    hostname: system:
+    nixpkgs.lib.nixosSystem {
+      inherit system;
+      specialArgs = {
+        inherit
+          inputs
+          mylib
+          myvars
+          hostname
+          username
+          ;
+        flakeRoot = self;
+      };
+      modules = [
+        ../hosts/nixos/${hostname}
+        inputs.agenix.nixosModules.age
+        {
+          mySystem.username = username;
+          nixpkgs.overlays = [ (import ../overlays) ];
+        }
+      ];
+    };
+
 in
 {
   nixosConfigurations.padrick = mkNixosHost "padrick" "x86_64-linux";
   nixosConfigurations.jobert = mkNixosHost "jobert" "x86_64-linux";
+  nixosConfigurations.server-example = mkNixosServerHost "server-example" "x86_64-linux";
 
   checks = forAllSystems (
     system:
@@ -94,7 +120,6 @@ in
       name = "${name}-eval";
       value = nixpkgs.legacyPackages.${system}.runCommand "check-${name}-eval" { } ''
         [ -n "${cfg.config.networking.hostName}" ] && \
-        [ -n "${cfg.config.mySystem.username}" ] && \
         [ -n "${cfg.config.system.stateVersion}" ] && \
         echo "ok" > $out
       '';

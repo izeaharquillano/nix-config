@@ -4,17 +4,29 @@ User-level configuration managed by Home Manager, organized by platform.
 
 ## Module Types
 
-- **`core/`** — Cross-platform (shell, cli, dev, editors, notes, terminal). Always imported.
-- **`linux/`** — Linux-only GUI apps and dotfiles (WM configs, desktop, web, wayland-utils, desktop-apps).
-- **`features/`** — Toggleable features that read from `osConfig.features.*`. Auto-imported via `scanPaths`.
+- **`base/`** — Cross-platform base configs shared between Linux and macOS.
+  - `core/` — Shell, CLI tools, editors, terminal (always imported).
+  - `features/` — Toggleable features that read from `osConfig.features.*`.
+  - `home.nix` — Username, stateVersion, homeDirectory.
+- **`linux/`** — Linux-specific home modules.
+  - `base/` — Linux-only essentials (desktop env, wayland utils).
+  - `gui/` — Full Linux GUI (WM configs, apps, browsers, media).
+  - `core.nix` — Entry point for headless Linux: imports `base/core` + `base/home.nix` + `linux/base`.
+  - `gui.nix` — Entry point for Linux GUI: imports `base/core` + `base/home.nix` + `linux/base` + `linux/gui`.
 - **`darwin/`** — macOS-only home modules (placeholder).
 - **`hosts/<name>/`** — Host-specific overrides, flake input imports, and hardware config symlinks.
 
-All directories use `scanPaths` for auto-import — create a `.nix` file and it's picked up automatically.
+## Entry Points
+
+| Host Type | HM Entry Point | Composes |
+|---|---|---|
+| Desktop (GUI) | `home/hosts/nixos/<name>.nix` → `linux/gui.nix` | base/core + base/home.nix + linux/base + linux/gui |
+| Server (headless) | `home/hosts/nixos/<name>.nix` → `linux/core.nix` | base/core + base/home.nix + linux/base |
+| macOS | `home/hosts/darwin/<name>.nix` | TBD |
 
 ## How It Works
 
-The host's HM entry point (`home/hosts/<name>/default.nix`) imports `core/`, the platform directory (`linux/` or `darwin/`), `features/`, plus flake module inputs (niri, noctalia).
+The host's HM entry point (`home/hosts/<name>/default.nix`) imports the platform entry point (`linux/gui.nix` or `linux/core.nix`), plus `features/`, host-specific packages, and flake module inputs (niri, noctalia).
 
 Config files in `config/` are consumed via `xdg.configFile` store copies. Host-specific settings in `home/hosts/<name>/config/` also use store copies. The `hostname` is passed via `specialArgs`, allowing modules like `noctalia.nix` to read host-specific settings.
 
@@ -24,7 +36,7 @@ HM renames conflicting files with `.hm-bak` instead of failing (`home-manager.ba
 
 ## Adding a Module
 
-Create a `.nix` file in `home/core/` or `home/linux/`:
+Create a `.nix` file in `home/base/core/` (cross-platform) or `home/linux/gui/` (Linux GUI):
 
 ```nix
 { pkgs, ... }:
@@ -41,16 +53,15 @@ It will be auto-imported by `scanPaths` in `default.nix`.
 
 ## Host-Specific Overrides
 
-In `home/hosts/<name>/default.nix`, add host-specific settings after the imports:
+In `home/hosts/nixos/<name>/default.nix`, add host-specific settings after the imports:
 
 ```nix
 { config, inputs, ... }:
 
 {
   imports = [
-    ../../../core
-    ../../../linux
-    ../../../features
+    ../../../linux/gui.nix
+    ../../../base/features
     ./packages.nix
     inputs.niri.homeModules.niri
     inputs.noctalia.homeModules.default
