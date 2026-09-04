@@ -23,5 +23,14 @@ in
     };
 
     users.users.${config.mySystem.username}.linger = true;
+
+    virtualisation.podman = {
+      enable = true;
+      dockerCompat = true;
+    };
+
+    environment.systemPackages = with pkgs; [
+      distrobox
+    ];
   };
 }
