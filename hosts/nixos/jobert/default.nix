@@ -30,6 +30,7 @@
     gaming.enable = true;
     docker.enable = true;
     fhs.enable = true;
+    recording.enable = true;
   };
 
   system.stateVersion = "26.05";

@@ -30,10 +30,12 @@ in
       dockerCompat = true;
     };
 
-    virtualisation.containers.registries.search = [
-      "docker.io"
+    virtualisation.containers.registries.settings = {
+      unqualified-search-registries = [
+        "docker.io"
         "quay.io"
-    ];
+      ];
+    };
 
     environment.systemPackages = with pkgs; [
       distrobox
