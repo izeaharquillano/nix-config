@@ -3,7 +3,6 @@
 let
   shellAliases = {
     svim = "sudoedit";
-    cat = "bat";
     ls = "eza --icons=always --color=always --group-directories-first";
     ll = "eza -alF --icons=always --color=always --group-directories-first";
     lll = "eza -al --icons=always --group-directories-first --git --color-scale=all --color-scale-mode=gradient";
