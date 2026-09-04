@@ -51,15 +51,20 @@ gc:
 [group('nix')]
 clean:
     sudo nix profile wipe-history --profile /nix/var/nix/profiles/system
-    nix profile wipe-history --profile "$XDG_STATE_HOME/nix/profiles/home-manager"
+    nix profile wipe-history --profile "${XDG_STATE_HOME:-$HOME/.local/state}/nix/profiles/home-manager"
 
 # Delete all generations except current + garbage collect (system + home-manager)
 [group('nix')]
 purge:
-    sudo nix profile wipe-history --profile /nix/var/nix/profiles/system --last 1
-    nix profile wipe-history --profile "$XDG_STATE_HOME/nix/profiles/home-manager" --last 1
+    sudo nix profile wipe-history --profile /nix/var/nix/profiles/system
+    nix profile wipe-history --profile "${XDG_STATE_HOME:-$HOME/.local/state}/nix/profiles/home-manager"
     sudo nix-collect-garbage -d
     nix-collect-garbage -d
+
+# Deduplicate identical files in the nix store via hard links
+[group('nix')]
+optimise:
+    sudo nix store optimise
 
 # Enter a dev shell with common tools
 [group('nix')]
