@@ -55,7 +55,8 @@
   };
 
   networking.firewall = {
-    allowedUDPPorts = [ 7654 ]; # for choicer voicer
+    allowedUDPPorts = [ 9993 ]; # for zerotier
+    # allowedUDPPorts = [ 7654 ]; # for choicer voicer
     # allowedTCPPorts = [ 7654 ]; # for choicer voicer
   };
 
