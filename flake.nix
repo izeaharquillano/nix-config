@@ -1,13 +1,6 @@
 {
   description = "An Epic NixOS Configuration";
 
-  nixConfig = {
-    extra-substituters = [
-      "https://cache.nixos.org"
-      "https://nix-community.cachix.org"
-    ];
-  };
-
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
 

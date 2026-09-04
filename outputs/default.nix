@@ -159,8 +159,8 @@ in
     // lib.mapAttrs' (name: cfg: {
       name = "${name}-eval";
       value = nixpkgs.legacyPackages.${system}.runCommand "check-${name}-eval" { } ''
-        [ -n "${cfg.config.networking.hostName}" ] && \
-        [ -n "${cfg.config.system.stateVersion}" ] && \
+        [ -n "${cfg.config.networking.hostName}" ] || exit 1
+        [ -n "${cfg.config.system.stateVersion}" ] || exit 1
         echo "ok" > $out
       '';
     }) self.nixosConfigurations

@@ -11,11 +11,8 @@
     allowPing = true;
   };
 
-  programs = {
-    neovim = {
-      enable = true;
-      defaultEditor = true;
-    };
-    nix-ld.enable = true;
+  programs.neovim = {
+    enable = true;
+    defaultEditor = true;
   };
 }
