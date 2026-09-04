@@ -1,6 +1,7 @@
 {
   pkgs,
   lib,
+  flakeRoot,
   config,
   ...
 }:
@@ -75,9 +76,8 @@ in
     services.zerotierone = lib.mkIf cfg.zerotier.enable {
       enable = true;
       joinNetworks = [ cfg.zerotier.networkId ];
-      networking.firewall = {
-        allowedUDPPorts = [ 9993 ]; # for zerotier
-      };
     };
+
+    networking.firewall.allowedUDPPorts = lib.mkIf cfg.zerotier.enable [ 9993 ];
   };
 }
