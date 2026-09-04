@@ -8,7 +8,6 @@ Each subdirectory represents a machine. NixOS hosts live under `nixos/`, macOS h
 |---|---|---|---|---|
 | `padrick` | NixOS | Laptop | AMD, BTRFS, Wayland | Daily use |
 | `jobert` | NixOS | Gaming Laptop | AMD + NVIDIA, BTRFS, Wayland | Work/gaming |
-| `server-example` | NixOS | Server | (placeholder) | Example server skeleton |
 
 ### padrick: Daily Use ThinkPad
 
@@ -218,6 +217,58 @@ nixosConfigurations.<name> = mkNixosServerHost "<name>" "x86_64-linux";
 ```
 
 No home-manager is included for servers. If you want headless HM tools, import `home/linux/core.nix` in a home-manager entry and add a `mkNixosServerHost` variant with HM.
+
+## Adding a New macOS Host
+
+### 1. Create the host directory
+
+```bash
+mkdir -p hosts/darwin/<name>
+mkdir -p home/hosts/darwin/<name>
+```
+
+### 2. Create `hosts/darwin/<name>/default.nix`
+
+```nix
+{ config, pkgs, lib, ... }:
+
+{
+  imports = [
+    ../../../modules/darwin
+  ];
+
+  networking.hostName = "<name>";
+
+  system.stateVersion = 5;
+}
+```
+
+### 3. Create Home Manager entry point
+
+`home/hosts/darwin/<name>/default.nix`:
+
+```nix
+{ config, inputs, ... }:
+
+{
+  imports = [
+    ../../darwin
+    ../../base/home.nix
+  ];
+}
+```
+
+### 4. Register in `outputs/default.nix`
+
+```nix
+darwinConfigurations.<name> = mkDarwinHost "<name>" "aarch64-darwin";
+```
+
+### 5. First deploy
+
+```bash
+darwin-rebuild switch --flake .#<name>
+```
 
 ## Disabling Services Per Host
 

@@ -15,6 +15,7 @@ let
 
   forAllSystems = lib.genAttrs [
     "x86_64-linux"
+    "aarch64-darwin"
   ];
 
   treefmtEval = forAllSystems (
@@ -79,7 +80,6 @@ let
       ];
     };
 
-  # Server host: no home-manager, no desktop environment
   mkNixosServerHost =
     hostname: system:
     nixpkgs.lib.nixosSystem {
@@ -104,11 +104,51 @@ let
       ];
     };
 
+  mkDarwinHost =
+    hostname: system:
+    inputs.nix-darwin.lib.darwinSystem {
+      inherit system;
+      specialArgs = {
+        inherit
+          inputs
+          mylib
+          myvars
+          hostname
+          username
+          ;
+        flakeRoot = self;
+      };
+      modules = [
+        ../hosts/darwin/${hostname}
+        inputs.home-manager.darwinModules.home-manager
+        inputs.agenix.nixosModules.age
+        {
+          mySystem.username = username;
+          nixpkgs.overlays = [ (import ../overlays) ];
+          home-manager = {
+            useGlobalPkgs = true;
+            useUserPackages = true;
+            backupFileExtension = "hm-bak";
+            users.${username} = import ../home/hosts/darwin/${hostname};
+            extraSpecialArgs = {
+              inherit
+                inputs
+                mylib
+                myvars
+                hostname
+                username
+                ;
+              flakeRoot = self;
+            };
+          };
+        }
+      ];
+    };
+
 in
 {
   nixosConfigurations.padrick = mkNixosHost "padrick" "x86_64-linux";
   nixosConfigurations.jobert = mkNixosHost "jobert" "x86_64-linux";
-  nixosConfigurations.server-example = mkNixosServerHost "server-example" "x86_64-linux";
 
   checks = forAllSystems (
     system:
