@@ -2,7 +2,6 @@
   pkgs,
   lib,
   config,
-  flakeRoot,
   ...
 }:
 
@@ -12,6 +11,14 @@ in
 {
   options.features.p2p = {
     enable = lib.mkEnableOption "P2P services (netbird, syncthing, localsend)";
+    zerotier = {
+      enable = lib.mkEnableOption "ZeroTier networking";
+      networkId = lib.mkOption {
+        type = lib.types.str;
+        example = "8056c2e21c123456";
+        description = "ZeroTier network ID to join on startup";
+      };
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -63,6 +70,14 @@ in
     programs.localsend = {
       enable = true;
       openFirewall = true;
+    };
+
+    services.zerotierone = lib.mkIf cfg.zerotier.enable {
+      enable = true;
+      joinNetworks = [ cfg.zerotier.networkId ];
+      networking.firewall = {
+        allowedUDPPorts = [ 9993 ]; # for zerotier
+      };
     };
   };
 }

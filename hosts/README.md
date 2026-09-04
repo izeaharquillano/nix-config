@@ -19,6 +19,8 @@ features = {
   p2p.enable = true;
   docker.enable = true;
   vm.enable = true;
+  editors.enable = true;
+  fhs.enable = true;
 };
 ```
 
@@ -29,10 +31,18 @@ features = {
   btrfs.enable = true;
   secureboot.enable = true;
   zswap.enable = true;
-  p2p.enable = true;
+  p2p = {
+    enable = true;
+    zerotier = {
+      enable = true;
+      networkId = "YOUR_NETWORK_ID";
+    };
+  };
   vm.enable = true;
   gaming.enable = true;
   docker.enable = true;
+  fhs.enable = true;
+  recording.enable = true;
 };
 ```
 

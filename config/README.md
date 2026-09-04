@@ -4,7 +4,7 @@ Raw application configuration files (dotfiles) consumed by Home Manager via `xdg
 
 ## How Dotfiles Are Consumed
 
-In `home/core/*.nix` and `home/linux/*.nix`, config files are referenced via `xdg.configFile`:
+In `home/base/core/*.nix` and `home/linux/gui/*.nix`, config files are referenced via `xdg.configFile`:
 
 ```nix
 # Single file
@@ -23,10 +23,10 @@ Host-specific settings live in `home/hosts/<name>/config/` and are store-copied 
 
 - **Niri**: `niri-host-settings.kdl` — included by `config.kdl` via `include "./niri-host-settings.kdl"`
 - **Hyprland**: `hypr-host-settings.lua` — loaded via `require("hypr-host-settings")`
-- **Noctalia**: `noctalia-host-settings.toml` — written to `host-settings.toml` by `home/linux/noctalia.nix`
+- **Noctalia**: `noctalia-host-settings.toml` — written to `host-settings.toml` by `home/linux/gui/noctalia.nix`
 
 ## Adding a New Dotfile
 
 1. Place config file(s) in `config/<app>/`
-2. Create a module in `home/core/<app>.nix` or `home/linux/<app>.nix` with the appropriate `xdg.configFile` reference
+2. Create a module in `home/base/core/<app>.nix` or `home/linux/gui/<app>.nix` with the appropriate `xdg.configFile` reference
 3. It will be auto-imported by `scanPaths` in `default.nix`

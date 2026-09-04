@@ -92,12 +92,27 @@ features = {
   zswap.enable = true;       # Zswap with zstd compression
   p2p.enable = true;         # Syncthing, NetBird VPN, LocalSend
   docker.enable = true;      # Docker (rootless, auto-prune)
+  fhs.enable = true;         # FHS env + nix-alien for unpatched binaries
+  editors.enable = true;     # Heavy code editors (VSCode, etc.)
+  recording.enable = true;   # OBS Studio and recording software
 };
 ```
 
 ### P2P Feature
 
-The `p2p` feature module configures Syncthing, NetBird, and LocalSend. Enable with `features.p2p.enable = true`. This opens UDP 51820 for NetBird WireGuard, enables Syncthing with default sync/discovery ports, auto-starts NetBird via setup key, and enables LocalSend with firewall access.
+The `p2p` feature module configures Syncthing, NetBird, LocalSend, and optionally ZeroTier. Enable with `features.p2p.enable = true`. This opens UDP 51820 for NetBird WireGuard, enables Syncthing with default sync/discovery ports, auto-starts NetBird via setup key, and enables LocalSend with firewall access.
+
+ZeroTier is optional via a sub-option:
+
+```nix
+features.p2p = {
+  enable = true;
+  zerotier = {
+    enable = true;
+    networkId = "8056c2e21c123456";
+  };
+};
+```
 
 ### Adding a New Feature
 

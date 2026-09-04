@@ -25,7 +25,13 @@
     btrfs.enable = true;
     secureboot.enable = true;
     zswap.enable = true;
-    p2p.enable = true;
+    p2p = {
+      enable = true;
+      zerotier = {
+        enable = true;
+        networkId = "YOUR_NETWORK_ID";
+      };
+    };
     vm.enable = true;
     gaming.enable = true;
     docker.enable = true;

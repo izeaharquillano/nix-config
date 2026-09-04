@@ -80,6 +80,21 @@ features = {
   zswap.enable = true;       # Zswap with zstd compression
   p2p.enable = true;         # Syncthing, NetBird VPN, LocalSend
   docker.enable = true;      # Docker (rootless, auto-prune)
+  fhs.enable = true;         # FHS env + nix-alien for unpatched binaries
+  editors.enable = true;     # Heavy code editors (VSCode, etc.)
+  recording.enable = true;   # OBS Studio and recording software
+};
+```
+
+P2P also supports an optional ZeroTier sub-feature:
+
+```nix
+features.p2p = {
+  enable = true;
+  zerotier = {
+    enable = true;
+    networkId = "8056c2e21c123456";
+  };
 };
 ```
 
@@ -195,8 +210,8 @@ The `vars/` directory exports user identity (`username`, `userfullname`, `userem
 
 ## Security
 
-- **Firewall:** Enabled system-wide, explicit port allowlists (`modules/nixos/core/security.nix`)
-- **SSH:** Key-based auth only, root login denied (`modules/nixos/core/ssh.nix`)
+- **Firewall:** Enabled system-wide, explicit port allowlists (`modules/nixos/base/security.nix`)
+- **SSH:** Key-based auth only, root login denied (`modules/nixos/base/ssh.nix`)
 - **Secrets:** agenix with age + SSH host keys (see [Secrets Management](#secrets-management))
 - **RealtimeKit:** Grants real-time scheduling to PipeWire
 - **Secure Boot:** Optional via `features.secureboot.enable` (Lanzaboote)
@@ -204,7 +219,7 @@ The `vars/` directory exports user identity (`username`, `userfullname`, `userem
 
 ## Nix Settings
 
-Configured in `modules/base/nix.nix` and `modules/nixos/core/system.nix`:
+Configured in `modules/base/nix.nix` and `modules/nixos/base/system.nix`:
 
 - `mySystem.kernelPackage`: Configurable kernel (default: `linuxPackages_latest`)
 - `mySystem.username`: Primary user (default: `"ize"`)

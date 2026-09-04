@@ -9,5 +9,4 @@ in
 {
   "nix-access-tokens.age".publicKeys = systems;
   "netbird-setup-key.age".publicKeys = systems;
-  "zerotier-network-id.age".publicKeys = systems;
 }
