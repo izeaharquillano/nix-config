@@ -9,6 +9,8 @@
     })
   ]
   ++ (with pkgs; [
+    dnsmasq
+    efibootmgr
     ncdu
     xdg-user-dirs
     waybar
