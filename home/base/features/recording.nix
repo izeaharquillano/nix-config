@@ -6,7 +6,7 @@
 }:
 
 let
-  enabled = lib.attrByPath [ "features" "editors" "enable" ] false osConfig;
+  enabled = lib.attrByPath [ "features" "recording" "enable" ] false osConfig;
 in
 lib.mkIf enabled {
   programs.obs-studio = {
