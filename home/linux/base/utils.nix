@@ -9,6 +9,7 @@
     })
   ]
   ++ (with pkgs; [
+    p7zip
     dnsmasq
     efibootmgr
     ncdu
