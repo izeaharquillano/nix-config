@@ -24,7 +24,7 @@
     secureboot.enable = true;
     zswap.enable = true;
     p2p.enable = true;
-    docker.enable = true;
+    containers.enable = true;
     vm.enable = true;
     editors.enable = true;
     fhs.enable = true;

@@ -34,7 +34,7 @@
     };
     vm.enable = true;
     gaming.enable = true;
-    docker.enable = true;
+    containers.enable = true;
     fhs.enable = true;
     recording.enable = true;
   };

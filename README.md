@@ -78,18 +78,18 @@ Optional features are gated behind `mkEnableOption` in `modules/features/`. See 
 features = {
   btrfs.enable = true;       # BTRFS compression/tuning
   secureboot.enable = true;  # UEFI Secure Boot via Lanzaboote
-  vm.enable = true;          # QEMU/KVM, virt-manager, Bottles, DOSBox
+  vm.enable = true;          # QEMU/KVM, virt-manager, SPICE, Bottles, DOSBox
   gaming.enable = true;      # Steam, Gamescope, Gamemode, MangoHud
   zswap.enable = true;       # Zswap with zstd compression
   p2p.enable = true;         # Syncthing, NetBird VPN, LocalSend
-  docker.enable = true;      # Docker (rootless, auto-prune)
+  containers.enable = true;  # Docker (rootless), Podman, Distrobox
   fhs.enable = true;         # FHS env + nix-alien for unpatched binaries
   editors.enable = true;     # Heavy code editors (VSCode, etc.)
   recording.enable = true;   # OBS Studio and recording software
 };
 ```
 
-P2P also supports an optional ZeroTier sub-feature:
+P2P also supports an optional ZeroTier sub-feature, and VM supports independent toggles for QEMU, Bottles, and DOSBox:
 
 ```nix
 features.p2p = {
@@ -98,6 +98,13 @@ features.p2p = {
     enable = true;
     networkId = "8056c2e21c123456";
   };
+};
+
+features.vm = {
+  enable = true;
+  qemu.enable = true;     # QEMU/KVM, virt-manager, SPICE (default: true)
+  bottles.enable = true;  # Wine runner (default: true)
+  dosbox.enable = true;   # DOSBox emulator (default: true)
 };
 ```
 
