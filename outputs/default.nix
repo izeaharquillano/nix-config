@@ -194,6 +194,7 @@ in
         ];
         packages = [
           agenix.packages.${system}.default
+          pkgs.just
           pkgs.nixfmt
           pkgs.deadnix
           pkgs.statix

@@ -4,10 +4,6 @@ let
   shellAliases = {
     svim = "sudoedit";
     cat = "bat";
-    bldswc = "sudo nixos-rebuild switch";
-    bldflk = "sudo nixos-rebuild switch --flake /etc/nixos#$(hostname)";
-    nixgc = "sudo nix-collect-garbage --delete-older-than 14d";
-    sagenix = "sudo agenix -i /etc/ssh/ssh_host_ed25519_key";
     ls = "eza --icons=always --color=always --group-directories-first";
     ll = "eza -alF --icons=always --color=always --group-directories-first";
     lll = "eza -al --icons=always --group-directories-first --git --color-scale=all --color-scale-mode=gradient";

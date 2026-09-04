@@ -13,6 +13,7 @@ A multi-host, cross-platform NixOS and macOS configuration using flakes and Home
 ```
 nix-config/
 ├── flake.nix              # Entry point (inputs only, outputs delegated)
+├── Justfile               # Task runner (just --list to see all commands)
 ├── outputs/               # Flake outputs (nixosConfigurations, checks, devShells)
 ├── lib/                   # Custom helpers (scanPaths, relativeToRoot)
 ├── overlays/              # Nixpkgs overlays (auto-loaded)
@@ -29,10 +30,10 @@ nix-config/
 ## Quick Start
 
 ```bash
-# Deploy for padrick
+# Deploy for padrick (or use just)
 sudo nixos-rebuild switch --flake .#padrick
 
-# Deploy for jobert
+# Deploy for jobert (or use just)
 sudo nixos-rebuild switch --flake .#jobert
 
 # Build without switching
@@ -42,22 +43,24 @@ nix build .#nixosConfigurations.padrick.config.system.build.toplevel
 nix fmt
 ```
 
+All commands above (and more) are available via [just](https://just.systems/) — run `just --list` to see them all. For example: `just padrick`, `just switch`, `just fmt`, `just gc`.
+
 ## Updating
 
 ```bash
-# Update all flake inputs
+# Update all flake inputs (or: just update)
 nix flake update
 
-# Update a specific input
+# Update a specific input (or: just update-input nixpkgs)
 nix flake update nixpkgs
 
-# Rebuild after updating
+# Rebuild after updating (or: just switch)
 sudo nixos-rebuild switch --flake .#<hostname>
 
-# Roll back to a previous generation
+# Roll back to a previous generation (or: just list-gens)
 sudo nix-env --list-generations --profile /nix/var/nix/profiles/system
 
-# Clean up old generations (auto-collected weekly, 14-day retention)
+# Clean up old generations (or: just gc)
 sudo nix-collect-garbage -d
 ```
 
@@ -109,17 +112,18 @@ This config uses [agenix](https://github.com/ryantm/agenix) for encrypted secret
 3. Feature modules declare `age.secrets.<name>` pointing to the `.age` file
 4. At boot, agenix decrypts secrets to `/run/agenix/` with the specified mode/owner
 5. Services reference the decrypted path via `config.age.secrets.<name>.path`
+6. **Rekeying must be done from an existing authorized host** — a new host cannot decrypt secrets until its key has been added to `secrets.nix` and the secrets re-encrypted by a host that already has access
 
 ### Quick Reference
 
 ```bash
-# Edit a secret
+# Edit a secret (or: just secrets-edit <secret>.age)
 sudo agenix -i /etc/ssh/ssh_host_ed25519_key -e <secret>.age
 
-# Decrypt to stdout (debugging)
+# Decrypt to stdout (or: just secrets-decrypt <secret>.age)
 sudo agenix -i /etc/ssh/ssh_host_ed25519_key -d <secret>.age
 
-# Re-encrypt after key changes
+# Re-encrypt after key changes (or: just secrets-rekey)
 sudo agenix -i /etc/ssh/ssh_host_ed25519_key --rekey
 ```
 
@@ -132,9 +136,9 @@ sudo agenix -i /etc/ssh/ssh_host_ed25519_key --rekey
 
 ### Adding a Secret
 
-1. Create: `sudo agenix -i /etc/ssh/ssh_host_ed25519_key -e <secret-name>.age`
+1. Create: `just secrets-edit <secret-name>.age`
 2. Declare keys in `secrets/secrets.nix`: `"<secret-name>.age".publicKeys = systems;`
-3. Rekey: `sudo agenix -i /etc/ssh/ssh_host_ed25519_key --rekey`
+3. Rekey from an existing authorized host: `just secrets-rekey`
 4. Reference in a module:
    ```nix
    age.secrets.<secret-name> = {
@@ -149,14 +153,15 @@ sudo agenix -i /etc/ssh/ssh_host_ed25519_key --rekey
 
 SSH host keys are generated on first boot, so two passes are needed:
 
-1. First deploy (generates keys): `sudo nixos-rebuild switch --flake .#newhost`
+1. First deploy on the new host (generates keys): `just switch` (or `sudo nixos-rebuild switch --flake .#newhost`)
 2. Grab the key: `ssh-keyscan newhost 2>/dev/null | grep ssh-ed25519`
-3. Add to `secrets/secrets.nix` and rekey
-4. Second deploy (decrypts secrets): `sudo nixos-rebuild switch --flake .#newhost`
+3. Add to `secrets/secrets.nix` (on an existing host with access)
+4. Rekey **from an existing authorized host**: `just secrets-rekey`
+5. Second deploy on the new host (now decrypts secrets): `just switch`
 
 ### Resetting a Host (Lost SSH Keys)
 
-Update the key binding in `secrets/secrets.nix` with the new host key, then `sudo agenix -i /etc/ssh/ssh_host_ed25519_key --rekey` and redeploy. If the lost host was the only one with access, re-create the secret from another host or backup.
+Update the key binding in `secrets/secrets.nix` with the new host key, then rekey **from another authorized host**: `just secrets-rekey`. Redeploy the affected host. If the lost host was the only one with access, re-create the secret from a backup.
 
 ## Flake Inputs
 
@@ -189,8 +194,8 @@ Update the key binding in `secrets/secrets.nix` with the new host key, then `sud
 ## Formatting & CI
 
 ```bash
-nix fmt                # Format all .nix files
-nix fmt -- --check     # Check without modifying
+nix fmt                # Format all .nix files (or: just fmt)
+nix fmt -- --check     # Check without modifying (or: just fmt-check)
 ```
 
 Uses `treefmt-nix` (nixfmt for Nix, shfmt for shell scripts) and `pre-commit-hooks` for git-level enforcement. CI runs on push/PR to `main`: flake checks + dry builds for all hosts.
@@ -198,6 +203,8 @@ Uses `treefmt-nix` (nixfmt for Nix, shfmt for shell scripts) and `pre-commit-hoo
 ## direnv
 
 The `.envrc` contains `use flake`, loading the dev shell automatically. Requires [direnv](https://direnv.net/) and `direnv allow` once. Add `accept-flake-config = true` to `~/.config/nix/nix.conf` if prompted.
+
+The dev shell includes `just`, `nixfmt`, `deadnix`, `statix`, and `agenix`. Run `just --list` to see all available commands.
 
 ## Custom Library
 
@@ -226,7 +233,7 @@ Configured in `modules/base/nix.nix` and `modules/nixos/base/system.nix`:
 - Experimental features: `nix-command`, `flakes`, `recursive-nix`
 - `sandbox = true`, `warn-dirty = false`
 - Automatic weekly `nix.optimise` and garbage collection (14-day retention)
-- **GitHub access token:** Optional, for private flakes / avoiding rate limits. Add via `sudo agenix -i /etc/ssh/ssh_host_ed25519_key -e nix-access-tokens.age` with content `access-tokens = github.com=ghp_<token>`. Auto-included via `nix.extraOptions` in `modules/nixos/core/secrets.nix`.
+- **GitHub access token:** Optional, for private flakes / avoiding rate limits. Add via `just secrets-edit nix-access-tokens.age` with content `access-tokens = github.com=ghp_<token>`. Auto-included via `nix.extraOptions` in `modules/nixos/core/secrets.nix`.
 
 ## Theme
 
