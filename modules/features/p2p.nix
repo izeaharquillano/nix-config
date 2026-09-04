@@ -23,7 +23,7 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    networking.firewall.allowedUDPPorts = [ 51820 ];
+    networking.firewall.allowedUDPPorts = [ 51820 ] ++ lib.optionals cfg.zerotier.enable [ 9993 ];
 
     age.secrets.netbird-setup-key = {
       file = "${flakeRoot}/secrets/netbird-setup-key.age";
@@ -77,7 +77,5 @@ in
       enable = true;
       joinNetworks = [ cfg.zerotier.networkId ];
     };
-
-    networking.firewall.allowedUDPPorts = lib.mkIf cfg.zerotier.enable [ 9993 ];
   };
 }
