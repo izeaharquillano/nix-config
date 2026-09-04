@@ -30,6 +30,11 @@ in
       dockerCompat = true;
     };
 
+    virtualisation.containers.registries.search = [
+      "docker.io"
+        "quay.io"
+    ];
+
     environment.systemPackages = with pkgs; [
       distrobox
     ];
