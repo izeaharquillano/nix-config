@@ -29,7 +29,7 @@
       enable = true;
       zerotier = {
         enable = true;
-        networkId = "YOUR_NETWORK_ID";
+        networkId = "88c5b1f339f6593b";
       };
     };
     vm.enable = true;
