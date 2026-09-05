@@ -122,17 +122,17 @@ gc-root:
 # Edit an encrypted secret (e.g. just secrets-edit nix-access-tokens.age)
 [group('secrets')]
 secrets-edit secret:
-    cd {{repo_root}}/secrets && sudo env RULES=./secrets.nix agenix -i /etc/ssh/ssh_host_ed25519_key -e {{secret}}
+    cd {{repo_root}}/secrets && sudo agenix -i /etc/ssh/ssh_host_ed25519_key -e {{secret}}
 
 # Decrypt a secret to stdout (e.g. just secrets-decrypt nix-access-tokens.age)
 [group('secrets')]
 secrets-decrypt secret:
-    cd {{repo_root}}/secrets && sudo env RULES=./secrets.nix agenix -i /etc/ssh/ssh_host_ed25519_key -d {{secret}}
+    cd {{repo_root}}/secrets && sudo agenix -i /etc/ssh/ssh_host_ed25519_key -d {{secret}}
 
 # Re-encrypt all secrets after key changes
 [group('secrets')]
 secrets-rekey:
-    sudo env RULES={{repo_root}}/secrets/secrets.nix agenix -i /etc/ssh/ssh_host_ed25519_key --rekey
+    cd {{repo_root}}/secrets && sudo agenix -i /etc/ssh/ssh_host_ed25519_key --rekey
 
 # ─── Dev Tools ──────────────────────────────────────────────────────────────
 
