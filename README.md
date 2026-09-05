@@ -84,12 +84,12 @@ features = {
   p2p.enable = true;         # Syncthing, NetBird VPN, LocalSend
   containers.enable = true;  # Docker (rootless), Podman, Distrobox
   fhs.enable = true;         # FHS env + nix-alien for unpatched binaries
-  editors.enable = true;     # Heavy code editors (VSCode, etc.)
+  editors.enable = true;     # Heavy code editors (VSCode, Zed)
   recording.enable = true;   # OBS Studio and recording software
 };
 ```
 
-P2P also supports an optional ZeroTier sub-feature, and VM supports independent toggles for QEMU, Bottles, and DOSBox:
+P2P also supports an optional ZeroTier sub-feature, VM supports independent toggles for QEMU, Bottles, and DOSBox, and Editors supports toggling VSCode and Zed independently:
 
 ```nix
 features.p2p = {
@@ -104,7 +104,13 @@ features.vm = {
   enable = true;
   qemu.enable = true;     # QEMU/KVM, virt-manager, SPICE (default: true)
   bottles.enable = true;  # Wine runner (default: true)
-  dosbox.enable = true;   # DOSBox emulator (default: true)
+  dosbox.enable = true;   # DOSBox emulator (default: false)
+};
+
+features.editors = {
+  enable = true;
+  vscode.enable = true;   # VS Code (default: true)
+  zed.enable = true;      # Zed Editor (default: false)
 };
 ```
 

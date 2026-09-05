@@ -93,7 +93,7 @@ features = {
   p2p.enable = true;         # Syncthing, NetBird VPN, LocalSend
   containers.enable = true;  # Docker (rootless), Podman, Distrobox
   fhs.enable = true;         # FHS env + nix-alien for unpatched binaries
-  editors.enable = true;     # Heavy code editors (VSCode, etc.)
+  editors.enable = true;     # Heavy code editors (VSCode, Zed)
   recording.enable = true;   # OBS Studio and recording software
 };
 ```
@@ -116,14 +116,26 @@ features.p2p = {
 
 ### VM Feature
 
-The `vm` feature module configures QEMU/KVM, virt-manager, SPICE tools, Bottles, and DOSBox. All three sub-features default to `true` when `vm.enable = true`:
+The `vm` feature module configures QEMU/KVM, virt-manager, SPICE tools, Bottles, and DOSBox. QEMU and Bottles default to `true`, DOSBox defaults to `false`:
 
 ```nix
 features.vm = {
   enable = true;
   qemu.enable = true;     # libvirtd, QEMU/KVM, virt-manager, SPICE (default: true)
   bottles.enable = true;  # Wine runner (default: true)
-  dosbox.enable = true;   # DOSBox emulator (default: true)
+  dosbox.enable = true;   # DOSBox emulator (default: false)
+};
+```
+
+### Editors Feature
+
+The `editors` feature module configures heavy code editors. VSCode defaults to `true`, Zed defaults to `false`:
+
+```nix
+features.editors = {
+  enable = true;
+  vscode.enable = true;   # VS Code with extensions and settings (default: true)
+  zed.enable = true;      # Zed Editor (default: false)
 };
 ```
 
