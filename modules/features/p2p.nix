@@ -30,8 +30,6 @@ in
     lib.mkMerge [
 
       (lib.mkIf cfg.netbird.enable {
-        networking.firewall.allowedUDPPorts = [ 51820 ];
-
         age.secrets.netbird-setup-key = {
           file = "${flakeRoot}/secrets/netbird-setup-key.age";
           owner = "root";
@@ -42,7 +40,7 @@ in
         services.netbird = {
           enable = true;
           clients.default = {
-            port = 51820;
+            port = 51821;
             ui.enable = true;
             login = {
               enable = true;
