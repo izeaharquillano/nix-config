@@ -65,5 +65,8 @@
       gtk-theme = "Adwaita";
       icon-theme = "Papirus-Dark";
     };
+    "org/cinnamon/desktop/applications/terminal" = {
+      exec = "${pkgs.kitty}/bin/kitty";
+    };
   };
 }
