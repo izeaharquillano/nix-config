@@ -41,4 +41,10 @@
   };
 
   services.resolved.enable = true;
+
+  networking.firewall = {
+    allowedUDPPorts = [
+      7654 # choicer voicer host port
+    ];
+  };
 }
