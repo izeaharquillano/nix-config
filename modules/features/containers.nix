@@ -7,53 +7,44 @@
 
 let
   cfg = config.features.containers;
+  mkEnabledOption = desc: lib.mkEnableOption desc // { default = true; };
 in
 {
   options.features.containers = {
     enable = lib.mkEnableOption "Containers (docker, distrobox)";
-    docker = {
-      enable = lib.mkEnableOption "Docker (rootless)" // {
-        default = true;
-      };
-    };
-    distrobox = {
-      enable = lib.mkEnableOption "Distrobox" // {
-        default = true;
-      };
-    };
+    docker.enable = mkEnabledOption "Docker (rootless)";
+    distrobox.enable = mkEnabledOption "Distrobox";
   };
 
-  config = lib.mkIf cfg.enable {
-    virtualisation.docker = lib.mkIf cfg.docker.enable {
-      enable = false;
-      autoPrune.enable = true;
-      rootless = {
-        enable = true;
-        setSocketVariable = true;
-      };
-    };
+  config = lib.mkIf cfg.enable (
+    lib.mkMerge [
 
-    users.users.${config.mySystem.username}.linger = lib.mkIf cfg.docker.enable true;
+      (lib.mkIf cfg.docker.enable {
+        virtualisation.docker = {
+          enable = false;
+          autoPrune.enable = true;
+          rootless = {
+            enable = true;
+            setSocketVariable = true;
+          };
+        };
+        users.users.${config.mySystem.username}.linger = true;
+        virtualisation.containers.registries.settings = {
+          unqualified-search-registries = [
+            "docker.io"
+            "quay.io"
+          ];
+        };
+      })
 
-    virtualisation.containers.registries.settings = lib.mkIf cfg.docker.enable {
-      unqualified-search-registries = [
-        "docker.io"
-        "quay.io"
-      ];
-    };
+      (lib.mkIf cfg.distrobox.enable {
+        virtualisation.podman = {
+          enable = true;
+          dockerCompat = true;
+        };
+        environment.systemPackages = with pkgs; [ distrobox ];
+      })
 
-    virtualisation.podman = lib.mkIf cfg.distrobox.enable {
-      enable = true;
-      dockerCompat = true;
-    };
-
-    environment.systemPackages = (
-      lib.optionals cfg.distrobox.enable (
-        with pkgs;
-        [
-          distrobox
-        ]
-      )
-    );
-  };
+    ]
+  );
 }

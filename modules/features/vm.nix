@@ -7,57 +7,50 @@
 
 let
   cfg = config.features.vm;
+  mkEnabledOption = desc: lib.mkEnableOption desc // { default = true; };
 in
 {
   options.features.vm = {
     enable = lib.mkEnableOption "Virtual machine support";
-    qemu = {
-      enable = lib.mkEnableOption "QEMU/KVM, virt-manager, and SPICE tools" // {
-        default = true;
-      };
-    };
-    bottles = {
-      enable = lib.mkEnableOption "Bottles (Wine runner)" // {
-        default = true;
-      };
-    };
-    dosbox = {
-      enable = lib.mkEnableOption "DOSBox emulator" // {
-        default = true;
-      };
-    };
+    qemu.enable = mkEnabledOption "QEMU/virt-manager for virtual machines";
+    bottles.enable = mkEnabledOption "Bottles for Windows compatibility layer";
+    dosbox.enable = lib.mkEnableOption "DOSBOX for DOS emulation";
   };
 
-  config = lib.mkIf cfg.enable {
-    virtualisation.libvirtd = lib.mkIf cfg.qemu.enable {
-      enable = true;
-      qemu = {
-        package = pkgs.qemu_kvm;
-        runAsRoot = false;
-        swtpm.enable = true;
-        vhostUserPackages = [ pkgs.virtiofsd ];
-      };
-    };
+  config = lib.mkIf cfg.enable (
+    lib.mkMerge [
 
-    virtualisation.spiceUSBRedirection.enable = lib.mkIf cfg.qemu.enable true;
+      (lib.mkIf cfg.qemu.enable {
+        virtualisation.libvirtd = {
+          enable = true;
+          qemu = {
+            package = pkgs.qemu_kvm;
+            runAsRoot = false;
+            swtpm.enable = true;
+            vhostUserPackages = [ pkgs.virtiofsd ];
+          };
+        };
 
-    programs.virt-manager.enable = lib.mkIf cfg.qemu.enable true;
+        virtualisation.spiceUSBRedirection.enable = true;
+        programs.virt-manager.enable = true;
+        users.users.${config.mySystem.username}.extraGroups = [ "libvirtd" ];
 
-    users.users.${config.mySystem.username}.extraGroups = lib.optionals cfg.qemu.enable [ "libvirtd" ];
-
-    environment.systemPackages =
-      (lib.optionals cfg.qemu.enable (
-        with pkgs;
-        [
+        environment.systemPackages = with pkgs; [
           virt-viewer
           spice
           spice-vdagent
           spice-gtk
-        ]
-      ))
-      ++ (lib.optionals cfg.bottles.enable [
-        (pkgs.bottles.override { removeWarningPopup = true; })
-      ])
-      ++ (lib.optionals cfg.dosbox.enable [ pkgs.dosbox ]);
-  };
+        ];
+      })
+
+      (lib.mkIf cfg.bottles.enable {
+        environment.systemPackages = with pkgs; [ (bottles.override { removeWarningPopup = true; }) ];
+      })
+
+      (lib.mkIf cfg.dosbox.enable {
+        environment.systemPackages = with pkgs; [ dosbox ];
+      })
+
+    ]
+  );
 }

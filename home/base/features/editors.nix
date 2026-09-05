@@ -10,8 +10,9 @@ let
 in
 lib.mkIf cfg.enable (
   lib.mkMerge [
-    {
-      programs.vscode = lib.mkIf (cfg.vscode.enable or false) {
+
+    (lib.mkIf (cfg.vscode.enable or false) {
+      programs.vscode = {
         enable = true;
         package = pkgs.vscode;
         profiles.default.extensions = with pkgs.vscode-extensions; [
@@ -20,15 +21,15 @@ lib.mkIf cfg.enable (
           jnoortheen.nix-ide
         ];
       };
-    }
-    (lib.mkIf (cfg.vscode.enable or false) {
       xdg.configFile."Code/User/settings.json".source = ../../../config/vscode/settings.json;
       xdg.configFile."vscode/.vimrc".source = ../../../config/vscode/.vimrc;
     })
-    {
-      programs.zed-editor = lib.mkIf (cfg.zed.enable or false) {
+
+    (lib.mkIf (cfg.zed.enable or false) {
+      programs.zed-editor = {
         enable = true;
       };
-    }
+    })
+
   ]
 )

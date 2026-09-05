@@ -7,17 +7,28 @@
 
 let
   cfg = config.features.fhs;
+  mkEnabledOption = desc: lib.mkEnableOption desc // { default = true; };
 in
 {
   options.features.fhs = {
-    enable = lib.mkEnableOption "FHS environment and nix-alien for running unpatched binaries";
+    enable = lib.mkEnableOption "FHS environment and nix-alien";
+    nix-ld.enable = mkEnabledOption "Allows running unpatched binaries";
+    nix-alien.enable = mkEnabledOption "Same as nix-ld but automated lib fetching";
   };
 
-  config = lib.mkIf cfg.enable {
-    programs.nix-ld.enable = true;
+  config = lib.mkIf cfg.enable (
+    lib.mkMerge [
 
-    environment.systemPackages = with pkgs; [
-      nix-alien
-    ];
-  };
+      (lib.mkIf cfg.nix-ld.enable {
+        programs.nix-ld.enable = true;
+      })
+
+      (lib.mkIf cfg.nix-alien.enable {
+        environment.systemPackages = with pkgs; [
+          nix-alien
+        ];
+      })
+
+    ]
+  );
 }

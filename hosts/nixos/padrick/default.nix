@@ -25,9 +25,12 @@
     zswap.enable = true;
     p2p.enable = true;
     containers.enable = true;
-    vm.enable = true;
     editors.enable = true;
     fhs.enable = true;
+    vm = {
+      enable = true;
+      dosbox.enable = true;
+    };
   };
 
   system.stateVersion = "26.05";
