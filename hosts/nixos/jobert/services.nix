@@ -34,7 +34,7 @@
   services.logind.settings.Login = {
     HandleLidSwitch = "suspend";
     HandleLidSwitchExternalPower = "suspend";
-    HandleLidSwitchDocked = "ignore";
+    HandleLidSwitchDocked = "lock";
     IdleAction = "suspend";
     IdleActionSec = "30min";
     LidSwitchIgnoreInhibited = "yes";
