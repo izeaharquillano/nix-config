@@ -32,10 +32,10 @@
   };
 
   services.logind.settings.Login = {
-    HandleLidSwitch = "suspend";
-    HandleLidSwitchExternalPower = "suspend";
+    HandleLidSwitch = "lock";
+    HandleLidSwitchExternalPower = "lock";
     HandleLidSwitchDocked = "lock";
-    IdleAction = "suspend";
+    IdleAction = "ignore";
     IdleActionSec = "30min";
     LidSwitchIgnoreInhibited = "yes";
   };

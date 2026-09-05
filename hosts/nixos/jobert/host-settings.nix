@@ -8,7 +8,6 @@
 
   boot.kernelParams = [
     "amd_pstate=active"
-    "amd_pmc.suspend_delay=1"
   ];
 
   swapDevices = [
@@ -41,7 +40,6 @@
 
   boot.extraModprobeConfig = ''
     options nvidia NVreg_EnableS0ixPowerManagement=1
-    options nvidia_drm fbdev=1 modeset=1
   '';
 
   environment.sessionVariables = {
