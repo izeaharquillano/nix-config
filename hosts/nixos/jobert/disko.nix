@@ -27,7 +27,7 @@
             priority = 1;
             name = "ESP";
             start = "1M";
-            end = "4G";
+            end = "1G";
             type = "EF00";
             content = {
               type = "filesystem";
@@ -59,7 +59,7 @@
               ];
               content = {
                 type = "btrfs";
-                extraArgs = [ "-f" ];
+                extraArgs = [ "-L" "nixos" "-f" ];
                 subvolumes = {
                   "/root" = {
                     mountpoint = "/";
@@ -90,8 +90,7 @@
                   };
                   "/swap" = {
                     mountpoint = "/swap";
-                    # TODO: Update to match your RAM size (should be >= RAM for hibernation)
-                    swap.swapfile.size = "16G";
+                    swap.swapfile.size = "8G";
                   };
                 };
               };

@@ -20,7 +20,7 @@ All NixOS hosts use LUKS2 full-disk encryption with btrfs.
 
 **LUKS settings:** LUKS2, AES-XTS-Plain64, SHA-512, Argon2id, 5000ms iteration time, TRIM enabled.
 
-**Hibernation:** Enabled via `boot.initrd.systemd.enable = true` (NixOS 26.05 auto-detects swapfile and resume offset via EFI variables). Swapfile size = RAM size (rounded up).
+**Swap:** Sized for overflow only (zswap handles compressed swap in RAM). Hibernation is not configured.
 
 **Disko config files:** `hosts/nixos/<name>/disko.nix` (jobert only)
 
@@ -78,7 +78,62 @@ mkdir -p home/hosts/nixos/<name>/config
 sudo nixos-generate-config --show-hardware-config > hosts/nixos/<name>/hardware-configuration.nix
 ```
 
-### 3. Create `hosts/nixos/<name>/default.nix`
+### 3. Choose your disk approach
+
+**Option A: NixOS-only disk (use disko)**
+
+```bash
+cp hosts/nixos/jobert/disko.nix hosts/nixos/<name>/disko.nix
+# Edit: update device = "/dev/disk/by-id/..." and swap.swapfile.size
+```
+
+Then in `hosts/nixos/<name>/default.nix`, add to imports:
+```nix
+inputs.disko.nixosModules.default
+./disko.nix
+```
+
+Remove `fileSystems` and `swapDevices` from the generated hardware config — disko provides them.
+
+**Option B: Dual-boot with Windows (manual LUKS)**
+
+Copy `hosts/nixos/padrick/hardware-configuration.nix` as a template. It contains the LUKS, fileSystems, and swapDevices declarations. Follow the dual-boot reinstall steps below to manually set up LUKS from the live ISO.
+
+Do **not** add disko imports to `default.nix` for this approach.
+
+### 4. Create `hosts/nixos/<name>/default.nix`
+
+For **Option A** (disko), include the disko imports:
+
+```nix
+{ config, pkgs, lib, inputs, ... }:
+
+{
+  imports = [
+    inputs.disko.nixosModules.default
+    ./disko.nix
+    ../../../modules/nixos/desktop.nix
+    ../../../modules/features
+    ./hardware-configuration.nix
+    ./packages.nix
+    ./services.nix
+    ./host-settings.nix
+  ];
+
+  networking.hostName = "<name>";
+
+  features = {
+    btrfs.enable = true;
+    secureboot.enable = true;
+    zswap.enable = true;
+    p2p.enable = true;
+  };
+
+  system.stateVersion = "26.05";
+}
+```
+
+For **Option B** (manual LUKS), omit the disko imports:
 
 ```nix
 { config, pkgs, lib, inputs, ... }:
@@ -106,9 +161,22 @@ sudo nixos-generate-config --show-hardware-config > hosts/nixos/<name>/hardware-
 }
 ```
 
-### 4. Create `hosts/nixos/<name>/services.nix`
+### 5. Create host-specific config files
 
-For laptops (power management):
+`hosts/nixos/<name>/host-settings.nix`:
+
+```nix
+{ pkgs, ... }:
+
+{
+  hardware.graphics = {
+    enable = true;
+    enable32Bit = true;
+  };
+}
+```
+
+`hosts/nixos/<name>/services.nix` — for laptops:
 
 ```nix
 { pkgs, lib, ... }:
@@ -133,7 +201,19 @@ For laptops (power management):
 }
 ```
 
-### 5. Create host-specific config files
+`hosts/nixos/<name>/packages.nix`:
+
+```nix
+{ pkgs, ... }:
+
+{
+  environment.systemPackages = with pkgs; [
+    # host-specific packages
+  ];
+}
+```
+
+### 6. Create host-specific config files (Wayland)
 
 `home/hosts/nixos/<name>/config/niri-host-settings.kdl`:
 
@@ -158,7 +238,7 @@ hl.monitor({
 
 Optionally, create `noctalia-host-settings.toml` for Noctalia lockscreen widgets.
 
-### 6. Add Home Manager config
+### 7. Add Home Manager config
 
 `home/hosts/nixos/<name>/default.nix`:
 
@@ -179,13 +259,13 @@ Optionally, create `noctalia-host-settings.toml` for Noctalia lockscreen widgets
 }
 ```
 
-### 7. Register in `outputs/default.nix`
+### 8. Register in `outputs/default.nix`
 
 ```nix
 nixosConfigurations.<name> = mkNixosHost "<name>" "x86_64-linux";
 ```
 
-### 8. Secure Boot (optional, first-time only)
+### 9. Secure Boot (optional, first-time only)
 
 ```bash
 sudo sbctl create-keys
@@ -193,7 +273,7 @@ sudo sbctl enroll-keys --microsoft
 sbctl status
 ```
 
-### 9. First deploy + secrets setup
+### 10. First deploy + secrets setup
 
 ```bash
 sudo nixos-rebuild switch --flake .#<name>
@@ -219,12 +299,14 @@ sudo nixos-generate-config --show-hardware-config > hosts/nixos/<name>/hardware-
 ### 3. Create `hosts/nixos/<name>/default.nix`
 
 ```nix
-{ config, pkgs, lib, ... }:
+{ config, pkgs, lib, inputs, ... }:
 
 {
   imports = [
     ../../../modules/nixos/server
     ./hardware-configuration.nix
+    # ./packages.nix       # optional
+    # ./services.nix       # optional
   ];
 
   networking.hostName = "<name>";
@@ -337,8 +419,6 @@ cd nix-config
 $EDITOR hosts/nixos/<hostname>/disko.nix
 # Change: device = "/dev/disk/by-id/TODO-YOUR-DISK-ID";
 # To:     device = "/dev/disk/by-id/<actual-disk-id>";
-#
-# Also update swap.swapfile.size to match the host's RAM
 ```
 
 ### Step 4: Run disko
@@ -385,175 +465,4 @@ ssh-keyscan <hostname> 2>/dev/null | grep ssh-ed25519
 # Add key to secrets/secrets.nix from another authorized host, then rekey
 sudo agenix --rekey
 sudo nixos-rebuild switch --flake .#<hostname>
-```
-
----
-
-## Adding a New Host
-
-### 1. Create the host directory
-
-```bash
-mkdir -p hosts/nixos/<name>
-mkdir -p home/hosts/nixos/<name>/config
-```
-
-### 2. Choose your disk approach
-
-**Option A: NixOS-only disk (use disko)**
-
-```bash
-cp hosts/nixos/jobert/disko.nix hosts/nixos/<name>/disko.nix
-# Edit: update device = "/dev/disk/by-id/..." and swap.swapfile.size
-```
-
-Then in `hosts/nixos/<name>/default.nix`, add to imports:
-```nix
-inputs.disko.nixosModules.default
-./disko.nix
-```
-
-Remove `fileSystems` and `swapDevices` from the generated hardware config — disko provides them.
-
-**Option B: Dual-boot with Windows (manual LUKS)**
-
-Copy `hosts/nixos/padrick/hardware-configuration.nix` as a template. It contains the LUKS, fileSystems, and swapDevices declarations. Follow the dual-boot reinstall steps below to manually set up LUKS from the live ISO.
-
-Do **not** add disko imports to `default.nix` for this approach.
-
-### 3. Create `hosts/nixos/<name>/default.nix`
-
-```nix
-{ config, pkgs, lib, inputs, ... }:
-
-{
-  imports = [
-    inputs.disko.nixosModules.default
-    ./disko.nix
-    ../../../modules/nixos/desktop.nix
-    ../../../modules/features
-    ./hardware-configuration.nix
-    ./packages.nix
-    ./services.nix
-    ./host-settings.nix
-  ];
-
-  networking.hostName = "<name>";
-
-  features = {
-    btrfs.enable = true;
-    secureboot.enable = true;
-    zswap.enable = true;
-    p2p.enable = true;
-  };
-
-  system.stateVersion = "26.05";
-}
-```
-
-### 5. Create host-specific config files
-
-`hosts/nixos/<name>/host-settings.nix`:
-
-```nix
-{ pkgs, ... }:
-
-{
-  hardware.graphics = {
-    enable = true;
-    enable32Bit = true;
-  };
-}
-```
-
-`hosts/nixos/<name>/services.nix` — for laptops:
-
-```nix
-{ pkgs, lib, ... }:
-
-{
-  services.resolved.enable = true;
-  services.tlp = {
-    enable = true;
-    settings = {
-      CPU_SCALING_GOVERNOR_ON_AC = "performance";
-      CPU_SCALING_GOVERNOR_ON_BAT = "powersave";
-    };
-  };
-}
-```
-
-`hosts/nixos/<name>/packages.nix`:
-
-```nix
-{ pkgs, ... }:
-
-{
-  environment.systemPackages = with pkgs; [
-    # host-specific packages
-  ];
-}
-```
-
-### 6. Add Home Manager config
-
-`home/hosts/nixos/<name>/default.nix`:
-
-```nix
-{ config, inputs, ... }:
-
-{
-  imports = [
-    ../../linux/gui.nix
-    ../../base/features
-    ./packages.nix
-    inputs.niri.homeModules.niri
-    inputs.noctalia.homeModules.default
-  ];
-
-  xdg.configFile."niri/niri-host-settings.kdl".source = ./config/niri-host-settings.kdl;
-}
-```
-
-`home/hosts/nixos/<name>/config/niri-host-settings.kdl`:
-
-```kdl
-output "eDP-1" {
-    mode "1920x1080@60"
-    scale 1.20
-    transform "normal"
-}
-```
-
-### 7. Register in `outputs/default.nix`
-
-```nix
-nixosConfigurations.<name> = mkNixosHost "<name>" "x86_64-linux";
-```
-
-### 8. Secure Boot enrollment (first-time only)
-
-```bash
-sudo sbctl create-keys
-sudo sbctl enroll-keys --microsoft
-sbctl status
-```
-
-### 9. Deploy
-
-```bash
-# From the NixOS live ISO:
-sudo nixos-install --flake .#<name>
-
-# After rebooting into the new system:
-sudo nixos-rebuild switch --flake .#<name>
-```
-
-### 10. Secrets setup
-
-```bash
-ssh-keyscan <name> 2>/dev/null | grep ssh-ed25519
-# Add key to secrets/secrets.nix on an existing authorized host
-sudo agenix --rekey
-sudo nixos-rebuild switch --flake .#<name>
 ```
