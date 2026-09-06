@@ -31,6 +31,7 @@
     };
 
     networking.networkmanager.enable = true;
+    hardware.enableAllFirmware = true;
 
     nix.gc = {
       automatic = true;
