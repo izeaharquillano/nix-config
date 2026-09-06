@@ -18,24 +18,6 @@ All NixOS hosts use LUKS2 full-disk encryption with btrfs.
 | `padrick` | Manual LUKS setup (dual-boot with Windows on same disk) | NixOS partitions only, Windows preserved |
 | `jobert` | [disko](https://github.com/nix-community/disko) (NixOS-only disk) | Full disk wipe via disko |
 
-**Disk layout:**
-
-```
-padrick (dual-boot):
-  nvme0n1
-  ├── p1: Windows recovery
-  ├── p2: Windows C: (NTFS)
-  ├── p3: Windows data (NTFS)
-  ├── p4: ESP (4G, vfat, /boot)
-  ├── p5: LUKS2 → btrfs (@root, @home, @nix, @swap)
-  └── p6: (reserved)
-
-jobert (disko, NixOS-only):
-  nvme0n1
-  ├── ESP (4G, vfat, /boot)
-  └── LUKS2 → btrfs (@root, @home, @nix, @swap)
-```
-
 **LUKS settings:** LUKS2, AES-XTS-Plain64, SHA-512, Argon2id, 5000ms iteration time, TRIM enabled.
 
 **Hibernation:** Enabled via `boot.initrd.systemd.enable = true` (NixOS 26.05 auto-detects swapfile and resume offset via EFI variables). Swapfile size = RAM size (rounded up).
