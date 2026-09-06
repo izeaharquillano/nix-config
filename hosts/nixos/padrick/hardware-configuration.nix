@@ -81,8 +81,19 @@
     ];
   };
 
+  fileSystems."/swap" = {
+    device = "/dev/mapper/luks-b3de44df-5f22-42ec-bb0b-87147a44830c";
+    fsType = "btrfs";
+    options = [
+      "subvol=swap"
+      "noatime"
+      "ssd"
+      "discard=async"
+    ];
+  };
+
   swapDevices = [
-    { device = "/var/lib/swapfile"; }
+    { device = "/swap/swapfile"; }
   ];
 
   boot.initrd.systemd.enable = true;
