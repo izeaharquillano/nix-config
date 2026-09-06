@@ -5,7 +5,7 @@
 }:
 
 let
-  hostSettingsPath = ../../../hosts/nixos/${hostname}/config/noctalia-host-settings.toml;
+  hostSettingsPath = ../../hosts/nixos/${hostname}/config/noctalia-host-settings.toml;
   hostSettings =
     if builtins.pathExists hostSettingsPath then builtins.readFile hostSettingsPath else "";
 in
