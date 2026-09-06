@@ -1,5 +1,5 @@
 let
-  padrick = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAXNwpuUhP9UdRk4oVjl9Bzva/sWiXkiD7HMrY4NcgOZ root@padrick";
+  padrick = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJjana/g5vxpaSS5OHe0HfN+eVkFtc9WzuCKCtbTQhcp root@padrick";
   jobert = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIDwOimLkLULeahLXIwCuhE3GHC/rbtbcA+8fsZQC4GG root@jobert";
   systems = [
     padrick
