@@ -19,7 +19,7 @@
     disk.nixos-jobert = {
       type = "disk";
       # TODO: Update this to match your disk: ls /dev/disk/by-id/ | grep nvme
-      device = "/dev/disk/by-id/TODO-YOUR-DISK-ID";
+      device = "/dev/disk/by-id/nvme-KINGSTON_SNV2S1000G_50026B728346A4FE";
       content = {
         type = "gpt";
         partitions = {
