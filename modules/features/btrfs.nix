@@ -7,6 +7,7 @@ let
     "compress=zstd:3"
     "noatime"
     "ssd"
+    "discard=async"
     "commit=120"
   ];
 in

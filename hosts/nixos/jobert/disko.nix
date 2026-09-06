@@ -86,7 +86,6 @@
                       "noatime"
                       "ssd"
                       "discard=async"
-                      "nodatacow"
                     ];
                   };
                   "/swap" = {
