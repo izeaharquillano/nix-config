@@ -277,6 +277,7 @@ sbctl status
 
 ```bash
 sudo nixos-rebuild switch --flake .#<name>
+passwd ize  # change from default "changeme" password
 ssh-keyscan <name> 2>/dev/null | grep ssh-ed25519
 # Add key to secrets/secrets.nix and rekey (see root README)
 sudo nixos-rebuild switch --flake .#<name>
@@ -461,6 +462,7 @@ Remove the USB. On first boot, enter your LUKS passphrase to unlock.
 ### Post-install
 
 ```bash
+passwd ize  # change from default "changeme" password
 ssh-keyscan <hostname> 2>/dev/null | grep ssh-ed25519
 # Add key to secrets/secrets.nix from another authorized host, then rekey
 sudo agenix --rekey

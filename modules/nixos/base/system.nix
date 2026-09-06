@@ -47,6 +47,7 @@
     users.users.${config.mySystem.username} = {
       isNormalUser = true;
       description = "Primary user";
+      initialPassword = "changeme";
       extraGroups = [
         "networkmanager"
         "wheel"
