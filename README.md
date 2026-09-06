@@ -19,7 +19,7 @@ nix-config/
 ├── overlays/              # Nixpkgs overlays (auto-loaded)
 ├── pkgs/                  # Custom packages
 ├── vars/                  # User identity (username, email)
-├── hosts/                 # Per-host NixOS configs → [hosts/README.md](hosts/README.md)
+├── hosts/                 # Per-host NixOS configs (disko, hardware, features) → [hosts/README.md](hosts/README.md)
 ├── modules/               # System modules (core, desktop, features) → [modules/README.md](modules/README.md)
 ├── home/                  # Home Manager modules → [home/README.md](home/README.md)
 ├── config/                # Raw dotfiles (kitty, hypr, niri, nvim, etc.) → [config/README.md](config/README.md)
@@ -66,9 +66,9 @@ sudo nix-collect-garbage -d
 
 ## Adding a New Host
 
-See [hosts/README.md](hosts/README.md) for the full walkthrough with code templates (hardware config, default.nix, services, Home Manager, Secure Boot enrollment, secrets setup).
+See [hosts/README.md](hosts/README.md) for the full walkthrough with code templates (disko disk layout, hardware config, default.nix, services, Home Manager, Secure Boot enrollment, secrets setup, and reinstallation instructions).
 
-**TL;DR:** create `hosts/nixos/<name>/` and `home/hosts/nixos/<name>/`, register in `outputs/default.nix` with `mkNixosHost "<name>" "x86_64-linux"`, deploy, add the host key to `secrets/secrets.nix`, rekey, deploy again.
+**TL;DR:** create `hosts/nixos/<name>/disko.nix` (copy from an existing host, update disk ID), run disko from a NixOS live ISO to format the disk, generate hardware config, create `default.nix` with `disko.nixosModules.default` + `./disko.nix` in imports, register in `outputs/default.nix` with `mkNixosHost "<name>" "x86_64-linux"`, deploy, add the host key to `secrets/secrets.nix`, rekey, deploy again.
 
 ## Feature Options
 
@@ -182,6 +182,7 @@ Update the key binding in `secrets/secrets.nix` with the new host key, then reke
 |---|---|
 | `nixpkgs` | NixOS packages (unstable) |
 | `home-manager` | User environment management |
+| `disko` | Declarative disk partitioning (LUKS + btrfs) |
 | `lanzaboote` | Secure Boot (UEFI) |
 | `nixos-hardware` | NixOS hardware modules |
 | `agenix` | Encrypted secrets management |
@@ -230,6 +231,7 @@ The `vars/` directory exports user identity (`username`, `userfullname`, `userem
 
 ## Security
 
+- **Disk Encryption:** LUKS2 full-disk encryption on all NixOS hosts (declared via disko)
 - **Firewall:** Enabled system-wide, explicit port allowlists (`modules/nixos/base/security.nix`)
 - **SSH:** Key-based auth only, root login denied (`modules/nixos/base/ssh.nix`)
 - **Secrets:** agenix with age + SSH host keys (see [Secrets Management](#secrets-management))

@@ -1,3 +1,6 @@
+# padrick: ThinkPad T14 AMD Gen1 — dual-boot with Windows on the same disk.
+# LUKS is set up manually (not via disko) to preserve Windows partitions.
+# See hardware-configuration.nix for LUKS/filesystem declarations.
 {
   config,
   pkgs,

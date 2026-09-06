@@ -1,12 +1,6 @@
 { pkgs, ... }:
 
 {
-  swapDevices = [
-    {
-      device = "/dev/disk/by-uuid/f9727e0a-51c2-431b-9ce7-5135d259bef2";
-    }
-  ];
-
   boot.kernelParams = [ "acpi.ec_no_wakeup=1" ];
 
   hardware.graphics = {

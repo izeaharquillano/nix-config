@@ -8,6 +8,8 @@
 
 {
   imports = [
+    inputs.disko.nixosModules.default
+    ./disko.nix
     ../../../modules/nixos/desktop.nix
     ../../../modules/features
     ./hardware-configuration.nix
