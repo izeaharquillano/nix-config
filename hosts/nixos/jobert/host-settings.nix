@@ -36,7 +36,6 @@
   '';
 
   environment.sessionVariables = {
-    MOZ_ENABLE_WAYLAND = "1";
     LIBVA_DRIVER_NAME = "nvidia";
     NVD_BACKEND = "direct";
     GBM_BACKEND = "nvidia-drm";
