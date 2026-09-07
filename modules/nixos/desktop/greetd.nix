@@ -23,5 +23,11 @@
     TTYReset = true;
     TTYVHangup = true;
     TTYVTDisallocate = true;
+    ExecStartPre = [
+      "-/bin/kill -s RTMIN+21 1"
+    ];
+    ExecStopPost = [
+      "-/bin/kill -s RTMIN+20 1"
+    ];
   };
 }
