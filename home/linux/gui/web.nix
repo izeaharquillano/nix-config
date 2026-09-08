@@ -46,11 +46,13 @@
           position = 1000;
           icon = "💤";
           theme = {
-            colors = [{
-              red = 60;
-              green = 56;
-              blue = 54;
-            }];
+            colors = [
+              {
+                red = 60;
+                green = 56;
+                blue = 54;
+              }
+            ];
           };
         };
         "Work" = {
@@ -58,11 +60,13 @@
           position = 2000;
           icon = "💼";
           theme = {
-            colors = [{
-              red = 60;
-              green = 56;
-              blue = 54;
-            }];
+            colors = [
+              {
+                red = 60;
+                green = 56;
+                blue = 54;
+              }
+            ];
           };
         };
         "Presentation" = {
@@ -70,11 +74,13 @@
           position = 3000;
           icon = "🎥";
           theme = {
-            colors = [{
-              red = 60;
-              green = 56;
-              blue = 54;
-            }];
+            colors = [
+              {
+                red = 60;
+                green = 56;
+                blue = 54;
+              }
+            ];
           };
         };
       };
