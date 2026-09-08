@@ -20,7 +20,6 @@ in
       default = [
         "/home"
         "/nix"
-        "/persist"
       ];
       description = "Filesystem paths to apply BTRFS compression options to";
     };

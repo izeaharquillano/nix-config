@@ -60,10 +60,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    impermanence = {
-      url = "github:nix-community/impermanence";
-    };
-
     nix-alien = {
       url = "github:thiagokokada/nix-alien";
     };

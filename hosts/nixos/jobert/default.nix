@@ -25,7 +25,6 @@
 
   features = {
     btrfs.enable = true;
-    impermanence.enable = true;
     secureboot.enable = true;
     zswap.enable = true;
     p2p = {

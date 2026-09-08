@@ -1,5 +1,5 @@
 # padrick: ThinkPad T14 AMD Gen1 — dual-boot with Windows on the same disk.
-# Disko manages disk layout; impermanence wipes root on boot.
+# Disko manages disk layout.
 {
   config,
   pkgs,
@@ -25,7 +25,6 @@
 
   features = {
     btrfs.enable = true;
-    impermanence.enable = true;
     secureboot.enable = true;
     zswap.enable = true;
     p2p.enable = true;
