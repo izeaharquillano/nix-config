@@ -1,6 +1,5 @@
 # padrick: ThinkPad T14 AMD Gen1 — dual-boot with Windows on the same disk.
-# LUKS is set up manually (not via disko) to preserve Windows partitions.
-# See hardware-configuration.nix for LUKS/filesystem declarations.
+# Disko manages disk layout; impermanence wipes root on boot.
 {
   config,
   pkgs,
@@ -11,6 +10,8 @@
 
 {
   imports = [
+    inputs.disko.nixosModules.default
+    ./disko.nix
     ../../../modules/nixos/desktop.nix
     ../../../modules/features
     ./hardware-configuration.nix
@@ -24,6 +25,7 @@
 
   features = {
     btrfs.enable = true;
+    impermanence.enable = true;
     secureboot.enable = true;
     zswap.enable = true;
     p2p.enable = true;

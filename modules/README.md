@@ -86,6 +86,7 @@ Enable optional features in `hosts/nixos/<name>/default.nix`:
 ```nix
 features = {
   btrfs.enable = true;       # BTRFS compression/tuning (compress=zstd:3, noatime, ssd)
+  impermanence.enable = true; # Ephemeral root, persistent /persist subvolume
   secureboot.enable = true;  # UEFI Secure Boot via Lanzaboote
   vm.enable = true;          # QEMU/KVM, virt-manager, SPICE, Bottles, DOSBox
   gaming.enable = true;      # Steam, Gamescope, Gamemode, MangoHud

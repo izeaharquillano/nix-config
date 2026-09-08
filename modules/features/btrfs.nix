@@ -18,9 +18,9 @@ in
     mountPaths = lib.mkOption {
       type = lib.types.listOf lib.types.str;
       default = [
-        "/"
         "/home"
         "/nix"
+        "/persist"
       ];
       description = "Filesystem paths to apply BTRFS compression options to";
     };

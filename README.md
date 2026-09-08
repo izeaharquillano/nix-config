@@ -77,6 +77,7 @@ Optional features are gated behind `mkEnableOption` in `modules/features/`. See 
 ```nix
 features = {
   btrfs.enable = true;       # BTRFS compression/tuning
+  impermanence.enable = true; # Ephemeral root, persistent /persist
   secureboot.enable = true;  # UEFI Secure Boot via Lanzaboote
   vm.enable = true;          # QEMU/KVM, virt-manager, SPICE, Bottles, DOSBox
   gaming.enable = true;      # Steam, Gamescope, Gamemode, MangoHud
@@ -185,6 +186,7 @@ Update the key binding in `secrets/secrets.nix` with the new host key, then reke
 | `disko` | Declarative disk partitioning (LUKS + btrfs) |
 | `lanzaboote` | Secure Boot (UEFI) |
 | `nixos-hardware` | NixOS hardware modules |
+| `impermanence` | Ephemeral root with persistent state |
 | `agenix` | Encrypted secrets management |
 | `niri` | Niri Wayland compositor |
 | `noctalia` | Wayland shell/bar |
@@ -232,6 +234,7 @@ The `vars/` directory exports user identity (`username`, `userfullname`, `userem
 ## Security
 
 - **Disk Encryption:** LUKS2 full-disk encryption on all NixOS hosts (declared via disko)
+- **Impermanence:** Root btrfs subvolume wiped on every boot; only explicitly persisted state survives
 - **Firewall:** Enabled system-wide, explicit port allowlists (`modules/nixos/base/security.nix`)
 - **SSH:** Key-based auth only, root login denied (`modules/nixos/base/ssh.nix`)
 - **Secrets:** agenix with age + SSH host keys (see [Secrets Management](#secrets-management))

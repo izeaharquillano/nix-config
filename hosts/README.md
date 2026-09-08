@@ -9,26 +9,29 @@ Each subdirectory represents a machine. NixOS hosts live under `nixos/`, macOS h
 | `padrick` | NixOS | Laptop | AMD, LUKS+BTRFS, Wayland | Daily use |
 | `jobert` | NixOS | Gaming Laptop | AMD + NVIDIA, LUKS+BTRFS, Wayland | Work/gaming |
 
-### Disk Encryption (LUKS)
+### Disk Encryption (LUKS) & Impermanence
 
-All NixOS hosts use LUKS2 full-disk encryption with btrfs.
+All NixOS hosts use LUKS2 full-disk encryption with btrfs and [impermanence](https://github.com/nix-community/impermanence) (ephemeral root, persistent `/persist` subvolume). Both hosts use [disko](https://github.com/nix-community/disko) for declarative disk management.
 
-| Host | Approach | Disk |
-|------|----------|------|
-| `padrick` | Manual LUKS setup (dual-boot with Windows on same disk) | NixOS partitions only, Windows preserved |
-| `jobert` | [disko](https://github.com/nix-community/disko) (NixOS-only disk) | Full disk wipe via disko |
+| Host | Disk Layout | Notes |
+|------|-------------|-------|
+| `padrick` | disko | Dual-boot with Windows on same disk |
+| `jobert` | disko | NixOS-only disk |
 
-**LUKS settings:** LUKS2, AES-XTS-Plain64, SHA-512, Argon2id, 5000ms iteration time, TRIM enabled.
+**LUKS settings:** LUKS2, AES-XTS-Plain64, SHA-512, Argon2id, TRIM enabled.
 
-**Swap:** Sized for overflow only (zswap handles compressed swap in RAM). Hibernation is not configured.
+**Impermanence:** Root btrfs subvolume is wiped on every boot via a systemd service in initrd. `/home`, `/nix`, and `/persist` are separate persistent subvolumes. System state (`/var/lib/nixos`, `/etc/machine-id`, `/etc/ssh`, NetworkManager, Bluetooth) is persisted via impermanence bind mounts.
 
-**Disko config files:** `hosts/nixos/<name>/disko.nix` (jobert only)
+**Swap:** zswap handles compressed swap in RAM. A swapfile on btrfs provides overflow. Hibernation is not configured.
+
+**Disko config files:** `hosts/nixos/<name>/disko.nix`
 
 ### padrick: Daily Use ThinkPad
 
 ```nix
 features = {
   btrfs.enable = true;
+  impermanence.enable = true;
   secureboot.enable = true;
   zswap.enable = true;
   p2p.enable = true;
@@ -44,6 +47,7 @@ features = {
 ```nix
 features = {
   btrfs.enable = true;
+  impermanence.enable = true;
   secureboot.enable = true;
   zswap.enable = true;
   p2p = {
@@ -80,14 +84,22 @@ sudo nixos-generate-config --show-hardware-config > hosts/nixos/<name>/hardware-
 
 ### 3. Choose your disk approach
 
-**Option A: NixOS-only disk (use disko)**
+**Option A: NixOS-only disk**
 
 ```bash
 cp hosts/nixos/jobert/disko.nix hosts/nixos/<name>/disko.nix
 # Edit: update device = "/dev/disk/by-id/..." and swap.swapfile.size
 ```
 
-Then in `hosts/nixos/<name>/default.nix`, add to imports:
+**Option B: Dual-boot with Windows on same disk**
+
+```bash
+cp hosts/nixos/padrick/disko.nix hosts/nixos/<name>/disko.nix
+# Edit: update device = "/dev/disk/by-id/..."
+# The disko config already reserves space for Windows (MS reserved + data partition)
+```
+
+For both options, in `hosts/nixos/<name>/default.nix`, add to imports:
 ```nix
 inputs.disko.nixosModules.default
 ./disko.nix
@@ -95,15 +107,7 @@ inputs.disko.nixosModules.default
 
 Remove `fileSystems` and `swapDevices` from the generated hardware config — disko provides them.
 
-**Option B: Dual-boot with Windows (manual LUKS)**
-
-Copy `hosts/nixos/padrick/hardware-configuration.nix` as a template. It contains the LUKS, fileSystems, and swapDevices declarations. Follow the dual-boot reinstall steps below to manually set up LUKS from the live ISO.
-
-Do **not** add disko imports to `default.nix` for this approach.
-
 ### 4. Create `hosts/nixos/<name>/default.nix`
-
-For **Option A** (disko), include the disko imports:
 
 ```nix
 { config, pkgs, lib, inputs, ... }:
@@ -124,34 +128,7 @@ For **Option A** (disko), include the disko imports:
 
   features = {
     btrfs.enable = true;
-    secureboot.enable = true;
-    zswap.enable = true;
-    p2p.enable = true;
-  };
-
-  system.stateVersion = "26.05";
-}
-```
-
-For **Option B** (manual LUKS), omit the disko imports:
-
-```nix
-{ config, pkgs, lib, inputs, ... }:
-
-{
-  imports = [
-    ../../../modules/nixos/desktop.nix
-    ../../../modules/features
-    ./hardware-configuration.nix
-    ./packages.nix
-    ./services.nix
-    ./host-settings.nix
-  ];
-
-  networking.hostName = "<name>";
-
-  features = {
-    btrfs.enable = true;
+    impermanence.enable = true;
     secureboot.enable = true;
     zswap.enable = true;
     p2p.enable = true;
@@ -468,3 +445,24 @@ ssh-keyscan <hostname> 2>/dev/null | grep ssh-ed25519
 sudo agenix --rekey
 sudo nixos-rebuild switch --flake .#<hostname>
 ```
+
+### padrick: Windows Dual-Boot Install
+
+After NixOS is installed and working on padrick, install Windows alongside it:
+
+1. **Boot the Windows installer** from a USB
+2. **Select the "Windows data" partition** (128GB, type 0700) as the install target
+3. Windows will detect the existing ESP and may create its own recovery partition
+4. **Do NOT format the ESP** — NixOS bootloader lives there
+5. After Windows install, you should be able to boot either OS from the firmware menu (F12 on ThinkPad) or configure systemd-boot to chainload Windows
+
+If Windows creates a duplicate recovery partition, that's harmless — it just uses a bit of extra space. If you want to reclaim it later, you can delete it from Windows Disk Management.
+
+To add a Windows boot entry to systemd-boot (optional, from NixOS):
+
+```bash
+sudo bootctl install  # re-register NixOS as primary
+# Then add a Windows entry manually or via a NixOS module
+```
+
+**Reverting to pure NixOS:** If Windows dual-boot causes issues, remove the `"Microsoft reserved"` and `"Windows data"` partitions from `disko.nix`, then rebuild. The LUKS/btrfs partitions will expand to fill the disk.
