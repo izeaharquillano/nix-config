@@ -6,7 +6,7 @@
 
     secrets.nix-access-tokens = {
       file = "${flakeRoot}/secrets/nix-access-tokens.age";
-      mode = "0400";
+      mode = "0644";
     };
   };
 
