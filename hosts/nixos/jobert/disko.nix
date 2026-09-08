@@ -1,4 +1,4 @@
-# Disko layout for jobert: ESP + LUKS2 + btrfs with subvolumes and swap.
+# Disko layout for jobert: ESP + LUKS2 + btrfs with impermanence and swap.
 #
 # WARNING: This will WIPE the entire disk. Back up any data first.
 #
@@ -73,6 +73,16 @@
                   };
                   "/nix" = {
                     mountpoint = "/nix";
+                  };
+                  "/persist" = {
+                    mountpoint = "/persist";
+                    mountOptions = [
+                      "compress=zstd:3"
+                      "noatime"
+                      "ssd"
+                      "discard=async"
+                      "commit=120"
+                    ];
                   };
                   "/swap" = {
                     mountpoint = "/swap";

@@ -1,8 +1,8 @@
-# Disko layout for padrick: LUKS + btrfs with Windows dual boot.
+# Disko layout for padrick: LUKS + btrfs with impermanence + Windows dual boot.
 #
 # Partition layout (512GB NVMe):
 #   1. ESP (1GB)           — shared bootloader for NixOS and Windows
-#   2. NixOS root (LUKS)   — btrfs subvolumes: root, home, nix
+#   2. NixOS root (LUKS)   — btrfs subvolumes: root (ephemeral), home, nix, persist
 #   3. MS reserved (16MB)  — required for Windows
 #   4. Windows data (128GB) — Windows C: drive, no disko content (installed manually)
 #
@@ -66,6 +66,16 @@
                   };
                   "/nix" = {
                     mountpoint = "/nix";
+                  };
+                  "/persist" = {
+                    mountpoint = "/persist";
+                    mountOptions = [
+                      "compress=zstd:3"
+                      "noatime"
+                      "ssd"
+                      "discard=async"
+                      "commit=120"
+                    ];
                   };
                   "/swap" = {
                     mountpoint = "/swap";
