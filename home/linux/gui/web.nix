@@ -46,7 +46,6 @@
           position = 1000;
           icon = "💤";
           theme = {
-            type = "gradient";
             colors = [{
               red = 60;
               green = 56;
@@ -59,7 +58,6 @@
           position = 2000;
           icon = "💼";
           theme = {
-            type = "gradient";
             colors = [{
               red = 60;
               green = 56;
@@ -72,7 +70,6 @@
           position = 3000;
           icon = "🎥";
           theme = {
-            type = "gradient";
             colors = [{
               red = 60;
               green = 56;

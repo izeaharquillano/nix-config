@@ -71,10 +71,6 @@ in
     # Ensure persist is mounted before activation scripts
     fileSystems.${persistPath}.neededForBoot = true;
 
-    # persist-files must run before etc so bind mounts (like /etc/machine-id)
-    # are in place before NixOS's etc activation creates the files.
-    system.activationScripts.etc.deps = lib.mkAfter [ "persist-files" ];
-
     # Prevent sudo lecture after each reboot
     security.sudo.extraConfig = ''
       Defaults lecture = never
@@ -111,10 +107,27 @@ in
 
       ];
 
-      files = [
-        # Machine ID (journald, D-Bus, DHCP, etc.)
-        "/etc/machine-id"
-      ];
+      files = [ ];
+    };
+
+    # machine-id: systemd creates /etc/machine-id during PID 1 init, before
+    # any service runs. Impermanence's persistence-mount-file refuses to bind
+    # mount over an existing non-empty file. Use environment.etc instead —
+    # it creates a symlink that systemd follows transparently.
+    # See: https://discourse.nixos.org/t/impermanence-a-file-already-exists-at-etc-machine-id/20267
+    environment.etc.machine-id.source = "${persistPath}/etc/machine-id";
+
+    # Ensure /persist/etc/machine-id exists before the symlink is resolved.
+    # On first boot, the file won't exist yet; this seeds it so systemd can
+    # find a valid machine-id.
+    systemd.services.ensure-machine-id = {
+      description = "Seed /persist/etc/machine-id if missing";
+      wantedBy = [ "local-fs.target" ];
+      before = [ "local-fs.target" ];
+      unitConfig.DefaultDependencies = false;
+      serviceConfig.Type = "oneshot";
+      serviceConfig.ExecStartPre = "${pkgs.coreutils}/bin/mkdir -p ${persistPath}/etc";
+      serviceConfig.ExecStart = "${pkgs.bash}/bin/bash -c 'if [ ! -f ${persistPath}/etc/machine-id ]; then ${pkgs.systemd}/bin/systemd-machine-id-setup --print > ${persistPath}/etc/machine-id; fi'";
     };
 
     # BTRFS scrub to detect and correct bit-rot
