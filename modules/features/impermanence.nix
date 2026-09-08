@@ -71,6 +71,10 @@ in
     # Ensure persist is mounted before activation scripts
     fileSystems.${persistPath}.neededForBoot = true;
 
+    # persist-files must run before etc so bind mounts (like /etc/machine-id)
+    # are in place before NixOS's etc activation creates the files.
+    system.activationScripts.etc.deps = lib.mkAfter [ "persist-files" ];
+
     # Prevent sudo lecture after each reboot
     security.sudo.extraConfig = ''
       Defaults lecture = never
@@ -107,7 +111,10 @@ in
 
       ];
 
-      files = [ ];
+      files = [
+        # Machine ID (journald, D-Bus, DHCP, etc.)
+        "/etc/machine-id"
+      ];
     };
 
     # BTRFS scrub to detect and correct bit-rot
