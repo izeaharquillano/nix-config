@@ -138,6 +138,8 @@ Remove `fileSystems` and `swapDevices` from the generated hardware config — di
 }
 ```
 
+> **Password setup:** With `impermanence.enable = true`, create `/persist/secrets/hashed-password` during installation (see Step 7 in the reinstall guide). With `impermanence.enable = false`, the fallback `initialPassword = "changeme"` is used — change it after first boot with `passwd`.
+
 ### 5. Create host-specific config files
 
 `hosts/nixos/<name>/host-settings.nix`:
@@ -254,7 +256,6 @@ sbctl status
 
 ```bash
 sudo nixos-rebuild switch --flake .#<name>
-passwd ize  # change from default "changeme" password
 ssh-keyscan <name> 2>/dev/null | grep ssh-ed25519
 # Add key to secrets/secrets.nix and rekey (see root README)
 sudo nixos-rebuild switch --flake .#<name>
@@ -302,6 +303,8 @@ nixosConfigurations.<name> = mkNixosServerHost "<name>" "x86_64-linux";
 ```
 
 No home-manager is included for servers. If you want headless HM tools, import `home/linux/core.nix` in a home-manager entry and add a `mkNixosServerHost` variant with HM.
+
+> **Note:** Server hosts don't use features or impermanence. The fallback `initialPassword = "changeme"` applies — change it after first boot with `passwd`.
 
 ## Adding a New macOS Host
 
@@ -428,7 +431,22 @@ cd /mnt/etc/nixos/nix-config
 sudo nixos-install --flake .#<hostname>
 ```
 
-### Step 7: Reboot
+### Step 7: Create the user password file
+
+**If `features.impermanence.enable = true`:**
+
+Impermanence requires a hashed password file at `/persist/secrets/hashed-password` before first boot. Since `/persist` is already mounted at this point:
+
+```bash
+mkdir -p /mnt/persist/secrets
+mkpasswd -m SHA-512 > /mnt/persist/secrets/hashed-password
+```
+
+**If `features.impermanence.enable = false`:**
+
+No action needed — the fallback `initialPassword = "changeme"` in `system.nix` is used. **Change it after first boot** with `passwd`.
+
+### Step 8: Reboot
 
 ```bash
 sudo reboot
@@ -439,7 +457,6 @@ Remove the USB. On first boot, enter your LUKS passphrase to unlock.
 ### Post-install
 
 ```bash
-passwd ize  # change from default "changeme" password
 ssh-keyscan <hostname> 2>/dev/null | grep ssh-ed25519
 # Add key to secrets/secrets.nix from another authorized host, then rekey
 sudo agenix --rekey

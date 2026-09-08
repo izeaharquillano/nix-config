@@ -43,6 +43,8 @@ in
       serviceConfig.Type = "oneshot";
 
       script = ''
+        set -euo pipefail
+
         mkdir -p /btrfs_tmp
         mount -o subvol=/ /dev/mapper/cryptroot /btrfs_tmp
 
@@ -74,6 +76,10 @@ in
       Defaults lecture = never
     '';
 
+    # Use persistent password file instead of initialPassword
+    users.users.${config.mySystem.username}.hashedPasswordFile =
+      "${persistPath}/secrets/hashed-password";
+
     # System-level persistent state
     environment.persistence.${persistPath} = {
       enable = true;
@@ -81,11 +87,17 @@ in
 
       directories = [
         "/var/lib"
+        "/var/lib/nixos" # UID/GID allocations — without this, IDs shift on reboot
+        "/var/lib/systemd"
         "/var/tmp"
         "/var/cache"
+        "/var/log"
 
         # NetworkManager connections
         "/etc/NetworkManager/system-connections"
+
+        # Nix registry and netrc
+        "/etc/nix"
 
         # SSH host keys
         {
@@ -99,6 +111,13 @@ in
         # Machine ID (journald, etc.)
         "/etc/machine-id"
       ];
+    };
+
+    # BTRFS scrub to detect and correct bit-rot
+    services.btrfs.autoScrub = {
+      enable = true;
+      interval = "monthly";
+      fileSystems = [ "/" ];
     };
   };
 }

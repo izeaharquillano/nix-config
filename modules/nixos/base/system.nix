@@ -48,7 +48,9 @@
     users.users.${config.mySystem.username} = {
       isNormalUser = true;
       description = "Primary user";
-      hashedPasswordFile = "/persist/secrets/hashed-password";
+      # Fallback password for first boot when impermanence is disabled.
+      # When impermanence is enabled, hashedPasswordFile in impermanence.nix takes precedence.
+      initialPassword = "changeme";
       extraGroups = [
         "networkmanager"
         "wheel"
