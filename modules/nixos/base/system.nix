@@ -48,7 +48,7 @@
     users.users.${config.mySystem.username} = {
       isNormalUser = true;
       description = "Primary user";
-      initialPassword = "changeme";
+      hashedPasswordFile = "/persist/secrets/hashed-password";
       extraGroups = [
         "networkmanager"
         "wheel"
