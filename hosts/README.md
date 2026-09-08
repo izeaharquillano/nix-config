@@ -138,7 +138,7 @@ Remove `fileSystems` and `swapDevices` from the generated hardware config — di
 }
 ```
 
-> **Password setup:** With `impermanence.enable = true`, create `/persist/secrets/hashed-password` during installation (see Step 7 in the reinstall guide). With `impermanence.enable = false`, the fallback `initialPassword = "changeme"` is used — change it after first boot with `passwd`.
+> **Password setup:** With `impermanence.enable = true`, create `/persist/secrets/hashed-password` during installation (see Step 7 in the reinstall guide). With `impermanence.enable = false`, the fallback `initialPassword` is used — change it after first boot with `passwd`.
 
 ### 5. Create host-specific config files
 
@@ -304,7 +304,7 @@ nixosConfigurations.<name> = mkNixosServerHost "<name>" "x86_64-linux";
 
 No home-manager is included for servers. If you want headless HM tools, import `home/linux/core.nix` in a home-manager entry and add a `mkNixosServerHost` variant with HM.
 
-> **Note:** Server hosts don't use features or impermanence. The fallback `initialPassword = "changeme"` applies — change it after first boot with `passwd`.
+> **Note:** Server hosts don't use features or impermanence. The fallback `initialPassword` applies — change it after first boot with `passwd`.
 
 ## Adding a New macOS Host
 
@@ -444,7 +444,7 @@ mkpasswd -m SHA-512 > /mnt/persist/secrets/hashed-password
 
 **If `features.impermanence.enable = false`:**
 
-No action needed — the fallback `initialPassword = "changeme"` in `system.nix` is used. **Change it after first boot** with `passwd`.
+No action needed — the fallback `initialPassword` is used. **Change it after first boot** with `passwd`.
 
 ### Step 8: Reboot
 

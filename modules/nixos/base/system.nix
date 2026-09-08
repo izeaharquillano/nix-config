@@ -48,9 +48,9 @@
     users.users.${config.mySystem.username} = {
       isNormalUser = true;
       description = "Primary user";
-      # Fallback password for first boot when impermanence is disabled.
-      # When impermanence is enabled, hashedPasswordFile in impermanence.nix takes precedence.
-      initialPassword = "changeme";
+      # Set when impermanence is disabled. When enabled, hashedPasswordFile
+      # in impermanence.nix takes precedence and this is ignored.
+      initialPassword = lib.mkIf (!(config.features.impermanence.enable or false)) "changeme";
       extraGroups = [
         "networkmanager"
         "wheel"
