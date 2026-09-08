@@ -107,10 +107,7 @@ in
 
       ];
 
-      files = [
-        # Machine ID (journald, etc.)
-        "/etc/machine-id"
-      ];
+      files = [ ];
     };
 
     # BTRFS scrub to detect and correct bit-rot
