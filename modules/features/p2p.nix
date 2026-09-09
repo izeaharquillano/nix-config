@@ -35,6 +35,9 @@ in
           owner = "root";
           group = "root";
           mode = "0400";
+        } // lib.optionalAttrs config.features.impermanence.enable {
+          path = "/persist/secrets/netbird-setup-key";
+          symlink = false;
         };
 
         services.netbird = {

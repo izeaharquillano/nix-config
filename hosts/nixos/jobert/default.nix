@@ -35,7 +35,10 @@
         networkId = "88c5b1f339f6593b";
       };
     };
-    vm.enable = true;
+    vm = {
+      enable = true;
+      dosbox.enable = true;
+    };
     gaming.enable = true;
     containers.enable = true;
     fhs.enable = true;
