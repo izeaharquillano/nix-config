@@ -1,6 +1,8 @@
 { pkgs, ... }:
 
 {
+  hardware.amdgpu.initrd.enable = false;
+
   boot.kernelParams = [ "acpi.ec_no_wakeup=1" ];
 
   hardware.graphics = {
