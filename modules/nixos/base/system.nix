@@ -40,6 +40,11 @@
       options = "--delete-older-than 14d";
     };
 
+    systemd.services."home-manager-${config.mySystem.username}" = {
+      after = [ "network-online.target" ];
+      wants = [ "network-online.target" ];
+    };
+
     nix.optimise = {
       automatic = true;
       dates = [ "weekly" ];
