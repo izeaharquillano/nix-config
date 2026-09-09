@@ -10,13 +10,10 @@ let
   cfg = config.features.impermanence;
   persistPath = "/persist";
   homeDir = "/home/${config.mySystem.username}";
-  ephemeralDirs = [
-    ".cache"
-    ".local/state"
-    ".local/share/Trash"
-    ".thumbnails"
-  ];
-  rmCmd = lib.concatStringsSep " " (map (d: "${homeDir}/${d}") ephemeralDirs);
+  clean = cfg.cleanHome;
+  findTargets = lib.concatStringsSep " " (map (d: "${homeDir}/${d}") clean.directories);
+  findExcludes = lib.concatStringsSep " " (map (d: "! -name \"${d}\"") clean.excludes);
+  touchFiles = lib.concatStringsSep " " (map (d: "${homeDir}/${d}") clean.excludeFiles);
 in
 {
   imports = [
@@ -25,12 +22,38 @@ in
 
   options.features.impermanence = {
     enable = lib.mkEnableOption "Ephemeral root with persistent /persist subvolume";
+
+    cleanHome = {
+      directories = lib.mkOption {
+        type = lib.types.listOf lib.types.str;
+        default = [
+          ".cache"
+          ".local/state"
+          ".local/share/Trash"
+          ".thumbnails"
+        ];
+        description = "Home directories to wipe on boot";
+      };
+
+      excludes = lib.mkOption {
+        type = lib.types.listOf lib.types.str;
+        default = [ ];
+        description = "Directory names to skip when wiping";
+      };
+
+      excludeFiles = lib.mkOption {
+        type = lib.types.listOf lib.types.str;
+        default = [
+          ".local/state/noctalia/.setup-complete"
+        ];
+        description = "Files to preserve after wiping (re-created via touch)";
+      };
+    };
   };
 
   config = lib.mkIf cfg.enable {
     boot.initrd.systemd.enable = true;
 
-    # Rollback btrfs root subvolume on every boot.
     boot.initrd.systemd.services.rollback = {
       description = "Rollback BTRFS root subvolume to a pristine state";
 
@@ -101,9 +124,6 @@ in
       files = [ ];
     };
 
-    # systemd creates /etc/machine-id during PID 1 init, before any service
-    # runs. Impermanence's bind-mount refuses to mount over an existing file,
-    # so we use environment.etc to symlink instead.
     environment.etc.machine-id.source = "${persistPath}/etc/machine-id";
 
     systemd.services.ensure-machine-id = {
@@ -122,8 +142,7 @@ in
       after = [ "home-manager-${config.mySystem.username}.service" ];
       wants = [ "home-manager-${config.mySystem.username}.service" ];
       serviceConfig.Type = "oneshot";
-      serviceConfig.RemainAfterExit = true;
-      serviceConfig.ExecStart = "${pkgs.bash}/bin/bash -c '${pkgs.coreutils}/bin/rm -rf ${rmCmd}'";
+      serviceConfig.ExecStart = "${pkgs.bash}/bin/bash -c 'for d in ${findTargets}; do [ -d \"$d\" ] && echo \"$d\"; done | ${pkgs.findutils}/bin/xargs ${pkgs.findutils}/bin/find -mindepth 1 -maxdepth 1 ${findExcludes} -exec ${pkgs.coreutils}/bin/rm -rf {} +; ${pkgs.coreutils}/bin/touch ${touchFiles}'";
     };
   };
 }

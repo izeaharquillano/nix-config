@@ -1,5 +1,8 @@
 config_version = 13
 
+[general]
+show_changelog_on_startup = false
+
 [bar.default]
 end = [ "tray", "brightness", "volume", "battery", "network", "control-center", "session" ]
 font_family = "JetBrainsMono NF"
