@@ -18,6 +18,9 @@
       "inode/directory" = [ "nemo.desktop" ];
       "application/x-gnome-saved-search" = [ "nemo.desktop" ];
     };
+    defaultApplicationPackages = with pkgs; [
+      qimgv
+    ];
   };
 
   systemd.user.services.polkit-gnome-authentication-agent-1 = {
