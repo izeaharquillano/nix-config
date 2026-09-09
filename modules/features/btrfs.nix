@@ -30,5 +30,11 @@ in
     fileSystems = lib.genAttrs cfg.mountPaths (path: {
       options = btrfsOpts;
     });
+
+    services.btrfs.autoScrub = {
+      enable = true;
+      interval = "monthly";
+      fileSystems = [ "/" ];
+    };
   };
 }
