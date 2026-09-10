@@ -13,6 +13,10 @@ hl.config({
         allow_tearing = false,
         layout = "dwindle",
     },
+    ecosystem = {
+      no_update_news = true,
+      no_donation_nag = true,
+    },
     decoration = {
         rounding       = 10,
         rounding_power = 2,

@@ -2,8 +2,12 @@
 
 {
   programs.zsh.enable = true;
+  programs.dconf.enable = true;
 
-  programs.hyprland.enable = true;
+  programs.hyprland = {
+    enable = true;
+    withUWSM = true;
+  };
 
   fonts.packages = with pkgs; [
     nerd-fonts.jetbrains-mono
@@ -24,6 +28,20 @@
     enable = true;
     alsa.enable = true;
     pulse.enable = true;
+  };
+
+  xdg.portal = {
+    enable = true;
+    config = {
+      hyprland = {
+        default = [ "hyprland" "gtk" ];
+        "org.freedesktop.impl.portal.ScreenCast" = [ "hyprland" ];
+      };
+    };
+    extraPortals = [
+      pkgs.xdg-desktop-portal-hyprland
+      pkgs.xdg-desktop-portal-gtk
+    ];
   };
 
   hardware.bluetooth = {

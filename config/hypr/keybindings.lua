@@ -33,7 +33,7 @@ end
 
 for i = 1, 10 do
     local key = i % 10
-    hl.bind("ALT + " .. key, hl.dsp.window.move({ workspace = i }))
+    hl.bind(mainMod .. " + SHIFT + " .. key, hl.dsp.window.move({ workspace = i }))
 end
 
 hl.bind(mainMod .. " + S",         hl.dsp.workspace.toggle_special("magic"))
