@@ -92,6 +92,7 @@
           id = "02857fd6-cd53-45a5-b8d9-54e3c2064a0c";
           url = "https://www.facebook.com/messages";
           position = 101;
+          isEssential = true;
         };
       };
 
