@@ -6,8 +6,9 @@ show_changelog_on_startup = false
 [bar.default]
 end = [ "tray", "brightness", "volume", "battery", "network", "control-center", "session" ]
 font_family = "JetBrainsMono NF"
-margin_ends = 3
 widget_spacing = 15
+margin_ends = 0
+radius = 0
 
 [notification]
 filter_order = [ "filter" ]
