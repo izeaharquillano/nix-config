@@ -19,6 +19,7 @@ lib.mkIf cfg.enable (
           vscodevim.vim
           jdinhlife.gruvbox
           jnoortheen.nix-ide
+          ms-dotnettools.csharp
         ];
       };
       xdg.configFile."Code/User/settings.json".source = ../../../config/vscode/settings.json;
