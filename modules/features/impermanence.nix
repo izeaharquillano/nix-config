@@ -25,9 +25,12 @@
       cleanExcludeFiles = [
         ".local/state/noctalia/.setup-complete"
       ];
-      findTargets = lib.concatStringsSep " " (map (d: "${homeDir}/${d}") cleanDirs);
-      findExcludes = lib.concatStringsSep " " (map (d: "! -name \"${d}\"") cleanExcludes);
-      touchFiles = lib.concatStringsSep " " (map (d: "${homeDir}/${d}") cleanExcludeFiles);
+      # `find <dir> -mindepth 1 -maxdepth 1 <excludes>`: paths MUST precede
+      # the expression (previous xargs appended paths at the end, so find
+      # always failed with "paths must precede expression" and wiped nothing).
+      findExcludeArgs = lib.concatMapStringsSep " " (
+        e: "! -name ${lib.escapeShellArg e}"
+      ) cleanExcludes;
     in
     {
       imports = [
@@ -125,10 +128,28 @@
       systemd.services.clean-home = {
         description = "Wipe ephemeral home directories on boot";
         wantedBy = [ "multi-user.target" ];
-        after = [ "home-manager-${config.mySystem.username}.service" ];
-        wants = [ "home-manager-${config.mySystem.username}.service" ];
+        # Run BEFORE Home Manager activation (not after): wiping after HM
+        # deletes files HM just created, and re-runs on every
+        # `nixos-rebuild switch` while logged in, nuking the live session's
+        # cache. Before HM it only affects stale state from previous boots.
+        after = [ "local-fs.target" ];
+        before = [ "home-manager-${config.mySystem.username}.service" ];
         serviceConfig.Type = "oneshot";
-        serviceConfig.ExecStart = "${pkgs.bash}/bin/bash -c 'for d in ${findTargets}; do [ -d \"$d\" ] && echo \"$d\"; done | ${pkgs.findutils}/bin/xargs ${pkgs.findutils}/bin/find -mindepth 1 -maxdepth 1 ${findExcludes} -exec ${pkgs.coreutils}/bin/rm -rf {} +; ${pkgs.coreutils}/bin/touch ${touchFiles}'";
+        serviceConfig.RemainAfterExit = true;
+        script = ''
+          set -euo pipefail
+          for d in ${lib.escapeShellArgs (map (d: "${homeDir}/${d}") cleanDirs)}; do
+            if [ ! -d "$d" ]; then
+              continue
+            fi
+            echo "cleaning $d..."
+            ${lib.getExe' pkgs.findutils "find"} "$d" -mindepth 1 -maxdepth 1 ${findExcludeArgs} -exec ${lib.getExe' pkgs.coreutils "rm"} -rf -- {} +
+          done
+          for f in ${lib.escapeShellArgs (map (f: "${homeDir}/${f}") cleanExcludeFiles)}; do
+            ${lib.getExe' pkgs.coreutils "mkdir"} -p "$(dirname "$f")"
+            ${lib.getExe' pkgs.coreutils "touch"} "$f"
+          done
+        '';
       };
     };
 }
