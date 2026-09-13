@@ -1,40 +1,45 @@
-{ lib, config, ... }:
-
-let
-  cfg = config.features.btrfs;
-
-  btrfsOpts = [
-    "compress=zstd:3"
-    "noatime"
-    "ssd"
-    "discard=async"
-    "commit=120"
-  ];
-in
+# Conditional Aspect: BTRFS compression/tuning
+# Dendritic module: flake.modules.nixos.btrfs
 {
-  options.features.btrfs = {
-    enable = lib.mkEnableOption "BTRFS mount options with zstd compression";
+  flake.modules.nixos.btrfs =
+    { lib, config, ... }:
 
-    mountPaths = lib.mkOption {
-      type = lib.types.listOf lib.types.str;
-      default = [
-        "/home"
-        "/nix"
-        "/persist"
+    let
+      cfg = config.features.btrfs;
+
+      btrfsOpts = [
+        "compress=zstd:3"
+        "noatime"
+        "ssd"
+        "discard=async"
+        "commit=120"
       ];
-      description = "Filesystem paths to apply BTRFS compression options to";
-    };
-  };
+    in
+    {
+      options.features.btrfs = {
+        enable = lib.mkEnableOption "BTRFS mount options with zstd compression";
 
-  config = lib.mkIf cfg.enable {
-    fileSystems = lib.genAttrs cfg.mountPaths (path: {
-      options = btrfsOpts;
-    });
+        mountPaths = lib.mkOption {
+          type = lib.types.listOf lib.types.str;
+          default = [
+            "/home"
+            "/nix"
+            "/persist"
+          ];
+          description = "Filesystem paths to apply BTRFS compression options to";
+        };
+      };
 
-    services.btrfs.autoScrub = {
-      enable = true;
-      interval = "monthly";
-      fileSystems = [ "/" ];
+      config = lib.mkIf cfg.enable {
+        fileSystems = lib.genAttrs cfg.mountPaths (path: {
+          options = btrfsOpts;
+        });
+
+        services.btrfs.autoScrub = {
+          enable = true;
+          interval = "monthly";
+          fileSystems = [ "/" ];
+        };
+      };
     };
-  };
 }

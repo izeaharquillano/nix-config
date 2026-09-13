@@ -1,12 +1,17 @@
-{ ... }:
-
+# Simple Aspect: Niri compositor + Wayland env
+# Dendritic module: flake.modules.nixos.desktop-niri
 {
-  programs.niri.enable = true;
+  flake.modules.nixos.desktop-niri =
+    { ... }:
 
-  systemd.user.services.niri.enableDefaultPath = false;
+    {
+      programs.niri.enable = true;
 
-  environment.sessionVariables = {
-    NIXOS_OZONE_WL = "1";
-    MOZ_ENABLE_WAYLAND = "1";
-  };
+      systemd.user.services.niri.enableDefaultPath = false;
+
+      environment.sessionVariables = {
+        NIXOS_OZONE_WL = "1";
+        MOZ_ENABLE_WAYLAND = "1";
+      };
+    };
 }

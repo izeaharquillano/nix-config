@@ -1,18 +1,23 @@
-{ pkgs, ... }:
-
+# Simple Aspect: polkit, rtkit, firewall, neovim
+# Dendritic module: flake.modules.nixos.base-security
 {
-  security = {
-    polkit.enable = true;
-    rtkit.enable = true;
-  };
+  flake.modules.nixos.base-security =
+    { pkgs, ... }:
 
-  networking.firewall = {
-    enable = true;
-    allowPing = true;
-  };
+    {
+      security = {
+        polkit.enable = true;
+        rtkit.enable = true;
+      };
 
-  programs.neovim = {
-    enable = true;
-    defaultEditor = true;
-  };
+      networking.firewall = {
+        enable = true;
+        allowPing = true;
+      };
+
+      programs.neovim = {
+        enable = true;
+        defaultEditor = true;
+      };
+    };
 }

@@ -1,8 +1,19 @@
+# Dendritic entry point: inputs plus a single mkFlake + import-tree call.
+# All configuration lives under `modules/` as `flake.modules.<class>.<name>`
+# pieces (see Doc-Steve/dendritic-design-with-flake-parts). Hosts are composed
+# in `modules/hosts/*/` and instantiated via the `mkNixosHost` factory in
+# `modules/dendritic/lib.nix`.
 {
   description = "An Epic NixOS Configuration";
 
+  outputs = inputs: inputs.flake-parts.lib.mkFlake { inherit inputs; } (inputs.import-tree ./modules);
+
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
+
+    flake-parts.url = "github:hercules-ci/flake-parts";
+
+    import-tree.url = "github:vic/import-tree";
 
     nix-darwin = {
       url = "github:LnL7/nix-darwin";
@@ -68,6 +79,4 @@
       url = "github:thiagokokada/nix-alien";
     };
   };
-
-  outputs = inputs: import ./outputs inputs;
 }

@@ -1,0 +1,542 @@
+# Hosts
+
+Each subdirectory is a machine (`padrick/`, `jobert/`; future macOS hosts live under `darwin/`). Each host folder is a dendritic composition root: per-aspect files declare `flake.modules.nixos.<name>-*` pieces, `configuration.nix` composes them into `flake.modules.nixos.<name>`, `home.nix` composes `flake.modules.homeManager.<name>`, and `flake-parts.nix` instantiates `nixosConfigurations.<name>` via the `mkNixosHost` factory.
+
+## Current Hosts
+
+| Host | Platform | Type | Hardware | Purpose |
+|---|---|---|---|---|
+| `padrick` | NixOS | Laptop | AMD, LUKS+BTRFS, Wayland | Daily use |
+| `jobert` | NixOS | Gaming Laptop | AMD + NVIDIA, LUKS+BTRFS, Wayland | Work/gaming |
+
+### Disk Encryption (LUKS) & Impermanence
+
+All NixOS hosts use LUKS2 full-disk encryption with btrfs and [impermanence](https://github.com/nix-community/impermanence) (ephemeral root, persistent `/persist` subvolume). Both hosts use [disko](https://github.com/nix-community/disko) for declarative disk management.
+
+| Host | Disk Layout | Notes |
+|------|-------------|-------|
+| `padrick` | disko | Dual-boot with Windows on same disk |
+| `jobert` | disko | NixOS-only disk |
+
+**LUKS settings:** LUKS2, AES-XTS-Plain64, SHA-512, Argon2id, TRIM enabled.
+
+**Impermanence:** Root btrfs subvolume is wiped on every boot via a systemd service in initrd. `/home`, `/nix`, and `/persist` are separate persistent subvolumes. System state (`/var/lib/nixos`, `/etc/machine-id`, `/etc/ssh`, NetworkManager, Bluetooth) is persisted via impermanence bind mounts.
+
+**Swap:** zswap handles compressed swap in RAM. A swapfile on btrfs provides overflow. Hibernation is not configured.
+
+**Disko config files:** `modules/hosts/<name>/disko.nix`
+
+### padrick: Daily Use ThinkPad
+
+```nix
+features = {
+  btrfs.enable = true;
+  impermanence.enable = true;
+  secureboot.enable = true;
+  zswap.enable = true;
+  p2p.enable = true;
+  containers.enable = true;
+  vm.enable = true;
+  editors.enable = true;
+  fhs.enable = true;
+};
+```
+
+### jobert: Gaming & Virtualization
+
+```nix
+features = {
+  btrfs.enable = true;
+  impermanence.enable = true;
+  secureboot.enable = true;
+  zswap.enable = true;
+  p2p = {
+    enable = true;
+    zerotier = {
+      enable = true;
+      networkId = "YOUR_NETWORK_ID";
+    };
+  };
+  vm.enable = true;
+  gaming.enable = true;
+  containers.enable = true;
+  fhs.enable = true;
+  recording.enable = true;
+};
+```
+
+The gaming module configures Steam (with remote play + dedicated server firewall rules), Proton GE, Gamescope, Gamemode, MangoHud, and GOverlay. NVIDIA-specific hardware config is in `modules/hosts/jobert/host-settings.nix` (open driver, VA-API, Wayland env vars, 32-bit OpenGL).
+
+## Adding a New Desktop Host
+
+### 1. Create the host directory
+
+```bash
+mkdir -p modules/hosts/<name>
+mkdir -p modules/hosts/<name>/config
+```
+
+### 2. Generate hardware config
+
+```bash
+sudo nixos-generate-config --show-hardware-config > modules/hosts/<name>/hardware-configuration.nix
+```
+
+### 3. Choose your disk approach
+
+**Option A: NixOS-only disk**
+
+```bash
+cp modules/hosts/jobert/disko.nix modules/hosts/<name>/disko.nix
+# Edit: update device = "/dev/disk/by-id/..." and swap.swapfile.size
+```
+
+**Option B: Dual-boot with Windows on same disk**
+
+```bash
+cp modules/hosts/padrick/disko.nix modules/hosts/<name>/disko.nix
+# Edit: update device = "/dev/disk/by-id/..."
+# The disko config already reserves space for Windows (MS reserved + data partition)
+```
+
+For both options, wrap the disko layout as a dendritic piece of this host
+(`flake.modules.nixos.<name>-disko`). Every host file follows the same shape —
+a thin `flake.modules.*` declaration around the plain module body, which
+`import-tree` picks up automatically (no aggregator files):
+
+```nix
+# Dendritic module: flake.modules.nixos.<name>-disko
+{
+  flake.modules.nixos.<name>-disko =
+    { ... }:
+    {
+      disko.devices = {
+        # ...your disk layout...
+      };
+    };
+}
+```
+
+Remove `fileSystems` and `swapDevices` from the generated hardware config — disko provides them.
+
+### 4. Create `modules/hosts/<name>/configuration.nix`
+
+The composition root. It pulls together the `desktop` + `features` system
+types, the reusable `user-ize` feature, this host's `*-disko`, `*-hardware`,
+`*-packages`, `*-services`, `*-host-settings` pieces, and external modules —
+all referenced via `inputs.self.modules.nixos` (never relative `../../../`):
+
+```nix
+# Dendritic composition root: flake.modules.nixos.<name>
+{ inputs, ... }:
+let
+  nixos = inputs.self.modules.nixos;
+in
+{
+  flake.modules.nixos.<name> = {
+    imports = [
+      nixos.desktop
+      nixos.features
+      nixos.user-ize
+      nixos.<name>-disko
+      nixos.<name>-hardware
+      nixos.<name>-packages
+      nixos.<name>-services
+      nixos.<name>-host-settings
+      inputs.disko.nixosModules.default
+      # inputs.nixos-hardware.nixosModules.<your-profile>
+    ];
+
+    networking.hostName = "<name>";
+
+    features = {
+      btrfs.enable = true;
+      impermanence.enable = true;
+      secureboot.enable = true;
+      zswap.enable = true;
+      p2p.enable = true;
+    };
+
+    system.stateVersion = "26.05";
+  };
+}
+```
+
+> **Password setup:** With `impermanence.enable = true`, create `/persist/secrets/hashed-password` during installation (see Step 7 in the reinstall guide). With `impermanence.enable = false`, the fallback `initialPassword` is used — change it after first boot with `passwd`.
+
+### 5. Create host-specific pieces
+
+Each file declares one `flake.modules.nixos.<name>-*` Collector piece.
+`modules/hosts/<name>/host-settings.nix`:
+
+```nix
+# Dendritic module: flake.modules.nixos.<name>-host-settings
+{
+  flake.modules.nixos.<name>-host-settings =
+    { pkgs, ... }:
+    {
+      hardware.graphics = {
+        enable = true;
+        enable32Bit = true;
+      };
+    };
+}
+```
+
+`modules/hosts/<name>/services.nix` — for laptops:
+
+```nix
+# Dendritic module: flake.modules.nixos.<name>-services
+{
+  flake.modules.nixos.<name>-services =
+    { pkgs, lib, ... }:
+    {
+      services.resolved.enable = true;
+      services.power-profiles-daemon.enable = false;
+      services.tlp = {
+        enable = true;
+        settings = {
+          CPU_SCALING_GOVERNOR_ON_AC = "performance";
+          CPU_SCALING_GOVERNOR_ON_BAT = "powersave";
+        };
+      };
+      services.upower = {
+        enable = true;
+        percentageLow = 20;
+        percentageCritical = 5;
+        percentageAction = 2;
+        criticalPowerAction = "PowerOff";
+      };
+    };
+}
+
+`modules/hosts/<name>/packages.nix`:
+
+```nix
+# Dendritic module: flake.modules.nixos.<name>-packages
+{
+  flake.modules.nixos.<name>-packages =
+    { pkgs, ... }:
+    {
+      environment.systemPackages = with pkgs; [
+        # host-specific packages
+      ];
+    };
+}
+```
+
+### 6. Create host-specific config files (Wayland)
+
+`modules/hosts/<name>/config/niri-host-settings.kdl`:
+
+```kdl
+output "eDP-1" {
+    mode "1920x1080@60"
+    scale 1.20
+    transform "normal"
+}
+```
+
+`modules/hosts/<name>/config/hypr-host-settings.lua`:
+
+```lua
+hl.monitor({
+    output   = "eDP-1",
+    mode     = "1920x1080@60",
+    position = "auto",
+    scale    = "1.20",
+})
+```
+
+Optionally, create `noctalia-host-settings.toml` for Noctalia lockscreen widgets.
+
+### 7. Add Home Manager config
+
+`modules/hosts/<name>/home.nix` (`flake.modules.homeManager.<name>`).
+Dendritic siblings are captured via `hm`; the inner `inputs` is the runtime
+`extraSpecialArgs` (provides `niri`, `noctalia`, ...):
+
+```nix
+{ inputs, ... }:
+let
+  hm = inputs.self.modules.homeManager;
+in
+{
+  flake.modules.homeManager.<name> =
+    { inputs, ... }:
+    {
+      imports = [
+        hm.home-linux-gui
+        hm.home-features
+        hm.<name>-home-packages
+        inputs.niri.homeModules.niri
+        inputs.noctalia.homeModules.default
+      ];
+
+      xdg.configFile."niri/niri-host-settings.kdl".source = ./config/niri-host-settings.kdl;
+      xdg.configFile."hypr/hypr-host-settings.lua".source = ./config/hypr-host-settings.lua;
+    };
+}
+```
+
+### 8. Instantiate via `modules/hosts/<name>/flake-parts.nix`
+
+```nix
+# Instantiates <name> via the Factory Aspect (`mkNixosHost`).
+{ inputs, ... }:
+{
+  flake.nixosConfigurations.<name> = inputs.self.lib.mkNixosHost "<name>" "x86_64-linux";
+}
+
+### 9. Secure Boot (optional, first-time only)
+
+```bash
+sudo sbctl create-keys
+sudo sbctl enroll-keys --microsoft
+sbctl status
+```
+
+### 10. First deploy + secrets setup
+
+```bash
+sudo nixos-rebuild switch --flake .#<name>
+ssh-keyscan <name> 2>/dev/null | grep ssh-ed25519
+# Add key to secrets/secrets.nix and rekey (see root README)
+sudo nixos-rebuild switch --flake .#<name>
+```
+
+## Adding a New Server Host
+
+### 1. Create the host directory
+
+```bash
+mkdir -p modules/hosts/<name>
+```
+
+### 2. Generate hardware config
+
+```bash
+sudo nixos-generate-config --show-hardware-config > modules/hosts/<name>/hardware-configuration.nix
+```
+
+### 3. Create `modules/hosts/<name>/configuration.nix`
+
+```nix
+# Dendritic composition root: flake.modules.nixos.<name>
+{ inputs, ... }:
+let
+  nixos = inputs.self.modules.nixos;
+in
+{
+  flake.modules.nixos.<name> = {
+    imports = [
+      nixos.server
+      nixos.user-ize
+      nixos.<name>-hardware
+      # nixos.<name>-packages  # optional
+      # nixos.<name>-services  # optional
+    ];
+
+    networking.hostName = "<name>";
+
+    system.stateVersion = "26.05";
+  };
+}
+```
+
+### 4. Create `modules/hosts/<name>/flake-parts.nix`
+
+```nix
+{ inputs, ... }:
+{
+  flake.nixosConfigurations.<name> = inputs.self.lib.mkNixosServerHost "<name>" "x86_64-linux";
+}
+
+No home-manager is included for servers. If you want headless HM tools, define a `flake.modules.homeManager.<name>` importing `home-linux-core` and extend the server factory with a home-manager block.
+
+> **Note:** Server hosts don't use features or impermanence. The fallback `initialPassword` applies — change it after first boot with `passwd`.
+
+## Adding a New macOS Host
+
+### 1. Create the host directory
+
+```bash
+mkdir -p modules/hosts/darwin/<name>
+```
+
+### 2. Create `modules/hosts/darwin/<name>/configuration.nix`
+
+```nix
+# Dendritic module: flake.modules.darwin.<name>
+{ inputs, ... }:
+let
+  darwin = inputs.self.modules.darwin;
+in
+{
+  flake.modules.darwin.<name> = {
+    imports = [
+      darwin.base-nix
+      darwin.base-direnv
+      darwin.home-manager
+    ];
+    networking.hostName = "<name>";
+    system.stateVersion = 5;
+  };
+}
+```
+
+### 3. Create Home Manager entry point
+
+`modules/hosts/darwin/<name>/home.nix`:
+
+```nix
+# Dendritic module: flake.modules.homeManager.<name>
+{ inputs, ... }:
+{
+  flake.modules.homeManager.<name> = {
+    imports = [ inputs.self.modules.homeManager.user-ize ];
+    # darwin home modules...
+  };
+}
+```
+
+### 4. Create `modules/hosts/darwin/<name>/flake-parts.nix`
+
+```nix
+{ inputs, ... }:
+{
+  flake.darwinConfigurations.<name> = inputs.self.lib.mkDarwinHost "<name>" "aarch64-darwin";
+}
+
+### 5. First deploy
+
+```bash
+darwin-rebuild switch --flake .#<name>
+```
+
+## Disabling Services Per Host
+
+Services enabled in shared modules apply to all hosts automatically (everything under `modules/` is imported by `import-tree`). To disable on a specific host, use `lib.mkForce` in the host's `configuration.nix`. See [modules/README.md](../README.md#overriding-modules-per-host) for examples.
+
+## BTRFS: Disable COW for Steam
+
+```bash
+sudo chattr +C ~/.local/share/steam
+```
+
+Must be done before any files are written to the directory. If Steam is already installed, move the folder, create a fresh one, apply the attribute, then move files back.
+
+---
+
+## Reinstalling a NixOS Host from Scratch
+
+### Prerequisites
+
+- A bootable NixOS USB (use the Minimal ISO from https://nixos.org/download/)
+- Internet connection
+- This config repo cloned to the USB (or accessible via network)
+
+### Step 1: Boot from USB
+
+Boot the NixOS live ISO.
+
+### Step 2: Find your disk
+
+```bash
+ls /dev/disk/by-id/ | grep nvme
+```
+
+### Step 3: Update disko config
+
+```bash
+git clone https://github.com/<your-user>/nix-config.git
+cd nix-config
+
+# Update the disk ID in the disko config
+$EDITOR modules/hosts/<hostname>/disko.nix
+# Change: device = "/dev/disk/by-id/TODO-YOUR-DISK-ID";
+# To:     device = "/dev/disk/by-id/<actual-disk-id>";
+```
+
+### Step 4: Run disko
+
+This **wipes the entire disk** and sets up LUKS + btrfs + subvolumes.
+disko reads the layout from the host's evaluated system config
+(`config.disko.devices`, wired via the `<name>-disko` dendritic piece):
+
+```bash
+sudo nix --experimental-features "nix-command flakes" run \
+  github:nix-community/disko/latest -- \
+  --mode destroy,format,mount --flake .#<hostname>
+```
+
+Enter a LUKS passphrase when prompted.
+
+### Step 5: Generate hardware config
+
+```bash
+sudo nixos-generate-config --root /mnt --show-hardware-config \
+  > /mnt/etc/nixos/nix-config/modules/hosts/<hostname>/hardware-configuration.nix
+```
+
+Remove `fileSystems` and `swapDevices` from the generated hardware config — disko provides those.
+
+### Step 6: Install
+
+```bash
+cd /mnt/etc/nixos/nix-config
+sudo nixos-install --flake .#<hostname>
+```
+
+### Step 7: Create the user password file
+
+**If `features.impermanence.enable = true`:**
+
+Impermanence requires a hashed password file at `/persist/secrets/hashed-password` before first boot. Since `/persist` is already mounted at this point:
+
+```bash
+mkdir -p /mnt/persist/secrets
+mkpasswd -m SHA-512 > /mnt/persist/secrets/hashed-password
+```
+
+**If `features.impermanence.enable = false`:**
+
+No action needed — the fallback `initialPassword` is used. **Change it after first boot** with `passwd`.
+
+### Step 8: Reboot
+
+```bash
+sudo reboot
+```
+
+Remove the USB. On first boot, enter your LUKS passphrase to unlock.
+
+### Post-install
+
+```bash
+ssh-keyscan <hostname> 2>/dev/null | grep ssh-ed25519
+# Add key to secrets/secrets.nix from another authorized host, then rekey
+sudo agenix --rekey
+sudo nixos-rebuild switch --flake .#<hostname>
+```
+
+### padrick: Windows Dual-Boot Install
+
+After NixOS is installed and working on padrick, install Windows alongside it:
+
+1. **Boot the Windows installer** from a USB
+2. **Select the "Windows data" partition** (128GB, type 0700) as the install target
+3. Windows will detect the existing ESP and may create its own recovery partition
+4. **Do NOT format the ESP** — NixOS bootloader lives there
+5. After Windows install, you should be able to boot either OS from the firmware menu (F12 on ThinkPad) or configure systemd-boot to chainload Windows
+
+If Windows creates a duplicate recovery partition, that's harmless — it just uses a bit of extra space. If you want to reclaim it later, you can delete it from Windows Disk Management.
+
+To add a Windows boot entry to systemd-boot (optional, from NixOS):
+
+```bash
+sudo bootctl install  # re-register NixOS as primary
+# Then add a Windows entry manually or via a NixOS module
+```
+
+**Reverting to pure NixOS:** If Windows dual-boot causes issues, remove the `"Microsoft reserved"` and `"Windows data"` partitions from `disko.nix`, then rebuild. The LUKS/btrfs partitions will expand to fill the disk.

@@ -1,53 +1,56 @@
 # System Modules
 
-System-level configuration split into reusable modules, organized by platform.
+System-level configuration as dendritic `flake.modules.nixos.*` pieces,
+organized by platform. Every `.nix` file under `modules/` is auto-imported by
+`import-tree` — no aggregator files. Cross-file composition is explicit via
+`inputs.self.modules.*`.
 
 ## Module Types
 
-- **`base/`** — Cross-platform NixOS config (nix settings, direnv). Shared between NixOS and Darwin.
-- **`nixos/base/`** — Core NixOS config (boot, networking, nix, users, SSH, firewall). Always imported.
-  - `system.nix` — Boot, networking, nix settings, `mySystem.kernelPackage` and `mySystem.username` options
+- **`base/`** — Cross-platform config (Multi-Context Aspect: same body published as `nixos.*` and `darwin.*`).
+- **`nixos/base/`** — Core NixOS pieces (boot, networking, locale, SSH, secrets, firewall). Always imported via the `desktop`/`server` system types.
+  - `system.nix` — Boot, networking, GC, `mySystem.kernelPackage` and `mySystem.username` options (the user account itself lives in `users/ize.nix`)
   - `locale.nix` — Timezone, locale, hardware clock (UTC)
   - `ssh.nix` — OpenSSH (key-based auth only, root login denied)
   - `secrets.nix` — agenix secret declarations
-  - `security.nix` — Neovim, nix-ld, firewall (base rules)
+  - `security.nix` — Neovim, firewall (base rules), polkit/rtkit
   - `packages.nix` — Base system packages
-- **`nixos/desktop.nix`** — Entry point for desktop/GUI hosts. Imports `nixos/base/` + `nixos/desktop/`.
-- **`nixos/desktop/`** — GUI/desktop modules (greetd, Niri, PipeWire, fonts).
-- **`nixos/server/`** — Entry point for headless server hosts. Imports `nixos/base/` + server-specific modules.
-- **`features/`** — Optional features gated behind `mkEnableOption`. Auto-imported via `scanPaths`.
-- **`darwin/`** — macOS system config (placeholder).
+- **`nixos/desktop.nix`** — `desktop` system type (Inheritance Aspect): base + desktop GUI modules + home-manager wiring. Hosts import `nixos.desktop`.
+- **`nixos/desktop/`** — GUI/desktop pieces (greetd, Niri, PipeWire, fonts).
+- **`nixos/server.nix`** — `server` system type (Inheritance Aspect): base modules only, no desktop, no Home Manager.
+- **`features/`** — Optional features gated behind `mkEnableOption` (Conditional Aspect), collected by `features.nix` (Collector Aspect).
+- **`users/`** — The primary user as a reusable Multi-Context feature (`nixos.user-ize` owns the account, `homeManager.user-ize` re-exports `home-base`).
 
-All directories use `scanPaths` for auto-import — create a `.nix` file and it's picked up automatically.
+To add a module, create a `.nix` file declaring one `flake.modules.<class>.<name>` piece — `import-tree` picks it up automatically. If it should be composed (system types, features), also add it to the relevant collector (`desktop`/`server`, `features.nix`, `home-linux-core`/`home-linux-gui`, `home-features`).
 
 ## Adding a Desktop Host
 
-Import `modules/nixos/desktop.nix` (which layers `nixos/base/` + `nixos/desktop/`):
+Hosts compose `nixos.desktop` + `nixos.features` + `nixos.user-ize` in their own `modules/hosts/<name>/configuration.nix` (see `modules/hosts/README.md`):
 
 ```nix
 imports = [
-  ../../../modules/nixos/desktop.nix
-  ../../../modules/features
-  ./hardware-configuration.nix
+  nixos.desktop
+  nixos.features
+  nixos.user-ize
+  # ...host-specific *-pieces + external modules...
 ];
 ```
 
 ## Adding a Server Host
 
-Import `modules/nixos/server` (which layers `nixos/base/` + server modules):
+Compose `nixos.server` instead, and instantiate with `mkNixosServerHost` in the host's `flake-parts.nix` (no home-manager):
 
 ```nix
 imports = [
-  ../../../modules/nixos/server
+  nixos.server
+  nixos.user-ize
   ./hardware-configuration.nix
 ];
 ```
 
-Then register with `mkNixosServerHost` in `outputs/default.nix` (no home-manager).
-
 ## Using as an External Module
 
-The `nixosModules.default` output can be consumed by other flakes:
+The `nixosModules.default` output (desktop system type + all features, plus overlays and `mySystem` defaults) can be consumed by other flakes:
 
 ```nix
 {
@@ -62,14 +65,6 @@ The `nixosModules.default` output can be consumed by other flakes:
       modules = [
         nix-config.nixosModules.default
         {
-          specialArgs = {
-            hostname = "myhost";
-            username = "myuser";
-            flakeRoot = ./.;
-            inputs = inputs;
-            mylib = nix-config.legacyPackages.x86_64-linux.mylib or {};
-          };
-
           mySystem.username = "myuser";
           networking.hostName = "myhost";
         }
@@ -79,9 +74,11 @@ The `nixosModules.default` output can be consumed by other flakes:
 }
 ```
 
+Note: external use requires passing this repo's `specialArgs` (`inputs`, `mylib`/`flake.lib.mylib`, `myvars`/`flake.lib.vars`, `hostname`, `username`, `flakeRoot`) — see the `mkNixosHost` factory in `modules/dendritic/lib.nix`.
+
 ## Feature Options
 
-Enable optional features in `hosts/nixos/<name>/default.nix`:
+Enable optional features in `modules/hosts/<name>/configuration.nix`:
 
 ```nix
 features = {
@@ -142,7 +139,7 @@ features.editors = {
 
 ### Adding a New Feature
 
-Create `modules/features/<name>.nix`. It's auto-imported by `scanPaths`:
+Create `modules/features/<name>.nix` declaring `flake.modules.nixos.<name>`, then add it to the `features` collector in `modules/features/features.nix` (both steps — `import-tree` imports the file, the collector composes it):
 
 ```nix
 { pkgs, lib, config, ... }:
@@ -163,7 +160,7 @@ in
 
 ## Overriding Modules Per Host
 
-Use `lib.mkForce` or `lib.mkDefault` in `hosts/nixos/<name>/default.nix`:
+Use `lib.mkForce` or `lib.mkDefault` in `modules/hosts/<name>/configuration.nix`:
 
 ```nix
 { lib, ... }:
