@@ -34,7 +34,10 @@
     enable = true;
     config = {
       hyprland = {
-        default = [ "hyprland" "gtk" ];
+        default = [
+          "hyprland"
+          "gtk"
+        ];
         "org.freedesktop.impl.portal.ScreenCast" = [ "hyprland" ];
       };
     };
