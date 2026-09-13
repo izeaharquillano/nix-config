@@ -28,9 +28,7 @@
       # `find <dir> -mindepth 1 -maxdepth 1 <excludes>`: paths MUST precede
       # the expression (previous xargs appended paths at the end, so find
       # always failed with "paths must precede expression" and wiped nothing).
-      findExcludeArgs = lib.concatMapStringsSep " " (
-        e: "! -name ${lib.escapeShellArg e}"
-      ) cleanExcludes;
+      findExcludeArgs = lib.concatMapStringsSep " " (e: "! -name ${lib.escapeShellArg e}") cleanExcludes;
     in
     {
       imports = [
