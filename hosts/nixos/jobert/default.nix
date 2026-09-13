@@ -43,6 +43,7 @@
     containers.enable = true;
     fhs.enable = true;
     recording.enable = true;
+    editors.enable = true;
   };
 
   system.stateVersion = "26.05";

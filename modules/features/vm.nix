@@ -34,6 +34,7 @@ in
         virtualisation.spiceUSBRedirection.enable = true;
         programs.virt-manager.enable = true;
         users.users.${config.mySystem.username}.extraGroups = [ "libvirtd" ];
+        networking.firewall.trustedInterfaces = [ "virbr0" ];
 
         # libvirt 12.7+ ships a 10-secret.conf drop-in with
         # LoadCredentialEncrypted for secrets encryption. Since we don't
@@ -44,6 +45,7 @@ in
         };
 
         environment.systemPackages = with pkgs; [
+          dnsmasq
           virt-viewer
           spice
           spice-vdagent
