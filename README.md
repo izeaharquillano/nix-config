@@ -10,22 +10,40 @@ A multi-host, cross-platform NixOS and macOS configuration using flakes and Home
 
 ## Overview
 
+This repo uses the [dendritic pattern](https://github.com/mightyiam/dendritic) with [flake-parts](https://flake.parts/) (following [Doc-Steve's dendritic-design-with-flake-parts guide](https://github.com/Doc-Steve/dendritic-design-with-flake-parts)): `flake.nix` is a thin `mkFlake` + `import-tree ./modules` entry point, and every file under `modules/` declares `flake.modules.<class>.<name>` pieces that hosts compose explicitly.
+
 ```
 nix-config/
-├── flake.nix              # Entry point (inputs only, outputs delegated)
+├── flake.nix              # Dendritic entry point (mkFlake + import-tree ./modules)
 ├── Justfile               # Task runner (just --list to see all commands)
-├── outputs/               # Flake outputs (nixosConfigurations, checks, devShells)
-├── lib/                   # Custom helpers (scanPaths, relativeToRoot)
-├── overlays/              # Nixpkgs overlays (auto-loaded)
-├── pkgs/                  # Custom packages
-├── vars/                  # User identity (username, email)
-├── hosts/                 # Per-host NixOS configs (disko, hardware, features) → [hosts/README.md](hosts/README.md)
-├── modules/               # System modules (core, desktop, features) → [modules/README.md](modules/README.md)
-├── home/                  # Home Manager modules → [home/README.md](home/README.md)
+├── modules/               # ALL config, auto-imported by import-tree
+│   ├── dendritic/         # flake-parts infra, flake.lib (vars, mylib, host factories)
+│   ├── tools/             # perSystem (formatter, checks, devShell, apps, packages), overlays, home-manager wiring
+│   ├── base/              # Cross-platform nix/direnv (Multi-Context Aspect)
+│   ├── nixos/             # System types (desktop/server) + base pieces → [modules/README.md](modules/README.md)
+│   ├── features/          # Composable modules; importing IS enabling
+│   ├── users/             # Primary user as a reusable feature
+│   ├── home/              # Home Manager pieces + system types → [modules/home/README.md](modules/home/README.md)
+│   └── hosts/             # Per-host composition roots → [modules/hosts/README.md](modules/hosts/README.md)
+├── overlays/              # Nixpkgs overlays (exposed as overlays.default)
+├── pkgs/                  # Custom packages (exposed as packages.*)
 ├── config/                # Raw dotfiles (kitty, hypr, niri, nvim, etc.) → [config/README.md](config/README.md)
 ├── secrets/               # Encrypted secrets (agenix)
 └── .github/workflows/     # CI
 ```
+
+### Dendritic Aspects in Use
+
+| Aspect | Where |
+|---|---|
+| Simple | One file = one `flake.modules.<class>.<name>` (e.g. `nixos/base/ssh.nix` → `nixos.base-ssh`) |
+| Multi-Context | One file populates several classes (`base/nix.nix` → `nixos.base-nix` + `darwin.base-nix`, `users/ize.nix`, `tools/home-manager.nix`) |
+| Inheritance | Layered system types: `nixos.desktop` / `nixos.server`, `home-linux-core` / `home-linux-gui` |
+| Conditional | Options only where a module needs host-specific *values* (`p2p-zerotier.networkId`); enabling is done by importing |
+| Collector | Per-host `<name>-*` pieces merged into hosts; shared concerns collected by system types |
+| Constants | `flake.lib.vars` (user identity), single source in `modules/dendritic/lib.nix` |
+| DRY | Factories in `modules/dendritic/lib.nix` inject identical `specialArgs`/`extraSpecialArgs` everywhere |
+| Factory | `mkNixosHost` / `mkNixosServerHost` / `mkDarwinHost` instantiate hosts from dendritic modules |
 
 ## Quick Start
 
@@ -66,53 +84,51 @@ sudo nix-collect-garbage -d
 
 ## Adding a New Host
 
-See [hosts/README.md](hosts/README.md) for the full walkthrough with code templates (disko disk layout, hardware config, default.nix, services, Home Manager, Secure Boot enrollment, secrets setup, and reinstallation instructions).
+See [modules/hosts/README.md](modules/hosts/README.md) for the full walkthrough with code templates (dendritic pieces, disko disk layout, hardware config, services, Home Manager, Secure Boot enrollment, secrets setup, and reinstallation instructions).
 
-**TL;DR:** create `hosts/nixos/<name>/disko.nix` (copy from an existing host, update disk ID), run disko from a NixOS live ISO to format the disk, generate hardware config, create `default.nix` with `disko.nixosModules.default` + `./disko.nix` in imports, register in `outputs/default.nix` with `mkNixosHost "<name>" "x86_64-linux"`, deploy, add the host key to `secrets/secrets.nix`, rekey, deploy again.
+**TL;DR:** create `modules/hosts/<name>/` with per-aspect `flake.modules.nixos.<name>-*` pieces (copy disko/hardware from an existing host, update disk ID), compose them in `configuration.nix` (`desktop` + `user-ize` + the feature modules the host needs + host pieces), compose `home.nix`, instantiate in `flake-parts.nix` with `mkNixosHost "<name>" "x86_64-linux"`, format the disk from a NixOS live ISO via `disko --mode destroy,format,mount --flake .#<name>`, deploy, add the host key to `secrets/secrets.nix`, rekey, deploy again.
 
-## Feature Options
+## Features
 
-Optional features are gated behind `mkEnableOption` in `modules/features/`. See [modules/README.md](modules/README.md) for details and templates.
+Optional functionality lives in `modules/features/` (system) and `modules/home/base/features/` (home) as plain composable modules — **importing one is enabling it**, no flags. See [modules/README.md](modules/README.md) for details and templates. Each host's `configuration.nix` / `home.nix` lists exactly what it uses:
 
 ```nix
-features = {
-  btrfs.enable = true;       # BTRFS compression/tuning
-  impermanence.enable = true; # Ephemeral root, persistent /persist
-  secureboot.enable = true;  # UEFI Secure Boot via Lanzaboote
-  vm.enable = true;          # QEMU/KVM, virt-manager, SPICE, Bottles, DOSBox
-  gaming.enable = true;      # Steam, Gamescope, Gamemode, MangoHud
-  zswap.enable = true;       # Zswap with zstd compression
-  p2p.enable = true;         # Syncthing, NetBird VPN, LocalSend
-  containers.enable = true;  # Docker (rootless), Podman, Distrobox
-  fhs.enable = true;         # FHS env + nix-alien for unpatched binaries
-  editors.enable = true;     # Heavy code editors (VSCode, Zed)
-  recording.enable = true;   # OBS Studio and recording software
-};
+# modules/hosts/jobert/configuration.nix (excerpt)
+imports = [
+  nixos.desktop
+  nixos.user-ize
+  nixos.btrfs # BTRFS compression/tuning
+  nixos.impermanence # Ephemeral root, persistent /persist
+  nixos.secureboot # UEFI Secure Boot via Lanzaboote
+  nixos.vm-qemu # QEMU/KVM, virt-manager, SPICE
+  nixos.vm-bottles # Wine runner
+  nixos.vm-dosbox # DOSBox emulator
+  nixos.gaming # Steam, Gamescope, Gamemode, MangoHud
+  nixos.zswap # Zswap with zstd compression
+  nixos.p2p # Syncthing, NetBird VPN, LocalSend
+  nixos.p2p-zerotier # ZeroTier VPN (needs networkId, see below)
+  nixos.containers # Docker (rootless), Podman, Distrobox
+  nixos.fhs # FHS env + nix-alien for unpatched binaries
+  # ...
+];
 ```
 
-P2P also supports an optional ZeroTier sub-feature, VM supports independent toggles for QEMU, Bottles, and DOSBox, and Editors supports toggling VSCode and Zed independently:
+```nix
+# modules/hosts/jobert/home.nix (excerpt)
+imports = [
+  hm.home-linux-gui
+  hm.home-features-vscode # VS Code (or home-features-zed for Zed)
+  hm.home-features-recording # OBS Studio
+  hm.home-features-p2p # Syncthing tray
+  # ...
+];
+```
+
+Truly host-specific *values* stay options, set by the importing host:
 
 ```nix
-features.p2p = {
-  enable = true;
-  zerotier = {
-    enable = true;
-    networkId = "8056c2e21c123456";
-  };
-};
-
-features.vm = {
-  enable = true;
-  qemu.enable = true;     # QEMU/KVM, virt-manager, SPICE (default: true)
-  bottles.enable = true;  # Wine runner (default: true)
-  dosbox.enable = true;   # DOSBox emulator (default: false)
-};
-
-features.editors = {
-  enable = true;
-  vscode.enable = true;   # VS Code (default: true)
-  zed.enable = true;      # Zed Editor (default: false)
-};
+# ZeroTier network ID for the imported p2p-zerotier module
+features.p2p.zerotier.networkId = "88c5b1f339f6593b";
 ```
 
 ## Secrets Management
@@ -146,7 +162,7 @@ sudo agenix -i /etc/ssh/ssh_host_ed25519_key --rekey
 | Secret | Required By | Purpose |
 |--------|-------------|---------|
 | `nix-access-tokens.age` | Always | Nix/GitHub access tokens for private flakes |
-| `netbird-setup-key.age` | `features.p2p.enable = true` | NetBird VPN auto-login key |
+| `netbird-setup-key.age` | Hosts importing `nixos.p2p` | NetBird VPN auto-login key |
 
 ### Adding a Secret
 
@@ -191,6 +207,8 @@ Update the key binding in `secrets/secrets.nix` with the new host key, then reke
 | `niri` | Niri Wayland compositor |
 | `noctalia` | Wayland shell/bar |
 | `zen-browser` | Zen Browser (Firefox-based) |
+| `flake-parts` | Flake module system composing `modules/` |
+| `import-tree` | Recursive auto-import of `modules/` (dendritic file layout) |
 | `treefmt-nix` | Nix code formatting (nixfmt, shfmt) |
 | `pre-commit-hooks` | Git pre-commit hooks |
 
@@ -198,14 +216,16 @@ Update the key binding in `secrets/secrets.nix` with the new host key, then reke
 
 | Output | Purpose |
 |---|---|
-| `nixosConfigurations.<host>` | NixOS system configurations |
-| `nixosModules.default` | Reusable module for external flakes |
+| `nixosConfigurations.<host>` | NixOS system configurations (instantiated in `modules/hosts/*/flake-parts.nix`) |
+| `nixosModules.default` | Reusable desktop module for external flakes |
 | `overlays.default` | Nixpkgs overlay (auto-loaded) |
 | `packages.<system>.gruvbox-material-yazi` | Custom package |
 | `checks.<system>` | Formatting + per-host evaluation checks |
 | `formatter.<system>` | nixfmt + shfmt wrapper |
 | `apps.<system>.agenix` | agenix CLI as a flake app |
 | `devShells.<system>.default` | Dev shell (nixfmt, deadnix, statix, agenix) |
+| `lib` | Dendritic helpers: `vars`, `mylib`, host factories |
+| `modules` | Published dendritic modules (`nixos.*`, `darwin.*`, `homeManager.*`) |
 
 ## Formatting & CI
 
@@ -224,12 +244,12 @@ The dev shell includes `just`, `nixfmt`, `deadnix`, `statix`, and `agenix`. Run 
 
 ## Custom Library
 
-The `lib/` directory provides:
+`flake.lib` (defined in `modules/dendritic/lib.nix`, single source of truth) provides:
 
-- **`scanPaths`** — Auto-imports all `.nix` files in a directory (excluding `default.nix`). Adding a new module only requires creating the file.
-- **`relativeToRoot`** — Converts a repo-relative path to an absolute store path.
-
-The `vars/` directory exports user identity (`username`, `userfullname`, `useremail`).
+- **`vars` / `myvars`** — User identity (`username`, `userfullname`, `useremail`). Injected into every module via `specialArgs`/`extraSpecialArgs`.
+- **`mylib.scanPaths`** — Kept for external compatibility. Inside this repo, `import-tree` auto-imports everything under `modules/`, so no aggregator files are needed — creating a `.nix` file is enough (plus adding it to the relevant system-type collector, if composed; features need nothing).
+- **`mylib.relativeToRoot`** — Converts a repo-relative path to an absolute store path.
+- **`mkNixosHost` / `mkNixosServerHost` / `mkDarwinHost`** — Factories instantiating hosts from dendritic modules with uniform `specialArgs` (`inputs`, `mylib`, `myvars`, `hostname`, `username`, `flakeRoot`).
 
 ## Security
 
@@ -239,7 +259,7 @@ The `vars/` directory exports user identity (`username`, `userfullname`, `userem
 - **SSH:** Key-based auth only, root login denied (`modules/nixos/base/ssh.nix`)
 - **Secrets:** agenix with age + SSH host keys (see [Secrets Management](#secrets-management))
 - **RealtimeKit:** Grants real-time scheduling to PipeWire
-- **Secure Boot:** Optional via `features.secureboot.enable` (Lanzaboote)
+- **Secure Boot:** Optional via the `secureboot` module (Lanzaboote)
 - **nix-ld:** Enabled for LazyVim compatibility
 
 ## Nix Settings
@@ -251,7 +271,7 @@ Configured in `modules/base/nix.nix` and `modules/nixos/base/system.nix`:
 - Experimental features: `nix-command`, `flakes`, `recursive-nix`
 - `sandbox = true`, `warn-dirty = false`
 - Automatic weekly `nix.optimise` and garbage collection (14-day retention)
-- **GitHub access token:** Optional, for private flakes / avoiding rate limits. Add via `just secrets-edit nix-access-tokens.age` with content `access-tokens = github.com=ghp_<token>`. Auto-included via `nix.extraOptions` in `modules/nixos/core/secrets.nix`.
+- **GitHub access token:** Optional, for private flakes / avoiding rate limits. Add via `just secrets-edit nix-access-tokens.age` with content `access-tokens = github.com=ghp_<token>`. Auto-included via `nix.extraOptions` in `modules/nixos/base/secrets.nix`.
 
 ## Theme
 

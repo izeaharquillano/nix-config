@@ -1,54 +1,59 @@
-{ pkgs, ... }:
-
+# Simple Aspect: Hyprland, PipeWire, fonts, bluetooth
+# Dendritic module: flake.modules.nixos.desktop-services
 {
-  programs.zsh.enable = true;
-  programs.dconf.enable = true;
+  flake.modules.nixos.desktop-services =
+    { pkgs, ... }:
 
-  programs.hyprland = {
-    enable = true;
-    withUWSM = true;
-  };
+    {
+      programs.zsh.enable = true;
+      programs.dconf.enable = true;
 
-  fonts.packages = with pkgs; [
-    nerd-fonts.jetbrains-mono
-  ];
+      programs.hyprland = {
+        enable = true;
+        withUWSM = true;
+      };
 
-  services.blueman.enable = true;
-  services.fwupd.enable = true;
+      fonts.packages = with pkgs; [
+        nerd-fonts.jetbrains-mono
+      ];
 
-  services.xserver.xkb = {
-    layout = "us";
-    variant = "";
-  };
+      services.blueman.enable = true;
+      services.fwupd.enable = true;
 
-  services.udisks2.enable = true;
-  services.gvfs.enable = true;
+      services.xserver.xkb = {
+        layout = "us";
+        variant = "";
+      };
 
-  services.pipewire = {
-    enable = true;
-    alsa.enable = true;
-    pulse.enable = true;
-  };
+      services.udisks2.enable = true;
+      services.gvfs.enable = true;
 
-  xdg.portal = {
-    enable = true;
-    config = {
-      hyprland = {
-        default = [
-          "hyprland"
-          "gtk"
+      services.pipewire = {
+        enable = true;
+        alsa.enable = true;
+        pulse.enable = true;
+      };
+
+      xdg.portal = {
+        enable = true;
+        config = {
+          hyprland = {
+            default = [
+              "hyprland"
+              "gtk"
+            ];
+            "org.freedesktop.impl.portal.ScreenCast" = [ "hyprland" ];
+          };
+        };
+        extraPortals = [
+          pkgs.xdg-desktop-portal-hyprland
+          pkgs.xdg-desktop-portal-gtk
         ];
-        "org.freedesktop.impl.portal.ScreenCast" = [ "hyprland" ];
+      };
+
+      hardware.bluetooth = {
+        enable = true;
+        powerOnBoot = false;
       };
     };
-    extraPortals = [
-      pkgs.xdg-desktop-portal-hyprland
-      pkgs.xdg-desktop-portal-gtk
-    ];
-  };
-
-  hardware.bluetooth = {
-    enable = true;
-    powerOnBoot = false;
-  };
 }

@@ -1,34 +1,15 @@
+# Simple Aspect: FHS env (nix-ld) + nix-alien for unpatched binaries.
+# Import this module = enabled (pure dendritic: composition decides).
+# Dendritic module: flake.modules.nixos.fhs
 {
-  pkgs,
-  lib,
-  config,
-  ...
-}:
+  flake.modules.nixos.fhs =
+    { pkgs, ... }:
 
-let
-  cfg = config.features.fhs;
-  mkEnabledOption = desc: lib.mkEnableOption desc // { default = true; };
-in
-{
-  options.features.fhs = {
-    enable = lib.mkEnableOption "FHS environment and nix-alien";
-    nix-ld.enable = mkEnabledOption "Allows running unpatched binaries";
-    nix-alien.enable = mkEnabledOption "Same as nix-ld but automated lib fetching";
-  };
+    {
+      programs.nix-ld.enable = true;
 
-  config = lib.mkIf cfg.enable (
-    lib.mkMerge [
-
-      (lib.mkIf cfg.nix-ld.enable {
-        programs.nix-ld.enable = true;
-      })
-
-      (lib.mkIf cfg.nix-alien.enable {
-        environment.systemPackages = with pkgs; [
-          nix-alien
-        ];
-      })
-
-    ]
-  );
+      environment.systemPackages = with pkgs; [
+        nix-alien
+      ];
+    };
 }

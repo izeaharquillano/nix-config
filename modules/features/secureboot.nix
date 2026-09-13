@@ -1,34 +1,26 @@
+# Simple Aspect: UEFI Secure Boot via Lanzaboote.
+# Import this module = enabled (pure dendritic: composition decides).
+# Dendritic module: flake.modules.nixos.secureboot
+{ inputs, ... }:
 {
-  pkgs,
-  lib,
-  inputs,
-  config,
-  ...
-}:
+  flake.modules.nixos.secureboot =
+    { pkgs, lib, ... }:
 
-let
-  cfg = config.features.secureboot;
-in
-{
-  imports = [
-    inputs.lanzaboote.nixosModules.lanzaboote
-  ];
+    {
+      imports = [
+        inputs.lanzaboote.nixosModules.lanzaboote
+      ];
 
-  options.features.secureboot = {
-    enable = lib.mkEnableOption "UEFI Secure Boot via Lanzaboote";
-  };
+      environment.systemPackages = [
+        pkgs.sbctl
+      ];
 
-  config = lib.mkIf cfg.enable {
-    environment.systemPackages = [
-      pkgs.sbctl
-    ];
+      boot.loader.systemd-boot.enable = lib.mkForce false;
 
-    boot.loader.systemd-boot.enable = lib.mkForce false;
-
-    boot.lanzaboote = {
-      enable = true;
-      pkiBundle = "/var/lib/sbctl";
-      configurationLimit = 5;
+      boot.lanzaboote = {
+        enable = true;
+        pkiBundle = "/var/lib/sbctl";
+        configurationLimit = 5;
+      };
     };
-  };
 }

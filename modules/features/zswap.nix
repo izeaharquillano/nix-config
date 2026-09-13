@@ -1,14 +1,8 @@
-{ lib, config, ... }:
-
-let
-  cfg = config.features.zswap;
-in
+# Simple Aspect: zswap with zstd.
+# Import this module = enabled (pure dendritic: composition decides).
+# Dendritic module: flake.modules.nixos.zswap
 {
-  options.features.zswap = {
-    enable = lib.mkEnableOption "Zswap tuning with zstd compression";
-  };
-
-  config = lib.mkIf cfg.enable {
+  flake.modules.nixos.zswap = {
     boot.zswap = {
       enable = true;
       compressor = "zstd";

@@ -1,8 +1,13 @@
-{ pkgs, ... }:
-
+# Simple Aspect: base system packages (wget, tmux)
+# Dendritic module: flake.modules.nixos.base-packages
 {
-  environment.systemPackages = with pkgs; [
-    wget
-    tmux
-  ];
+  flake.modules.nixos.base-packages =
+    { pkgs, ... }:
+
+    {
+      environment.systemPackages = with pkgs; [
+        wget
+        tmux
+      ];
+    };
 }
