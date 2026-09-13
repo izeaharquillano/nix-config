@@ -9,7 +9,6 @@
     {
       imports = [
         self.modules.nixos.desktop
-        self.modules.nixos.features
       ];
 
       config = {

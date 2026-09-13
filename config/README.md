@@ -23,7 +23,7 @@ Host-specific settings live in `modules/hosts/<name>/config/` and are store-copi
 
 - **Niri**: `niri-host-settings.kdl` — included by `config.kdl` via `include "./niri-host-settings.kdl"`
 - **Hyprland**: `hypr-host-settings.lua` — loaded via `require("hypr-host-settings")`
-- **Noctalia**: `noctalia-host-settings.toml` — written to `host-settings.toml` by `modules/home/linux/gui/noctalia.nix`
+- **Noctalia**: `noctalia-host-settings.toml` — wired to `host-settings.toml` by the host's `home.nix`
 
 ## Adding a New Dotfile
 

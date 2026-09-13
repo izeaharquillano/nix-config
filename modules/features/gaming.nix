@@ -1,44 +1,31 @@
-# Conditional Aspect: Steam, Gamescope, Gamemode
+# Simple Aspect: gaming stack (Steam, Gamescope, Gamemode, MangoHud).
+# Import this module = enabled (pure dendritic: composition decides).
 # Dendritic module: flake.modules.nixos.gaming
 {
   flake.modules.nixos.gaming =
-    {
-      pkgs,
-      lib,
-      config,
-      ...
-    }:
+    { pkgs, ... }:
 
-    let
-      cfg = config.features.gaming;
-    in
     {
-      options.features.gaming = {
-        enable = lib.mkEnableOption "Gaming stack (Steam, Gamescope, Gamemode, MangoHud)";
-      };
+      environment.systemPackages = with pkgs; [
+        mangohud
+        goverlay
+      ];
 
-      config = lib.mkIf cfg.enable {
-        environment.systemPackages = with pkgs; [
-          mangohud
-          goverlay
+      programs.steam = {
+        enable = true;
+        remotePlay.openFirewall = true;
+        dedicatedServer.openFirewall = true;
+        extraCompatPackages = with pkgs; [
+          proton-ge-bin
         ];
-
-        programs.steam = {
-          enable = true;
-          remotePlay.openFirewall = true;
-          dedicatedServer.openFirewall = true;
-          extraCompatPackages = with pkgs; [
-            proton-ge-bin
-          ];
-        };
-
-        programs.gamescope = {
-          enable = true;
-          capSysNice = false;
-          args = [ "--rt" ];
-        };
-
-        programs.gamemode.enable = true;
       };
+
+      programs.gamescope = {
+        enable = true;
+        capSysNice = false;
+        args = [ "--rt" ];
+      };
+
+      programs.gamemode.enable = true;
     };
 }

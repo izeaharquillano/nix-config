@@ -28,42 +28,11 @@ All NixOS hosts use LUKS2 full-disk encryption with btrfs and [impermanence](htt
 
 ### padrick: Daily Use ThinkPad
 
-```nix
-features = {
-  btrfs.enable = true;
-  impermanence.enable = true;
-  secureboot.enable = true;
-  zswap.enable = true;
-  p2p.enable = true;
-  containers.enable = true;
-  vm.enable = true;
-  editors.enable = true;
-  fhs.enable = true;
-};
-```
+Imports `btrfs`, `impermanence`, `secureboot`, `zswap`, `p2p`, `containers`, `fhs`, `vm-qemu`, `vm-bottles`, `vm-dosbox` (+ HM: `home-features-vscode`, `home-features-p2p`).
 
 ### jobert: Gaming & Virtualization
 
-```nix
-features = {
-  btrfs.enable = true;
-  impermanence.enable = true;
-  secureboot.enable = true;
-  zswap.enable = true;
-  p2p = {
-    enable = true;
-    zerotier = {
-      enable = true;
-      networkId = "YOUR_NETWORK_ID";
-    };
-  };
-  vm.enable = true;
-  gaming.enable = true;
-  containers.enable = true;
-  fhs.enable = true;
-  recording.enable = true;
-};
-```
+Padrick's set, plus `p2p-zerotier` (with `features.p2p.zerotier.networkId`), `gaming` (+ HM: `home-features-recording`). See each host's `configuration.nix` / `home.nix` for the exact composition.
 
 The gaming module configures Steam (with remote play + dedicated server firewall rules), Proton GE, Gamescope, Gamemode, MangoHud, and GOverlay. NVIDIA-specific hardware config is in `modules/hosts/jobert/host-settings.nix` (open driver, VA-API, Wayland env vars, 32-bit OpenGL).
 
@@ -121,10 +90,12 @@ Remove `fileSystems` and `swapDevices` from the generated hardware config — di
 
 ### 4. Create `modules/hosts/<name>/configuration.nix`
 
-The composition root. It pulls together the `desktop` + `features` system
-types, the reusable `user-ize` feature, this host's `*-disko`, `*-hardware`,
-`*-packages`, `*-services`, `*-host-settings` pieces, and external modules —
-all referenced via `inputs.self.modules.nixos` (never relative `../../../`):
+The composition root. It pulls together the `desktop` system type,
+the reusable `user-ize` feature, this host's `*-disko`, `*-hardware`,
+`*-packages`, `*-services`, `*-host-settings` pieces, external modules,
+and exactly the feature modules this host needs (importing one IS
+enabling it) — all referenced via `inputs.self.modules.nixos`
+(never relative `../../../`):
 
 ```nix
 # Dendritic composition root: flake.modules.nixos.<name>
@@ -136,8 +107,14 @@ in
   flake.modules.nixos.<name> = {
     imports = [
       nixos.desktop
-      nixos.features
       nixos.user-ize
+      nixos.btrfs
+      nixos.impermanence
+      nixos.secureboot
+      nixos.zswap
+      nixos.p2p
+      # nixos.p2p-zerotier  # + features.p2p.zerotier.networkId below
+      # nixos.gaming
       nixos.<name>-disko
       nixos.<name>-hardware
       nixos.<name>-packages
@@ -149,20 +126,12 @@ in
 
     networking.hostName = "<name>";
 
-    features = {
-      btrfs.enable = true;
-      impermanence.enable = true;
-      secureboot.enable = true;
-      zswap.enable = true;
-      p2p.enable = true;
-    };
-
     system.stateVersion = "26.05";
   };
 }
 ```
 
-> **Password setup:** With `impermanence.enable = true`, create `/persist/secrets/hashed-password` during installation (see Step 7 in the reinstall guide). With `impermanence.enable = false`, the fallback `initialPassword` is used — change it after first boot with `passwd`.
+> **Password setup:** With `impermanence` imported, create `/persist/secrets/hashed-password` during installation (see Step 7 in the reinstall guide). Without it, the fallback `initialPassword` (`changeme`) is used — change it after first boot with `passwd`.
 
 ### 5. Create host-specific pieces
 
@@ -267,7 +236,8 @@ in
     {
       imports = [
         hm.home-linux-gui
-        hm.home-features
+        hm.home-features-vscode
+        hm.home-features-p2p
         hm.<name>-home-packages
         inputs.niri.homeModules.niri
         inputs.noctalia.homeModules.default
@@ -351,6 +321,7 @@ in
 {
   flake.nixosConfigurations.<name> = inputs.self.lib.mkNixosServerHost "<name>" "x86_64-linux";
 }
+```
 
 No home-manager is included for servers. If you want headless HM tools, define a `flake.modules.homeManager.<name>` importing `home-linux-core` and extend the server factory with a home-manager block.
 
@@ -407,6 +378,7 @@ in
 {
   flake.darwinConfigurations.<name> = inputs.self.lib.mkDarwinHost "<name>" "aarch64-darwin";
 }
+```
 
 ### 5. First deploy
 

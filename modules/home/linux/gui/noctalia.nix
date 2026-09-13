@@ -1,19 +1,11 @@
-# Simple Aspect: Noctalia shell + wallpaper + host settings
+# Simple Aspect: Noctalia shell + wallpaper.
+# Host-specific `host-settings.toml` is set by each host's home.nix
+# (like the niri/hypr host files) — this module stays fully shared.
 # Dendritic module: flake.modules.homeManager.home-gui-noctalia
 {
   flake.modules.homeManager.home-gui-noctalia =
-    {
-      config,
-      hostname,
-      flakeRoot,
-      ...
-    }:
+    { config, flakeRoot, ... }:
 
-    let
-      hostSettingsPath = flakeRoot + "/modules/hosts/${hostname}/config/noctalia-host-settings.toml";
-      hostSettings =
-        if builtins.pathExists hostSettingsPath then builtins.readFile hostSettingsPath else "";
-    in
     {
       programs.noctalia.enable = true;
 
@@ -31,7 +23,5 @@
           [wallpaper.last]
           path = "${wp}"
         '';
-
-      xdg.configFile."noctalia/host-settings.toml".text = hostSettings;
     };
 }

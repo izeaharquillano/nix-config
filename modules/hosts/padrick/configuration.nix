@@ -2,8 +2,9 @@
 # Disko manages disk layout; impermanence wipes root on boot.
 #
 # Dendritic composition root: `flake.modules.nixos.padrick` pulls together the
-# desktop + features system types, the reusable `user-ize` feature, per-host
-# Collector pieces (`padrick-*`), and external hardware/disk modules.
+# desktop system type, the reusable `user-ize` feature, per-host Collector
+# pieces (`padrick-*`), external hardware/disk modules, and exactly the
+# feature modules this host uses — importing a module IS enabling it.
 # Instantiated as `nixosConfigurations.padrick` in `flake-parts.nix`.
 { inputs, ... }:
 let
@@ -13,8 +14,17 @@ in
   flake.modules.nixos.padrick = {
     imports = [
       nixos.desktop
-      nixos.features
       nixos.user-ize
+      nixos.btrfs
+      nixos.impermanence
+      nixos.secureboot
+      nixos.zswap
+      nixos.p2p
+      nixos.containers
+      nixos.fhs
+      nixos.vm-qemu
+      nixos.vm-bottles
+      nixos.vm-dosbox
       nixos.padrick-disko
       nixos.padrick-hardware
       nixos.padrick-packages
@@ -25,21 +35,6 @@ in
     ];
 
     networking.hostName = "padrick";
-
-    features = {
-      btrfs.enable = true;
-      impermanence.enable = true;
-      secureboot.enable = true;
-      zswap.enable = true;
-      p2p.enable = true;
-      containers.enable = true;
-      editors.enable = true;
-      fhs.enable = true;
-      vm = {
-        enable = true;
-        dosbox.enable = true;
-      };
-    };
 
     system.stateVersion = "26.05";
   };

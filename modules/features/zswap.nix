@@ -1,27 +1,16 @@
-# Conditional Aspect: zswap with zstd
+# Simple Aspect: zswap with zstd.
+# Import this module = enabled (pure dendritic: composition decides).
 # Dendritic module: flake.modules.nixos.zswap
 {
-  flake.modules.nixos.zswap =
-    { lib, config, ... }:
-
-    let
-      cfg = config.features.zswap;
-    in
-    {
-      options.features.zswap = {
-        enable = lib.mkEnableOption "Zswap tuning with zstd compression";
-      };
-
-      config = lib.mkIf cfg.enable {
-        boot.zswap = {
-          enable = true;
-          compressor = "zstd";
-          zpool = "zsmalloc";
-          maxPoolPercent = 25;
-          acceptThresholdPercent = 90;
-          shrinkerEnabled = true;
-        };
-        boot.kernel.sysctl."vm.swappiness" = 10;
-      };
+  flake.modules.nixos.zswap = {
+    boot.zswap = {
+      enable = true;
+      compressor = "zstd";
+      zpool = "zsmalloc";
+      maxPoolPercent = 25;
+      acceptThresholdPercent = 90;
+      shrinkerEnabled = true;
     };
+    boot.kernel.sysctl."vm.swappiness" = 10;
+  };
 }

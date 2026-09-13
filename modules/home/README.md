@@ -8,7 +8,7 @@ organized by platform. Auto-imported by `import-tree`; composed explicitly via
 
 - **`base/`** — Cross-platform base configs shared between Linux and macOS.
   - `core/` — Shell, CLI tools, editors, terminal (`home-core-*` pieces).
-  - `features/` — Toggleable features that read from `osConfig.features.*` (`home-features-*` pieces, collected by `features.nix` → `home-features`).
+  - `features/` — Optional home functionality (`home-features-vscode`, `home-features-zed`, `home-features-recording`, `home-features-p2p`); hosts import what they use.
   - `home.nix` — Username, stateVersion, homeDirectory (`home-base`, re-exported by the `user-ize` feature).
 - **`linux/`** — Linux-specific home modules.
   - `base/` — Linux-only essentials (`home-linux-desktop`, `home-linux-utils`).
@@ -21,14 +21,14 @@ organized by platform. Auto-imported by `import-tree`; composed explicitly via
 
 | Host Type | HM Composition | Includes |
 |---|---|---|
-| Desktop (GUI) | `home-linux-gui` + `home-features` (in the host's `home.nix`) | user + core + linux/base + linux/gui + osConfig-driven features |
+| Desktop (GUI) | `home-linux-gui` + individual `home-features-*` pieces (in the host's `home.nix`) | user + core + linux/base + linux/gui + chosen features |
 | Server (headless) | `home-linux-core` | user + core + linux/base |
 
 ## How It Works
 
-The host's HM composition root (`modules/hosts/<name>/home.nix`, defining `flake.modules.homeManager.<name>`) imports the platform system type (`home-linux-gui` or `home-linux-core`), plus `home-features`, host-specific packages, and flake module inputs (niri, noctalia).
+The host's HM composition root (`modules/hosts/<name>/home.nix`, defining `flake.modules.homeManager.<name>`) imports the platform system type (`home-linux-gui` or `home-linux-core`), plus individual `home-features-*` pieces, host-specific packages, and flake module inputs (niri, noctalia).
 
-Config files in `config/` are consumed via `xdg.configFile` store copies referenced through the `flakeRoot` specialArg. Host-specific settings in `modules/hosts/<name>/config/` also use store copies. The `hostname` is passed via `extraSpecialArgs`, allowing modules like `noctalia.nix` to read host-specific settings.
+Config files in `config/` are consumed via `xdg.configFile` store copies referenced through the `flakeRoot` specialArg. Host-specific settings in `modules/hosts/<name>/config/` are wired by each host's own `home.nix` via local `./config/` paths — shared modules never reach into host directories.
 
 ## Home Manager Backup
 
@@ -52,7 +52,7 @@ Create a `.nix` file in `modules/home/base/core/` (cross-platform) or `modules/h
 }
 ```
 
-It is picked up by `import-tree` automatically; add it to the relevant collector (`home-linux-core`/`home-linux-gui` in `modules/home/linux/`, or `home-features` in `modules/home/base/features.nix`) so hosts compose it.
+It is picked up by `import-tree` automatically; add it to the relevant system-type collector (`home-linux-core`/`home-linux-gui` in `modules/home/linux/`) so hosts compose it, or leave it standalone for hosts to import directly (like the `home-features-*` pieces).
 
 ## Host-Specific Overrides
 
@@ -69,7 +69,8 @@ in
     {
       imports = [
         hm.home-linux-gui
-        hm.home-features
+        hm.home-features-vscode
+        hm.home-features-p2p
         hm.<name>-home-packages
         inputs.niri.homeModules.niri
         inputs.noctalia.homeModules.default
@@ -77,11 +78,12 @@ in
 
       xdg.configFile."niri/niri-host-settings.kdl".source = ./config/niri-host-settings.kdl;
       xdg.configFile."hypr/hypr-host-settings.lua".source = ./config/hypr-host-settings.lua;
+      xdg.configFile."noctalia/host-settings.toml".source = ./config/noctalia-host-settings.toml;
     };
 }
 ```
 
-Noctalia lockscreen widgets go in `modules/hosts/<name>/config/noctalia-host-settings.toml`. If present, `noctalia.nix` writes it to `host-settings.toml` in `~/.config/noctalia/`. TOML files merge alphabetically: `config.toml` → `host-settings.toml` → `wallpaper.toml`.
+Noctalia lockscreen widgets go in `modules/hosts/<name>/config/noctalia-host-settings.toml`, wired by the host's `home.nix` to `host-settings.toml` in `~/.config/noctalia/`. TOML files merge alphabetically: `config.toml` → `host-settings.toml` → `wallpaper.toml`.
 
 Add host-specific user packages in `modules/hosts/<name>/home-packages.nix` (declaring `flake.modules.homeManager.<name>-home-packages`):
 

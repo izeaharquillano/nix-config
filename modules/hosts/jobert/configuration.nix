@@ -1,8 +1,9 @@
 # jobert: AMD+NVIDIA gaming laptop for work/gaming.
 #
 # Dendritic composition root: `flake.modules.nixos.jobert` pulls together the
-# desktop + features system types, the reusable `user-ize` feature, per-host
-# Collector pieces (`jobert-*`), and external hardware/disk modules.
+# desktop system type, the reusable `user-ize` feature, per-host Collector
+# pieces (`jobert-*`), external hardware/disk modules, and exactly the
+# feature modules this host uses — importing a module IS enabling it.
 # Instantiated as `nixosConfigurations.jobert` in `flake-parts.nix`.
 { inputs, ... }:
 let
@@ -12,8 +13,19 @@ in
   flake.modules.nixos.jobert = {
     imports = [
       nixos.desktop
-      nixos.features
       nixos.user-ize
+      nixos.btrfs
+      nixos.impermanence
+      nixos.secureboot
+      nixos.zswap
+      nixos.p2p
+      nixos.p2p-zerotier
+      nixos.containers
+      nixos.fhs
+      nixos.vm-qemu
+      nixos.vm-bottles
+      nixos.vm-dosbox
+      nixos.gaming
       nixos.jobert-disko
       nixos.jobert-hardware
       nixos.jobert-packages
@@ -27,28 +39,8 @@ in
 
     networking.hostName = "jobert";
 
-    features = {
-      btrfs.enable = true;
-      impermanence.enable = true;
-      secureboot.enable = true;
-      zswap.enable = true;
-      p2p = {
-        enable = true;
-        zerotier = {
-          enable = true;
-          networkId = "88c5b1f339f6593b";
-        };
-      };
-      vm = {
-        enable = true;
-        dosbox.enable = true;
-      };
-      gaming.enable = true;
-      containers.enable = true;
-      fhs.enable = true;
-      recording.enable = true;
-      editors.enable = true;
-    };
+    # Host-specific value for the imported p2p-zerotier module.
+    features.p2p.zerotier.networkId = "88c5b1f339f6593b";
 
     system.stateVersion = "26.05";
   };

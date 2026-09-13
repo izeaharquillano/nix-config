@@ -20,9 +20,10 @@ in
       users.users.${config.mySystem.username} = {
         isNormalUser = true;
         description = vars.userfullname;
-        # Set when impermanence is disabled. When enabled, hashedPasswordFile
-        # in impermanence.nix takes precedence and this is ignored.
-        initialPassword = lib.mkIf (!(config.features.impermanence.enable or false)) "changeme";
+        # Fallback password for hosts without impermanence (overridable).
+        # The impermanence module forces this to null and uses
+        # /persist/secrets/hashed-password instead.
+        initialPassword = lib.mkDefault "changeme";
         extraGroups = [
           "networkmanager"
           "wheel"

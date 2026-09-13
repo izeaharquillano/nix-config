@@ -1,18 +1,11 @@
-# Conditional Aspect: OBS Studio from osConfig.features.recording
+# Simple Aspect: OBS Studio with CUDA + plugins.
+# Import this module = enabled (pure dendritic: composition decides).
 # Dendritic module: flake.modules.homeManager.home-features-recording
 {
   flake.modules.homeManager.home-features-recording =
-    {
-      osConfig,
-      lib,
-      pkgs,
-      ...
-    }:
+    { pkgs, ... }:
 
-    let
-      enabled = lib.attrByPath [ "features" "recording" "enable" ] false osConfig;
-    in
-    lib.mkIf enabled {
+    {
       programs.obs-studio = {
         enable = true;
 

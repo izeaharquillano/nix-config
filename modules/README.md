@@ -18,21 +18,20 @@ organized by platform. Every `.nix` file under `modules/` is auto-imported by
 - **`nixos/desktop.nix`** — `desktop` system type (Inheritance Aspect): base + desktop GUI modules + home-manager wiring. Hosts import `nixos.desktop`.
 - **`nixos/desktop/`** — GUI/desktop pieces (greetd, Niri, PipeWire, fonts).
 - **`nixos/server.nix`** — `server` system type (Inheritance Aspect): base modules only, no desktop, no Home Manager.
-- **`features/`** — Optional features gated behind `mkEnableOption` (Conditional Aspect), collected by `features.nix` (Collector Aspect).
+- **`features/`** — Optional functionality as plain composable modules; hosts import what they use (importing IS enabling).
 - **`users/`** — The primary user as a reusable Multi-Context feature (`nixos.user-ize` owns the account, `homeManager.user-ize` re-exports `home-base`).
 
-To add a module, create a `.nix` file declaring one `flake.modules.<class>.<name>` piece — `import-tree` picks it up automatically. If it should be composed (system types, features), also add it to the relevant collector (`desktop`/`server`, `features.nix`, `home-linux-core`/`home-linux-gui`, `home-features`).
+To add a module, create a `.nix` file declaring one `flake.modules.<class>.<name>` piece — `import-tree` picks it up automatically. If it should be composed (system types), also add it to the relevant collector (`desktop`/`server`, `home-linux-core`/`home-linux-gui`). Features need no collector: hosts import them directly.
 
 ## Adding a Desktop Host
 
-Hosts compose `nixos.desktop` + `nixos.features` + `nixos.user-ize` in their own `modules/hosts/<name>/configuration.nix` (see `modules/hosts/README.md`):
+Hosts compose `nixos.desktop` + `nixos.user-ize` + feature modules in their own `modules/hosts/<name>/configuration.nix` (see `modules/hosts/README.md`):
 
 ```nix
 imports = [
   nixos.desktop
-  nixos.features
   nixos.user-ize
-  # ...host-specific *-pieces + external modules...
+  # ...feature modules + host-specific *-pieces + external modules...
 ];
 ```
 
@@ -50,7 +49,7 @@ imports = [
 
 ## Using as an External Module
 
-The `nixosModules.default` output (desktop system type + all features, plus overlays and `mySystem` defaults) can be consumed by other flakes:
+The `nixosModules.default` output (desktop system type, plus overlays and `mySystem` defaults) can be consumed by other flakes:
 
 ```nix
 {
@@ -76,87 +75,54 @@ The `nixosModules.default` output (desktop system type + all features, plus over
 
 Note: external use requires passing this repo's `specialArgs` (`inputs`, `mylib`/`flake.lib.mylib`, `myvars`/`flake.lib.vars`, `hostname`, `username`, `flakeRoot`) — see the `mkNixosHost` factory in `modules/dendritic/lib.nix`.
 
-## Feature Options
+## Features
 
-Enable optional features in `modules/hosts/<name>/configuration.nix`:
+Optional functionality lives in `modules/features/` as plain composable modules — **importing one is enabling it**. Each host's `configuration.nix` lists exactly what it uses:
 
 ```nix
-features = {
-  btrfs.enable = true;       # BTRFS compression/tuning (compress=zstd:3, noatime, ssd)
-  impermanence.enable = true; # Ephemeral root, persistent /persist subvolume
-  secureboot.enable = true;  # UEFI Secure Boot via Lanzaboote
-  vm.enable = true;          # QEMU/KVM, virt-manager, SPICE, Bottles, DOSBox
-  gaming.enable = true;      # Steam, Gamescope, Gamemode, MangoHud
-  zswap.enable = true;       # Zswap with zstd compression
-  p2p.enable = true;         # Syncthing, NetBird VPN, LocalSend
-  containers.enable = true;  # Docker (rootless), Podman, Distrobox
-  fhs.enable = true;         # FHS env + nix-alien for unpatched binaries
-  editors.enable = true;     # Heavy code editors (VSCode, Zed)
-  recording.enable = true;   # OBS Studio and recording software
-};
+imports = [
+  nixos.btrfs # BTRFS compression/tuning (compress=zstd:3, noatime, ssd)
+  nixos.impermanence # Ephemeral root, persistent /persist subvolume
+  nixos.secureboot # UEFI Secure Boot via Lanzaboote
+  nixos.vm-qemu # QEMU/KVM, virt-manager, SPICE
+  nixos.vm-bottles # Wine runner
+  nixos.vm-dosbox # DOSBox emulator
+  nixos.gaming # Steam, Gamescope, Gamemode, MangoHud
+  nixos.zswap # Zswap with zstd compression
+  nixos.p2p # Syncthing, NetBird VPN, LocalSend
+  nixos.p2p-zerotier # ZeroTier VPN (needs networkId, see below)
+  nixos.containers # Docker (rootless), Podman, Distrobox
+  nixos.fhs # FHS env + nix-alien for unpatched binaries
+];
 ```
 
-### P2P Feature
+Home-side counterparts live in `modules/home/base/features/` (`home-features-vscode`, `home-features-zed`, `home-features-recording`, `home-features-p2p`) and are composed in each host's `home.nix` the same way.
 
-The `p2p` feature module configures Syncthing, NetBird, LocalSend, and optionally ZeroTier. Enable with `features.p2p.enable = true`. This opens UDP 51820 for NetBird WireGuard, enables Syncthing with default sync/discovery ports, auto-starts NetBird via setup key, and enables LocalSend with firewall access.
+### P2P + ZeroTier
 
-ZeroTier is optional via a sub-option:
-
-```nix
-features.p2p = {
-  enable = true;
-  zerotier = {
-    enable = true;
-    networkId = "8056c2e21c123456";
-  };
-};
-```
-
-### VM Feature
-
-The `vm` feature module configures QEMU/KVM, virt-manager, SPICE tools, Bottles, and DOSBox. QEMU and Bottles default to `true`, DOSBox defaults to `false`:
+The `p2p` module configures Syncthing, NetBird (auto-login via agenix setup key), and LocalSend, with firewall ports opened. ZeroTier lives in its own module — import it and set the host-specific network ID:
 
 ```nix
-features.vm = {
-  enable = true;
-  qemu.enable = true;     # libvirtd, QEMU/KVM, virt-manager, SPICE (default: true)
-  bottles.enable = true;  # Wine runner (default: true)
-  dosbox.enable = true;   # DOSBox emulator (default: false)
-};
-```
-
-### Editors Feature
-
-The `editors` feature module configures heavy code editors. VSCode defaults to `true`, Zed defaults to `false`:
-
-```nix
-features.editors = {
-  enable = true;
-  vscode.enable = true;   # VS Code with extensions and settings (default: true)
-  zed.enable = true;      # Zed Editor (default: false)
-};
+imports = [ nixos.p2p-zerotier ];
+features.p2p.zerotier.networkId = "88c5b1f339f6593b";
 ```
 
 ### Adding a New Feature
 
-Create `modules/features/<name>.nix` declaring `flake.modules.nixos.<name>`, then add it to the `features` collector in `modules/features/features.nix` (both steps — `import-tree` imports the file, the collector composes it):
+Create `modules/features/<name>.nix` declaring `flake.modules.nixos.<name>`, then import it in the hosts that need it — no flags, no collectors:
 
 ```nix
-{ pkgs, lib, config, ... }:
-
-let
-  cfg = config.features.<name>;
-in
+# Dendritic module: flake.modules.nixos.<name>
 {
-  options.features.<name> = {
-    enable = lib.mkEnableOption "Description of the feature";
-  };
-
-  config = lib.mkIf cfg.enable {
-    # your config here
-  };
+  flake.modules.nixos.<name> =
+    { pkgs, ... }:
+    {
+      # your config here (applied whenever a host imports this module)
+    };
 }
 ```
+
+Only add an option if the module needs a host-specific *value* (like `networkId` above) — never an `enable` flag; importing IS enabling.
 
 ## Overriding Modules Per Host
 
