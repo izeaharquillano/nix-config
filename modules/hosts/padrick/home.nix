@@ -19,8 +19,10 @@ in
         inputs.noctalia.homeModules.default
       ];
 
-      xdg.configFile."niri/niri-host-settings.kdl".source = ./config/niri-host-settings.kdl;
-      xdg.configFile."hypr/hypr-host-settings.lua".source = ./config/hypr-host-settings.lua;
-      xdg.configFile."noctalia/host-settings.toml".source = ./config/noctalia-host-settings.toml;
+      xdg.configFile = {
+        "niri/niri-host-settings.kdl".source = ./config/niri-host-settings.kdl;
+        "hypr/hypr-host-settings.lua".source = ./config/hypr-host-settings.lua;
+        "noctalia/host-settings.toml".source = ./config/noctalia-host-settings.toml;
+      };
     };
 }

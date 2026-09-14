@@ -31,7 +31,8 @@ in
       nixos.jobert-packages
       nixos.jobert-services
       nixos.jobert-host-settings
-      inputs.disko.nixosModules.default
+      # disko comes from the `desktop` system type; hardware profiles stay
+      # per-host because they differ per machine.
       inputs.nixos-hardware.nixosModules.common-cpu-amd
       inputs.nixos-hardware.nixosModules.common-pc-laptop
       inputs.nixos-hardware.nixosModules.common-pc-ssd

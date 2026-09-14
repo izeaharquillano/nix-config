@@ -22,7 +22,7 @@
             "/nix"
             "/persist"
           ]
-          (path: {
+          (_path: {
             options = btrfsOpts;
           });
 

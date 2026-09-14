@@ -1,31 +1,27 @@
-# Simple Aspect: containers (Docker rootless, Podman, Distrobox).
+# Simple Aspect: containers (Podman, Distrobox). Docker stays disabled by
+# default — enable rootless Docker explicitly per host if needed.
 # Import this module = enabled (pure dendritic: composition decides).
 # Dendritic module: flake.modules.nixos.containers
 {
   flake.modules.nixos.containers =
-    { pkgs, config, ... }:
+    { pkgs, username, ... }:
 
     {
-      virtualisation.docker = {
-        enable = false;
-        autoPrune.enable = true;
-        rootless = {
+      virtualisation = {
+        docker.enable = false;
+        containers.registries.settings = {
+          unqualified-search-registries = [
+            "docker.io"
+            "quay.io"
+          ];
+        };
+
+        podman = {
           enable = true;
-          setSocketVariable = true;
+          dockerCompat = true;
         };
       };
-      users.users.${config.mySystem.username}.linger = true;
-      virtualisation.containers.registries.settings = {
-        unqualified-search-registries = [
-          "docker.io"
-          "quay.io"
-        ];
-      };
-
-      virtualisation.podman = {
-        enable = true;
-        dockerCompat = true;
-      };
+      users.users.${username}.linger = true;
       environment.systemPackages = with pkgs; [ distrobox ];
     };
 }

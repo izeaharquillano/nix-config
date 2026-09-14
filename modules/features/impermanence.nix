@@ -4,16 +4,16 @@
 {
   flake.modules.nixos.impermanence =
     {
-      config,
       lib,
       pkgs,
       inputs,
+      username,
       ...
     }:
 
     let
       persistPath = "/persist";
-      homeDir = "/home/${config.mySystem.username}";
+      homeDir = "/home/${username}";
       # Home directories to wipe on boot (+ names to skip, files to re-touch).
       cleanDirs = [
         ".cache"
@@ -37,7 +37,7 @@
 
       # With impermanence, no static password is set (see users/ize.nix):
       # authentication comes from /persist/secrets/hashed-password.
-      users.users.${config.mySystem.username} = {
+      users.users.${username} = {
         initialPassword = lib.mkForce null;
         hashedPasswordFile = "${persistPath}/secrets/hashed-password";
       };
@@ -118,9 +118,11 @@
         wantedBy = [ "local-fs.target" ];
         before = [ "local-fs.target" ];
         unitConfig.DefaultDependencies = false;
-        serviceConfig.Type = "oneshot";
-        serviceConfig.ExecStartPre = "${pkgs.coreutils}/bin/mkdir -p ${persistPath}/etc";
-        serviceConfig.ExecStart = "${pkgs.bash}/bin/bash -c 'if [ ! -f ${persistPath}/etc/machine-id ]; then ${pkgs.systemd}/bin/systemd-machine-id-setup --print > ${persistPath}/etc/machine-id; fi'";
+        serviceConfig = {
+          Type = "oneshot";
+          ExecStartPre = "${pkgs.coreutils}/bin/mkdir -p ${persistPath}/etc";
+          ExecStart = "${pkgs.bash}/bin/bash -c 'if [ ! -f ${persistPath}/etc/machine-id ]; then ${pkgs.systemd}/bin/systemd-machine-id-setup --print > ${persistPath}/etc/machine-id; fi'";
+        };
       };
 
       systemd.services.clean-home = {
@@ -131,9 +133,11 @@
         # `nixos-rebuild switch` while logged in, nuking the live session's
         # cache. Before HM it only affects stale state from previous boots.
         after = [ "local-fs.target" ];
-        before = [ "home-manager-${config.mySystem.username}.service" ];
-        serviceConfig.Type = "oneshot";
-        serviceConfig.RemainAfterExit = true;
+        before = [ "home-manager-${username}.service" ];
+        serviceConfig = {
+          Type = "oneshot";
+          RemainAfterExit = true;
+        };
         script = ''
           set -euo pipefail
           for d in ${lib.escapeShellArgs (map (d: "${homeDir}/${d}") cleanDirs)}; do

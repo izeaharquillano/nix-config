@@ -6,24 +6,25 @@
     {
       pkgs,
       lib,
-      config,
+      username,
       ...
     }:
 
     {
-      virtualisation.libvirtd = {
-        enable = true;
-        qemu = {
-          package = pkgs.qemu_kvm;
-          runAsRoot = false;
-          swtpm.enable = true;
-          vhostUserPackages = [ pkgs.virtiofsd ];
+      virtualisation = {
+        libvirtd = {
+          enable = true;
+          qemu = {
+            package = pkgs.qemu_kvm;
+            runAsRoot = false;
+            swtpm.enable = true;
+            vhostUserPackages = [ pkgs.virtiofsd ];
+          };
         };
+        spiceUSBRedirection.enable = true;
       };
-
-      virtualisation.spiceUSBRedirection.enable = true;
       programs.virt-manager.enable = true;
-      users.users.${config.mySystem.username}.extraGroups = [ "libvirtd" ];
+      users.users.${username}.extraGroups = [ "libvirtd" ];
       networking.firewall.trustedInterfaces = [ "virbr0" ];
 
       # libvirt 12.7+ ships a 10-secret.conf drop-in with

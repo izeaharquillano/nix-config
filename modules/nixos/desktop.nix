@@ -5,7 +5,10 @@
 { inputs, ... }:
 {
   flake.modules.nixos.desktop = {
-    imports = with inputs.self.modules.nixos; [
+    imports = [
+      inputs.disko.nixosModules.default
+    ]
+    ++ (with inputs.self.modules.nixos; [
       base-nix
       base-direnv
       base-system
@@ -18,6 +21,6 @@
       desktop-niri
       desktop-services
       home-manager
-    ];
+    ]);
   };
 }

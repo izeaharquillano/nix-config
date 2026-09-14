@@ -1,14 +1,11 @@
 # Constants Aspect + Factory Aspect + DRY Aspect.
 #
-# - `flake.lib.vars`: single source of truth for user identity (was `vars/`).
-# - `flake.lib.mylib`: custom helpers (was `lib/`). `scanPaths` is kept for
-#   external compatibility; inside this repo `import-tree` auto-imports
-#   everything under `modules/`, so no aggregator files are needed.
+# - `flake.lib.vars`: single source of truth for user identity.
 # - `flake.lib.mkNixosHost / mkNixosServerHost / mkDarwinHost`: factories that
-#   instantiate hosts from dendritic modules (were `outputs/default.nix`).
-#   They inject the same `specialArgs`/`extraSpecialArgs` as before, so all
-#   system and home modules keep working unchanged:
-#     hostname, flakeRoot, inputs, mylib, myvars, username
+#   instantiate hosts from dendritic modules. They inject the same
+#   `specialArgs`/`extraSpecialArgs` everywhere, so all system and home
+#   modules keep working unchanged:
+#     hostname, flakeRoot, inputs, myvars, username
 {
   inputs,
   self,
@@ -22,44 +19,27 @@ let
     useremail = "izeaharquillano@gmail.com";
   };
 
-  mylib = {
-    scanPaths =
-      dir:
-      builtins.map (f: (dir + "/${f}")) (
-        builtins.attrNames (
-          lib.attrsets.filterAttrs (
-            name: _type:
-            (_type == "directory") || ((name != "default.nix") && (lib.strings.hasSuffix ".nix" name))
-          ) (builtins.readDir dir)
-        )
-      );
-
-    # Convert a repo-relative path to an absolute path.
-    relativeToRoot = path: (builtins.toString ../.) + "/../../${path}";
-
-    # specialArgs passed to all NixOS, Darwin, and Home Manager modules.
-    # All modules can expect these arguments:
-    #
-    #   hostname  - string  - Current host name (e.g. "padrick")
-    #   flakeRoot - path    - Flake root (self) for referencing repo files
-    #   inputs    - attrset - Flake inputs (nixpkgs, home-manager, etc.)
-    #   mylib     - attrset - Custom library functions (scanPaths, relativeToRoot)
-    #   myvars    - attrset - User identity vars (username, userfullname, useremail)
-    #   username  - string  - Primary user username (e.g. "ize")
-  };
-
-  username = vars.username;
+  inherit (vars) username;
 
   specialArgsFor = hostname: {
-    inherit inputs hostname username;
-    mylib = mylib;
+    inherit
+      inputs
+      hostname
+      username
+      mylib
+      ;
     myvars = vars;
     flakeRoot = self;
   };
 
+  # Backwards-compat shim: `mylib` used to carry `scanPaths`/`relativeToRoot`.
+  # `import-tree` auto-imports everything under `modules/`, so no aggregator
+  # is needed. Kept as an empty set so external consumers referencing
+  # `flake.lib.mylib` don't break; do not add helpers here.
+  mylib = { };
+
   baseSystemModules = [
     {
-      mySystem.username = username;
       nixpkgs.overlays = [
         self.overlays.default
         inputs.nix-alien.overlays.default
@@ -67,12 +47,13 @@ let
     }
   ];
 
-  homeManagerBlock = hostname: {
+  # Only binds `users.<name>` + `extraSpecialArgs`. Common HM settings
+  # (`useGlobalPkgs`, `backupFileExtension`, ...) live in the dendritic
+  # `home-manager` modules (`modules/tools/home-manager.nix`) which the
+  # `desktop` system type already imports — do not duplicate them here and
+  # do not re-import the home-manager NixOS/Darwin module here.
+  homeManagerUsersBlock = hostname: {
     home-manager = {
-      useGlobalPkgs = true;
-      useUserPackages = true;
-      backupFileExtension = "hm-bak";
-      overwriteBackup = true;
       users.${username} = self.modules.homeManager.${hostname};
       extraSpecialArgs = specialArgsFor hostname;
     };
@@ -95,9 +76,10 @@ in
         specialArgs = specialArgsFor hostname;
         modules = [
           self.modules.nixos.${hostname}
-          inputs.home-manager.nixosModules.home-manager
-          inputs.agenix.nixosModules.age
-          (homeManagerBlock hostname)
+          # NOTE: home-manager integration + agenix come from the composition
+          # itself (`nixos.desktop` imports `home-manager`, `base-secrets`
+          # imports agenix). The factory only binds the per-host HM user.
+          (homeManagerUsersBlock hostname)
         ]
         ++ baseSystemModules;
       };
@@ -109,27 +91,30 @@ in
         specialArgs = specialArgsFor hostname;
         modules = [
           self.modules.nixos.${hostname}
-          inputs.agenix.nixosModules.age
+          # NOTE: agenix comes from `base-secrets` via the `server` type.
         ]
         ++ baseSystemModules;
       };
 
     mkDarwinHost =
       hostname: system:
+      let
+        agenixDarwin =
+          if inputs.agenix ? darwinModules then
+            inputs.agenix.darwinModules.age
+          else
+            inputs.agenix.nixosModules.age;
+      in
       inputs.nix-darwin.lib.darwinSystem {
         inherit system;
         specialArgs = specialArgsFor hostname;
         modules = [
           self.modules.darwin.${hostname}
+          agenixDarwin
           inputs.home-manager.darwinModules.home-manager
-          inputs.agenix.nixosModules.age
           {
-            mySystem.username = username;
             nixpkgs.overlays = [ self.overlays.default ];
             home-manager = {
-              useGlobalPkgs = true;
-              useUserPackages = true;
-              backupFileExtension = "hm-bak";
               users.${username} = self.modules.homeManager.${hostname};
               extraSpecialArgs = specialArgsFor hostname;
             };

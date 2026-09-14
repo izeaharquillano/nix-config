@@ -14,47 +14,51 @@
       };
     in
     {
-      programs.bash = {
-        enable = true;
-        enableCompletion = true;
-        initExtra = ''
-          bind -s '"\C-w": kill-word'
-        '';
-      };
+      programs = {
+        bash = {
+          enable = true;
+          enableCompletion = true;
+          initExtra = ''
+            bind -s '"\C-w": kill-word'
+          '';
+        };
 
-      programs.zsh = {
-        enable = true;
-        enableCompletion = true;
-        autosuggestion.enable = true;
-        syntaxHighlighting.enable = true;
-        initContent = ''
-          bindkey "^[[H" beginning-of-line
-          bindkey "^[[F" end-of-line
-          bindkey "^[[3~" delete-char
-        '';
-      };
+        zsh = {
+          enable = true;
+          enableCompletion = true;
+          autosuggestion.enable = true;
+          syntaxHighlighting.enable = true;
+          initContent = ''
+            bindkey "^[[H" beginning-of-line
+            bindkey "^[[F" end-of-line
+            bindkey "^[[3~" delete-char
+          '';
+        };
 
-      programs.starship = {
-        enable = true;
-        enableBashIntegration = true;
-        enableZshIntegration = true;
+        starship = {
+          enable = true;
+          enableBashIntegration = true;
+          enableZshIntegration = true;
+        };
+
+        zoxide = {
+          enable = true;
+          enableZshIntegration = true;
+          enableBashIntegration = true;
+        };
       };
 
       xdg.configFile."starship.toml".source = flakeRoot + /config/starship.toml;
 
-      programs.zoxide = {
-        enable = true;
-        enableZshIntegration = true;
-        enableBashIntegration = true;
-      };
+      home = {
+        sessionVariables = {
+          EDITOR = "nvim";
+          VISUAL = "nvim";
+          MANPAGER = "sh -c 'col -bx | bat -l man -p'";
+          BAT_THEME = "gruvbox-dark";
+        };
 
-      home.sessionVariables = {
-        EDITOR = "nvim";
-        VISUAL = "nvim";
-        MANPAGER = "sh -c 'col -bx | bat -l man -p'";
-        BAT_THEME = "gruvbox-dark";
+        inherit shellAliases;
       };
-
-      home.shellAliases = shellAliases;
     };
 }

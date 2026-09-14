@@ -4,8 +4,12 @@
 {
   flake.overlays.default = import ../../overlays;
 
+  # Central nixpkgs wiring for perSystem consumers lives in
+  # `modules/tools/nixpkgs.nix` (single `import nixpkgs` with overlays +
+  # allowUnfree). System modules get overlays via the host factories +
+  # this reusable module.
   flake.nixosModules.default =
-    { lib, ... }:
+    { ... }:
     {
       imports = [
         self.modules.nixos.desktop
@@ -16,9 +20,6 @@
           self.overlays.default
           inputs.nix-alien.overlays.default
         ];
-
-        mySystem.username = lib.mkDefault self.lib.vars.username;
-        mySystem.kernelPackage = lib.mkDefault inputs.nixpkgs.linuxPackages_latest;
       };
     };
 }

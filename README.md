@@ -247,9 +247,8 @@ The dev shell includes `just`, `nixfmt`, `deadnix`, `statix`, and `agenix`. Run 
 `flake.lib` (defined in `modules/dendritic/lib.nix`, single source of truth) provides:
 
 - **`vars` / `myvars`** — User identity (`username`, `userfullname`, `useremail`). Injected into every module via `specialArgs`/`extraSpecialArgs`.
-- **`mylib.scanPaths`** — Kept for external compatibility. Inside this repo, `import-tree` auto-imports everything under `modules/`, so no aggregator files are needed — creating a `.nix` file is enough (plus adding it to the relevant system-type collector, if composed; features need nothing).
-- **`mylib.relativeToRoot`** — Converts a repo-relative path to an absolute store path.
-- **`mkNixosHost` / `mkNixosServerHost` / `mkDarwinHost`** — Factories instantiating hosts from dendritic modules with uniform `specialArgs` (`inputs`, `mylib`, `myvars`, `hostname`, `username`, `flakeRoot`).
+- **`mylib`** — Empty backwards-compat shim (former `scanPaths`/`relativeToRoot` removed; `import-tree` auto-imports everything under `modules/`).
+- **`mkNixosHost` / `mkNixosServerHost` / `mkDarwinHost`** — Factories instantiating hosts from dendritic modules with uniform `specialArgs` (`inputs`, `myvars`, `hostname`, `username`, `flakeRoot`). They only bind the per-host Home Manager user; HM settings/agenix/disko come from the composed modules themselves.
 
 ## Security
 
@@ -267,11 +266,11 @@ The dev shell includes `just`, `nixfmt`, `deadnix`, `statix`, and `agenix`. Run 
 Configured in `modules/base/nix.nix` and `modules/nixos/base/system.nix`:
 
 - `mySystem.kernelPackage`: Configurable kernel (default: `linuxPackages_latest`)
-- `mySystem.username`: Primary user (default: `"ize"`)
+- Primary user comes from the `username` specialArg (`flake.lib.vars.username`, default `"ize"`) — no `mySystem.username` option.
 - Experimental features: `nix-command`, `flakes`, `recursive-nix`
-- `sandbox = true`, `warn-dirty = false`
+- `sandbox = true` (Linux only), `warn-dirty = false`
 - Automatic weekly `nix.optimise` and garbage collection (14-day retention)
-- **GitHub access token:** Optional, for private flakes / avoiding rate limits. Add via `just secrets-edit nix-access-tokens.age` with content `access-tokens = github.com=ghp_<token>`. Auto-included via `nix.extraOptions` in `modules/nixos/base/secrets.nix`.
+- **GitHub access token:** Optional, for private flakes / avoiding rate limits. Add via `just secrets-edit nix-access-tokens.age` with content `access-tokens = github.com=ghp_<token>`. Auto-included via `nix.extraOptions` (`!include`) in `modules/nixos/base/secrets.nix` as `0400 owner=<user>` (user-readable, daemon-readable as root) with an empty fallback so fresh hosts without decrypted secrets don't deadlock nix.
 
 ## Theme
 

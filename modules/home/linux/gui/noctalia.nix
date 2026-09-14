@@ -9,19 +9,21 @@
     {
       programs.noctalia.enable = true;
 
-      xdg.configFile."noctalia/config.toml".source = flakeRoot + /config/noctalia/config.toml;
-      xdg.configFile."noctalia/wallpapers".source = flakeRoot + /_img/wallpapers;
+      xdg.configFile = {
+        "noctalia/config.toml".source = flakeRoot + /config/noctalia/config.toml;
+        "noctalia/wallpapers".source = flakeRoot + /_img/wallpapers;
 
-      xdg.configFile."noctalia/wallpaper.toml".text =
-        let
-          wp = "${config.home.homeDirectory}/.config/noctalia/wallpapers/gruv-abstract-maze.png";
-        in
-        ''
-          [wallpaper.default]
-          path = "${wp}"
+        "noctalia/wallpaper.toml".text =
+          let
+            wp = "${config.home.homeDirectory}/.config/noctalia/wallpapers/gruv-abstract-maze.png";
+          in
+          ''
+            [wallpaper.default]
+            path = "${wp}"
 
-          [wallpaper.last]
-          path = "${wp}"
-        '';
+            [wallpaper.last]
+            path = "${wp}"
+          '';
+      };
     };
 }

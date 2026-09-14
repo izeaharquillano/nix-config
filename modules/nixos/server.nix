@@ -4,7 +4,10 @@
 { inputs, ... }:
 {
   flake.modules.nixos.server = {
-    imports = with inputs.self.modules.nixos; [
+    imports = [
+      inputs.disko.nixosModules.default
+    ]
+    ++ (with inputs.self.modules.nixos; [
       base-nix
       base-direnv
       base-system
@@ -13,6 +16,6 @@
       base-secrets
       base-security
       base-packages
-    ];
+    ]);
   };
 }

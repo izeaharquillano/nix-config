@@ -1,14 +1,12 @@
-# Per-system custom packages (was `packages` in `outputs/default.nix`).
-# Sources live in `pkgs/` and are also exposed via `overlays.default`.
-{ inputs, ... }:
+# Per-system custom packages. Sources live in `pkgs/` and are also exposed via
+# `overlays.default` for NixOS system `pkgs`. Built here with the centralized
+# `pkgs` from `modules/tools/nixpkgs.nix` (allowUnfree + overlays).
 {
   perSystem =
-    { system, ... }:
+    { pkgs, ... }:
     {
       packages = {
-        gruvbox-material-yazi =
-          inputs.nixpkgs.legacyPackages.${system}.callPackage ../../pkgs/gruvbox-material-yazi.nix
-            { };
+        gruvbox-material-yazi = pkgs.callPackage ../../pkgs/gruvbox-material-yazi.nix { };
       };
     };
 }

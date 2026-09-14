@@ -2,7 +2,7 @@
 # Dendritic module: flake.modules.nixos.desktop-niri
 {
   flake.modules.nixos.desktop-niri =
-    { ... }:
+    _:
 
     {
       programs.niri.enable = true;

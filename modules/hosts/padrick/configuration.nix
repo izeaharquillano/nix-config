@@ -30,7 +30,8 @@ in
       nixos.padrick-packages
       nixos.padrick-services
       nixos.padrick-host-settings
-      inputs.disko.nixosModules.default
+      # disko comes from the `desktop` system type; hardware profile stays
+      # per-host because it differs per machine.
       inputs.nixos-hardware.nixosModules.lenovo-thinkpad-t14-amd-gen1
     ];
 

@@ -5,26 +5,28 @@
     { pkgs, ... }:
 
     {
-      xdg.userDirs = {
-        enable = true;
-        createDirectories = true;
-      };
-
-      xdg.desktopEntries.nemo = {
-        name = "Nemo";
-        exec = "${pkgs.nemo-with-extensions}/bin/nemo";
-        icon = "nemo";
-      };
-
-      xdg.mimeApps = {
-        enable = true;
-        defaultApplications = {
-          "inode/directory" = [ "nemo.desktop" ];
-          "application/x-gnome-saved-search" = [ "nemo.desktop" ];
+      xdg = {
+        userDirs = {
+          enable = true;
+          createDirectories = true;
         };
-        defaultApplicationPackages = with pkgs; [
-          qimgv
-        ];
+
+        desktopEntries.nemo = {
+          name = "Nemo";
+          exec = "${pkgs.nemo-with-extensions}/bin/nemo";
+          icon = "nemo";
+        };
+
+        mimeApps = {
+          enable = true;
+          defaultApplications = {
+            "inode/directory" = [ "nemo.desktop" ];
+            "application/x-gnome-saved-search" = [ "nemo.desktop" ];
+          };
+          defaultApplicationPackages = with pkgs; [
+            qimgv
+          ];
+        };
       };
 
       systemd.user.services.polkit-gnome-authentication-agent-1 = {

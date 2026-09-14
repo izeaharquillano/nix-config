@@ -3,19 +3,17 @@
 {
   flake.modules.homeManager.home-base =
     {
-      config,
       pkgs,
       username,
       ...
     }:
 
     {
-      home.stateVersion = "26.05";
-      home.username = username;
-      home.homeDirectory =
-        if pkgs.stdenv.hostPlatform.isDarwin then
-          "/Users/${config.home.username}"
-        else
-          "/home/${config.home.username}";
+      home = {
+        stateVersion = "26.05";
+        inherit username;
+        homeDirectory =
+          if pkgs.stdenv.hostPlatform.isDarwin then "/Users/${username}" else "/home/${username}";
+      };
     };
 }

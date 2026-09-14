@@ -10,41 +10,43 @@
     }:
 
     {
-      services.tlp.enable = lib.mkForce false;
-      services.hdapsd.enable = false;
+      services = {
+        tlp.enable = lib.mkForce false;
+        hdapsd.enable = false;
 
-      services.auto-cpufreq = {
-        enable = true;
-        settings = {
-          battery = {
-            governor = "powersave";
-            turbo = "auto";
-          };
-          charger = {
-            governor = "performance";
-            turbo = "auto";
+        auto-cpufreq = {
+          enable = true;
+          settings = {
+            battery = {
+              governor = "powersave";
+              turbo = "auto";
+            };
+            charger = {
+              governor = "performance";
+              turbo = "auto";
+            };
           };
         };
-      };
 
-      services.upower = {
-        enable = true;
-        percentageLow = 20;
-        percentageCritical = 5;
-        percentageAction = 2;
-        criticalPowerAction = "PowerOff";
-      };
+        upower = {
+          enable = true;
+          percentageLow = 20;
+          percentageCritical = 5;
+          percentageAction = 2;
+          criticalPowerAction = "PowerOff";
+        };
 
-      services.logind.settings.Login = {
-        HandleLidSwitch = "lock";
-        HandleLidSwitchExternalPower = "lock";
-        HandleLidSwitchDocked = "lock";
-        IdleAction = "ignore";
-        IdleActionSec = "30min";
-        LidSwitchIgnoreInhibited = "yes";
-      };
+        logind.settings.Login = {
+          HandleLidSwitch = "lock";
+          HandleLidSwitchExternalPower = "lock";
+          HandleLidSwitchDocked = "lock";
+          IdleAction = "ignore";
+          IdleActionSec = "30min";
+          LidSwitchIgnoreInhibited = "yes";
+        };
 
-      services.resolved.enable = true;
+        resolved.enable = true;
+      };
 
       networking.firewall = {
         allowedUDPPorts = [

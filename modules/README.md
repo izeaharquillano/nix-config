@@ -9,10 +9,10 @@ organized by platform. Every `.nix` file under `modules/` is auto-imported by
 
 - **`base/`** — Cross-platform config (Multi-Context Aspect: same body published as `nixos.*` and `darwin.*`).
 - **`nixos/base/`** — Core NixOS pieces (boot, networking, locale, SSH, secrets, firewall). Always imported via the `desktop`/`server` system types.
-  - `system.nix` — Boot, networking, GC, `mySystem.kernelPackage` and `mySystem.username` options (the user account itself lives in `users/ize.nix`)
+  - `system.nix` — Boot, networking, GC, `mySystem.kernelPackage` option. User identity comes from the `username` specialArg (`flake.lib.vars`); the account itself lives in `users/ize.nix`
   - `locale.nix` — Timezone, locale, hardware clock (UTC)
   - `ssh.nix` — OpenSSH (key-based auth only, root login denied)
-  - `secrets.nix` — agenix secret declarations
+  - `secrets.nix` — agenix secret declarations (imports agenix itself; `nix-access-tokens` is `0400 owner=<user>` + `!include` with a missing-file fallback so fresh hosts don't deadlock)
   - `security.nix` — Neovim, firewall (base rules), polkit/rtkit
   - `packages.nix` — Base system packages
 - **`nixos/desktop.nix`** — `desktop` system type (Inheritance Aspect): base + desktop GUI modules + home-manager wiring. Hosts import `nixos.desktop`.
@@ -49,7 +49,7 @@ imports = [
 
 ## Using as an External Module
 
-The `nixosModules.default` output (desktop system type, plus overlays and `mySystem` defaults) can be consumed by other flakes:
+The `nixosModules.default` output (desktop system type plus overlays) can be consumed by other flakes:
 
 ```nix
 {
@@ -61,10 +61,16 @@ The `nixosModules.default` output (desktop system type, plus overlays and `mySys
   outputs = { self, nixpkgs, nix-config, ... }: {
     nixosConfigurations.myhost = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
+      specialArgs = {
+        inherit (nix-config.lib) vars myvars mylib;
+        username = "myuser";
+        hostname = "myhost";
+        flakeRoot = nix-config;
+        inputs = { inherit nixpkgs; };
+      };
       modules = [
         nix-config.nixosModules.default
         {
-          mySystem.username = "myuser";
           networking.hostName = "myhost";
         }
       ];
@@ -73,7 +79,7 @@ The `nixosModules.default` output (desktop system type, plus overlays and `mySys
 }
 ```
 
-Note: external use requires passing this repo's `specialArgs` (`inputs`, `mylib`/`flake.lib.mylib`, `myvars`/`flake.lib.vars`, `hostname`, `username`, `flakeRoot`) — see the `mkNixosHost` factory in `modules/dendritic/lib.nix`.
+Note: external use requires passing this repo's `specialArgs` (`inputs`, `flake.lib.mylib` (compat shim), `myvars`/`flake.lib.vars`, `hostname`, `username`, `flakeRoot`) — see the `mkNixosHost` factory in `modules/dendritic/lib.nix`. `username`/`hostname` are plain strings (no `mySystem.username` option exists).
 
 ## Features
 
@@ -89,9 +95,9 @@ imports = [
   nixos.vm-dosbox # DOSBox emulator
   nixos.gaming # Steam, Gamescope, Gamemode, MangoHud
   nixos.zswap # Zswap with zstd compression
-  nixos.p2p # Syncthing, NetBird VPN, LocalSend
+  nixos.p2p # Syncthing, NetBird VPN, LocalSend (peers/folders via `features.p2p.syncthing.*`)
   nixos.p2p-zerotier # ZeroTier VPN (needs networkId, see below)
-  nixos.containers # Docker (rootless), Podman, Distrobox
+  nixos.containers # Podman, Distrobox (Docker disabled)
   nixos.fhs # FHS env + nix-alien for unpatched binaries
 ];
 ```

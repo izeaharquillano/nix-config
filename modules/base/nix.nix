@@ -1,5 +1,7 @@
 # Multi-Context Aspect: the same nix settings shared across operating systems.
 # Dendritic modules: flake.modules.nixos.base-nix, flake.modules.darwin.base-nix
+# Linux-only settings (`sandbox`, `@wheel`) are gated on `isDarwin` so the
+# shared body evaluates cleanly on nix-darwin (`@admin` there).
 { ... }:
 let
   nix-body =
@@ -9,7 +11,9 @@ let
       inputs ? null,
       ...
     }:
-
+    let
+      isDarwin = pkgs.stdenv.hostPlatform.isDarwin;
+    in
     {
       nixpkgs.config.allowUnfree = true;
 
@@ -30,11 +34,10 @@ let
           max-jobs = "auto";
           http-connections = 50;
           warn-dirty = false;
-          sandbox = true;
           trusted-users = [
             "root"
-            "@wheel"
-          ];
+          ]
+          ++ (if isDarwin then [ "@admin" ] else [ "@wheel" ]);
           substituters = [
             "https://cache.nixos.org"
             "https://nix-community.cachix.org"
@@ -42,6 +45,9 @@ let
           trusted-public-keys = [
             "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
           ];
+        }
+        // lib.optionalAttrs (!isDarwin) {
+          sandbox = true;
         };
       };
     };

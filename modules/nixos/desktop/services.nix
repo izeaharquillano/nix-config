@@ -5,33 +5,37 @@
     { pkgs, ... }:
 
     {
-      programs.zsh.enable = true;
-      programs.dconf.enable = true;
+      programs = {
+        zsh.enable = true;
+        dconf.enable = true;
 
-      programs.hyprland = {
-        enable = true;
-        withUWSM = true;
+        hyprland = {
+          enable = true;
+          withUWSM = true;
+        };
       };
 
       fonts.packages = with pkgs; [
         nerd-fonts.jetbrains-mono
       ];
 
-      services.blueman.enable = true;
-      services.fwupd.enable = true;
+      services = {
+        blueman.enable = true;
+        fwupd.enable = true;
 
-      services.xserver.xkb = {
-        layout = "us";
-        variant = "";
-      };
+        xserver.xkb = {
+          layout = "us";
+          variant = "";
+        };
 
-      services.udisks2.enable = true;
-      services.gvfs.enable = true;
+        udisks2.enable = true;
+        gvfs.enable = true;
 
-      services.pipewire = {
-        enable = true;
-        alsa.enable = true;
-        pulse.enable = true;
+        pipewire = {
+          enable = true;
+          alsa.enable = true;
+          pulse.enable = true;
+        };
       };
 
       xdg.portal = {
