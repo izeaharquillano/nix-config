@@ -1,13 +1,6 @@
 #!/usr/bin/env bash
-# Scale (zoom) the focused output by static amount or +/- increments. This works
-# with 1 or multiple monitors. Supports Niri and Hyprland.
-#
-# Examples:
-#   output-scale    # Cycle between supported scales (1, 1.25, 1.5, 2, etc.)
-#   output-scale 2  # Set the current scale to 2 (zoom in)
-#   output-scale +  # Scale up in 0.25 increments
-#   output-scale -  # Scale down in 0.25 increments
-#   courtesy of https://github.com/nickjj
+# Scale focused Niri/Hyprland output: `[scale|+|-|empty]` (empty cycles presets).
+# e.g. `output-scale 2`, `output-scale +`; via https://github.com/nickjj
 
 if [ -n "${NIRI_SOCKET}" ]; then
   compositor="niri"

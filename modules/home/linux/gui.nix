@@ -1,5 +1,4 @@
-# Inheritance Aspect: full GUI home configuration. Host homes import this
-# plus the individual `home-features-*` pieces they need.
+# Full GUI home; hosts add `home-features-*` as needed.
 # Dendritic module: flake.modules.homeManager.home-linux-gui
 { inputs, ... }:
 {

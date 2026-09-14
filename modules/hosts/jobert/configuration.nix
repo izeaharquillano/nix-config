@@ -1,10 +1,5 @@
-# jobert: AMD+NVIDIA gaming laptop for work/gaming.
-#
-# Dendritic composition root: `flake.modules.nixos.jobert` pulls together the
-# desktop system type, the reusable `user-ize` feature, per-host Collector
-# pieces (`jobert-*`), external hardware/disk modules, and exactly the
-# feature modules this host uses — importing a module IS enabling it.
-# Instantiated as `nixosConfigurations.jobert` in `flake-parts.nix`.
+# jobert: AMD+NVIDIA gaming/work laptop.
+# Composition root (`flake.modules.nixos.jobert`); see `flake-parts.nix`.
 { inputs, ... }:
 let
   nixos = inputs.self.modules.nixos;
@@ -31,8 +26,7 @@ in
       nixos.jobert-packages
       nixos.jobert-services
       nixos.jobert-host-settings
-      # disko comes from the `desktop` system type; hardware profiles stay
-      # per-host because they differ per machine.
+      # disko from `desktop`; hardware profiles stay per-host.
       inputs.nixos-hardware.nixosModules.common-cpu-amd
       inputs.nixos-hardware.nixosModules.common-pc-laptop
       inputs.nixos-hardware.nixosModules.common-pc-ssd
@@ -40,7 +34,6 @@ in
 
     networking.hostName = "jobert";
 
-    # Host-specific value for the imported p2p-zerotier module.
     features.p2p.zerotier.networkId = "88c5b1f339f6593b";
 
     system.stateVersion = "26.05";

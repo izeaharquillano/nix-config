@@ -25,9 +25,7 @@
       cleanExcludeFiles = [
         ".local/state/noctalia/.setup-complete"
       ];
-      # `find <dir> -mindepth 1 -maxdepth 1 <excludes>`: paths MUST precede
-      # the expression (previous xargs appended paths at the end, so find
-      # always failed with "paths must precede expression" and wiped nothing).
+      # find needs paths before the expression.
       findExcludeArgs = lib.concatMapStringsSep " " (e: "! -name ${lib.escapeShellArg e}") cleanExcludes;
     in
     {
@@ -35,8 +33,7 @@
         inputs.impermanence.nixosModules.impermanence
       ];
 
-      # With impermanence, no static password is set (see users/ize.nix):
-      # authentication comes from /persist/secrets/hashed-password.
+      # No static password; auth comes from /persist/secrets/hashed-password.
       users.users.${username} = {
         initialPassword = lib.mkForce null;
         hashedPasswordFile = "${persistPath}/secrets/hashed-password";
@@ -97,6 +94,7 @@
           "/var/lib"
           "/var/lib/nixos"
           "/var/lib/systemd"
+          "/var/lib/sbctl" # Secure Boot keys (also covered by /var/lib)
           "/var/tmp"
           "/var/cache"
           "/var/log"
@@ -128,10 +126,7 @@
       systemd.services.clean-home = {
         description = "Wipe ephemeral home directories on boot";
         wantedBy = [ "multi-user.target" ];
-        # Run BEFORE Home Manager activation (not after): wiping after HM
-        # deletes files HM just created, and re-runs on every
-        # `nixos-rebuild switch` while logged in, nuking the live session's
-        # cache. Before HM it only affects stale state from previous boots.
+        # Wipe before Home Manager activation to spare the live session cache.
         after = [ "local-fs.target" ];
         before = [ "home-manager-${username}.service" ];
         serviceConfig = {

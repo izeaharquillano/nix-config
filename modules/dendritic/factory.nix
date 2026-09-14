@@ -1,6 +1,4 @@
-# Factory Aspect placeholder: parameterized module generators live here.
-# (e.g. `flake.factory.mkUser = ...`). Host builders in `lib.nix` are the
-# primary factories in this repo.
+# Factory Aspect placeholder (host builders live in `lib.nix`).
 { lib, ... }:
 {
   options.flake.factory = lib.mkOption {

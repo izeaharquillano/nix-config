@@ -1,8 +1,7 @@
 # Simple Aspect: boot, networking, GC
 # Dendritic module: flake.modules.nixos.base-system
-# NOTE: primary user identity comes from the `username` specialArg
-# (`flake.lib.vars.username`); there is deliberately no `mySystem.username`
-# option. The account itself lives in `users/ize.nix`.
+# NOTE: no `mySystem.username` option; identity comes from the `username`
+# specialArg, account lives in `users/ize.nix`.
 {
   flake.modules.nixos.base-system =
     {
@@ -55,8 +54,7 @@
           wants = [ "network-online.target" ];
         };
 
-        # The primary user account itself is defined by the `user-ize` feature
-        # (modules/users/ize.nix), which hosts import alongside this module.
+        # Account defined in `users/ize.nix`.
       };
     };
 }

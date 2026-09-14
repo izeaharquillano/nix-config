@@ -1,6 +1,4 @@
-# Inheritance Aspect: the desktop system type composes cross-platform base,
-# NixOS base, and desktop environments. Hosts import this instead of
-# hand-picking modules.
+# Inheritance Aspect: desktop system type (base + desktop envs + HM).
 # Dendritic module: flake.modules.nixos.desktop
 { inputs, ... }:
 {

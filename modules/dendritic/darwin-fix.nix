@@ -1,6 +1,4 @@
-# Upstream flake-parts exposes `nixosConfigurations` and `homeConfigurations`
-# but no `darwinConfigurations` option. This declares it so darwin hosts can
-# be instantiated the same dendritic way as NixOS hosts.
+# Declares `darwinConfigurations` (missing upstream) for dendritic darwin hosts.
 { lib, flake-parts-lib, ... }:
 {
   options = {

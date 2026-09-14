@@ -1,8 +1,5 @@
-# Single `import nixpkgs` for all `perSystem` consumers (formatter, checks,
-# devShell, packages): allowUnfree + repo overlays. System modules get the
-# same overlays via the host factories (`dendritic/lib.nix`) and
-# `nixosModules.default` — do not re-import nixpkgs elsewhere with
-# `legacyPackages`.
+# Single `import nixpkgs` (allowUnfree + overlays) for `perSystem` consumers.
+# System modules get overlays via host factories; no `legacyPackages` elsewhere.
 { inputs, self, ... }:
 {
   perSystem =

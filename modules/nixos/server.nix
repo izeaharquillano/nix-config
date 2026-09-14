@@ -1,5 +1,4 @@
-# Inheritance Aspect: the headless server system type. No desktop modules,
-# no Home Manager (see `mkNixosServerHost` in `dendritic/lib.nix`).
+# Inheritance Aspect: headless server system type (no desktop, no HM).
 # Dendritic module: flake.modules.nixos.server
 { inputs, ... }:
 {

@@ -1,7 +1,4 @@
-# Shared Home Manager wiring (Multi-Context Aspect): the same settings applied
-# to the NixOS and nix-darwin home-manager integrations.
-# Host user composition (`users.<name>`, `extraSpecialArgs`) is injected by
-# the `mkNixosHost`/`mkDarwinHost` factories in `dendritic/lib.nix`.
+# Shared HM wiring for NixOS + nix-darwin; user composition via host factories.
 { inputs, ... }:
 let
   home-manager-config =

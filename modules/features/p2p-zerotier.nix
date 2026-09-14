@@ -1,7 +1,6 @@
 # Simple Aspect: ZeroTier networking.
 # Import this module = enabled (pure dendritic: composition decides).
-# The network ID is host-specific, so it stays a plain value option
-# (no enable flag) set by the importing host.
+# networkId is host-specific; set by the importing host.
 # Dendritic module: flake.modules.nixos.p2p-zerotier
 {
   flake.modules.nixos.p2p-zerotier =

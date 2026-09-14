@@ -1,5 +1,4 @@
-# just is a command runner, Justfile is similar to Makefile but simpler.
-# https://just.systems/
+# Task runner; see https://just.systems/
 
 set shell := ["bash", "-euo", "pipefail", "-c"]
 
@@ -133,6 +132,30 @@ secrets-decrypt secret:
 [group('secrets')]
 secrets-rekey:
     cd {{repo_root}}/secrets && sudo agenix -i /etc/ssh/ssh_host_ed25519_key --rekey
+
+# ─── Secure Boot (lanzaboote/sbctl) ───────────────────────────────────────
+
+# Back up /var/lib/sbctl before a reinstall (preserves firmware enrollment)
+[group('secureboot')]
+secureboot-backup dest="sbctl-backup-$(hostname).tar.gz":
+    sudo tar -czpf "{{dest}}" -C /var/lib sbctl
+    @echo "Saved {{dest}} — copy it off-disk before wiping."
+
+# Restore a backup after disko mount, before nixos-install.
+# Writes both /mnt/var/lib/sbctl and /mnt/persist/var/lib/sbctl.
+[group('secureboot')]
+secureboot-restore archive:
+    sudo mkdir -p /mnt/var/lib /mnt/persist/var/lib
+    sudo tar -xzpf "{{archive}}" -C /mnt/var/lib
+    sudo rm -rf /mnt/persist/var/lib/sbctl
+    sudo cp -a /mnt/var/lib/sbctl /mnt/persist/var/lib/
+    @echo "Restored {{archive}} to /mnt/var/lib/sbctl + /mnt/persist/var/lib/sbctl"
+
+# Check Secure Boot key + signature state
+[group('secureboot')]
+secureboot-status:
+    sbctl status
+    sudo sbctl verify
 
 # ─── Dev Tools ──────────────────────────────────────────────────────────────
 

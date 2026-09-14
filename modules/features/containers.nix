@@ -1,5 +1,4 @@
-# Simple Aspect: containers (Podman, Distrobox). Docker stays disabled by
-# default — enable rootless Docker explicitly per host if needed.
+# Simple Aspect: containers (Podman, Distrobox; Docker off by default).
 # Import this module = enabled (pure dendritic: composition decides).
 # Dendritic module: flake.modules.nixos.containers
 {

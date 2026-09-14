@@ -7,3 +7,6 @@ result-*
 
 # Ignore NixOS interactive test driver history
 **/.nixos-test-history
+
+# Secure Boot key backups (secret material, never commit)
+sbctl-backup-*.tar.gz

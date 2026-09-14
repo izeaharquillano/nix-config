@@ -1,11 +1,5 @@
-# Constants Aspect + Factory Aspect + DRY Aspect.
-#
-# - `flake.lib.vars`: single source of truth for user identity.
-# - `flake.lib.mkNixosHost / mkNixosServerHost / mkDarwinHost`: factories that
-#   instantiate hosts from dendritic modules. They inject the same
-#   `specialArgs`/`extraSpecialArgs` everywhere, so all system and home
-#   modules keep working unchanged:
-#     hostname, flakeRoot, inputs, myvars, username
+# User identity + host factories (`mkNixosHost`/`mkNixosServerHost`/`mkDarwinHost`).
+# Factories inject shared `specialArgs` (hostname, flakeRoot, inputs, myvars, username).
 {
   inputs,
   self,
@@ -32,10 +26,7 @@ let
     flakeRoot = self;
   };
 
-  # Backwards-compat shim: `mylib` used to carry `scanPaths`/`relativeToRoot`.
-  # `import-tree` auto-imports everything under `modules/`, so no aggregator
-  # is needed. Kept as an empty set so external consumers referencing
-  # `flake.lib.mylib` don't break; do not add helpers here.
+  # Empty legacy `mylib` shim for external compat; add no helpers here.
   mylib = { };
 
   baseSystemModules = [
@@ -47,11 +38,7 @@ let
     }
   ];
 
-  # Only binds `users.<name>` + `extraSpecialArgs`. Common HM settings
-  # (`useGlobalPkgs`, `backupFileExtension`, ...) live in the dendritic
-  # `home-manager` modules (`modules/tools/home-manager.nix`) which the
-  # `desktop` system type already imports — do not duplicate them here and
-  # do not re-import the home-manager NixOS/Darwin module here.
+  # Binds the HM user only; shared HM settings live in `tools/home-manager.nix`.
   homeManagerUsersBlock = hostname: {
     home-manager = {
       users.${username} = self.modules.homeManager.${hostname};
@@ -76,9 +63,7 @@ in
         specialArgs = specialArgsFor hostname;
         modules = [
           self.modules.nixos.${hostname}
-          # NOTE: home-manager integration + agenix come from the composition
-          # itself (`nixos.desktop` imports `home-manager`, `base-secrets`
-          # imports agenix). The factory only binds the per-host HM user.
+          # HM + agenix come from composition; factory binds the HM user only.
           (homeManagerUsersBlock hostname)
         ]
         ++ baseSystemModules;
@@ -91,7 +76,6 @@ in
         specialArgs = specialArgsFor hostname;
         modules = [
           self.modules.nixos.${hostname}
-          # NOTE: agenix comes from `base-secrets` via the `server` type.
         ]
         ++ baseSystemModules;
       };

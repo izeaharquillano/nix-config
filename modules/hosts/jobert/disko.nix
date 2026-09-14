@@ -2,26 +2,14 @@
 # Dendritic module: flake.modules.nixos.jobert-disko
 {
   flake.modules.nixos.jobert-disko =
-    # Disko layout for jobert: ESP + LUKS2 + btrfs with impermanence and swap.
-    #
-    # WARNING: This will WIPE the entire disk. Back up any data first.
-    #
-    # Destroy, format & mount (from the nix-config root on a NixOS live ISO).
-    # disko reads the devices from this host's evaluated system config:
-    #   sudo nix --experimental-features "nix-command flakes" run \
-    #     github:nix-community/disko/latest -- \
-    #     --mode destroy,format,mount --flake .#jobert
-    #
-    # Override device when installing (e.g. if disk IDs differ):
-    #   sudo nix --experimental-features "nix-command flakes" run \
-    #     github:nix-community/disko/latest -- \
-    #     --mode destroy,format,mount --flake .#jobert \
-    #     --option disko.devices.disk.nixos-jobert.device /dev/nvme0n1
+    # ESP+LUKS2+btrfs+swap. WIPES disk.
+    # Deploy: `disko --mode destroy,format,mount --flake .#jobert`
+    # Override disk: `--option disko.devices.disk.nixos-jobert.device /dev/nvme0n1`
     {
       disko.devices = {
         disk.nixos-jobert = {
           type = "disk";
-          # TODO: Update this to match your disk: ls /dev/disk/by-id/ | grep nvme
+          # Confirm with: ls /dev/disk/by-id/ | grep nvme
           device = "/dev/disk/by-id/nvme-KINGSTON_SNV2S1000G_50026B728346A4FE";
           content = {
             type = "gpt";

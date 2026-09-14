@@ -1,9 +1,5 @@
-# Per-system outputs: formatting, checks, dev shell, and flake apps.
-# `pkgs` (allowUnfree + overlays) comes from `modules/tools/nixpkgs.nix` —
-# do not use `legacyPackages` here.
-# NOTE: per-host eval is covered by CI dry-builds (`.github/workflows/ci.yml`
-# + `just ci-dry-build`), not by a `perSystem` check referencing
-# `self.nixosConfigurations` (that forces every system to evaluate every host).
+# Per-system fmt/checks/shell/apps (`pkgs` from `tools/nixpkgs.nix`).
+# Per-host eval covered by CI dry-builds, not a `perSystem` check.
 { inputs, self, ... }:
 {
   perSystem =

@@ -1,6 +1,5 @@
 # Simple Aspect: Noctalia shell + wallpaper.
-# Host-specific `host-settings.toml` is set by each host's home.nix
-# (like the niri/hypr host files) — this module stays fully shared.
+# Per-host `host-settings.toml` comes from each host's `home.nix`.
 # Dendritic module: flake.modules.homeManager.home-gui-noctalia
 {
   flake.modules.homeManager.home-gui-noctalia =

@@ -1,7 +1,6 @@
 # Multi-Context Aspect: the same nix settings shared across operating systems.
 # Dendritic modules: flake.modules.nixos.base-nix, flake.modules.darwin.base-nix
-# Linux-only settings (`sandbox`, `@wheel`) are gated on `isDarwin` so the
-# shared body evaluates cleanly on nix-darwin (`@admin` there).
+# Linux-only settings gated on `isDarwin` for nix-darwin compat.
 { ... }:
 let
   nix-body =

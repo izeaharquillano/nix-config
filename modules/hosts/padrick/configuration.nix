@@ -1,11 +1,5 @@
-# padrick: ThinkPad T14 AMD Gen1 — dual-boot with Windows on the same disk.
-# Disko manages disk layout; impermanence wipes root on boot.
-#
-# Dendritic composition root: `flake.modules.nixos.padrick` pulls together the
-# desktop system type, the reusable `user-ize` feature, per-host Collector
-# pieces (`padrick-*`), external hardware/disk modules, and exactly the
-# feature modules this host uses — importing a module IS enabling it.
-# Instantiated as `nixosConfigurations.padrick` in `flake-parts.nix`.
+# padrick: ThinkPad T14 AMD Gen1, Windows dual-boot, impermanence root.
+# Composition root (`flake.modules.nixos.padrick`); see `flake-parts.nix`.
 { inputs, ... }:
 let
   nixos = inputs.self.modules.nixos;
@@ -30,8 +24,7 @@ in
       nixos.padrick-packages
       nixos.padrick-services
       nixos.padrick-host-settings
-      # disko comes from the `desktop` system type; hardware profile stays
-      # per-host because it differs per machine.
+      # disko from `desktop`; hardware profile stays per-host.
       inputs.nixos-hardware.nixosModules.lenovo-thinkpad-t14-amd-gen1
     ];
 

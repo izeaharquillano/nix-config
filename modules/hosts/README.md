@@ -257,14 +257,30 @@ in
 {
   flake.nixosConfigurations.<name> = inputs.self.lib.mkNixosHost "<name>" "x86_64-linux";
 }
+```
 
-### 9. Secure Boot (optional, first-time only)
+### 9. Secure Boot (first boot, not install time)
+
+No action needed before install: `nixos.secureboot` sets
+`boot.lanzaboote.autoGenerateKeys.enable`, so `nixos-install` succeeds with
+an empty `/var/lib/sbctl` (unsigned artifacts allowed) and keys are created
+automatically on first boot by `generate-sb-keys.service`. Keys persist via
+impermanence (`/persist/var/lib/sbctl`).
+
+After first boot, sign then enroll once (firmware in Setup Mode):
 
 ```bash
-sudo sbctl create-keys
+sbctl status
+sudo nixos-rebuild boot --flake .#<name>
+sudo sbctl verify
 sudo sbctl enroll-keys --microsoft
 sbctl status
 ```
+
+To **skip re-enrollment on reinstall**, back up `/var/lib/sbctl` before
+wiping and restore it after `disko --mode destroy,format,mount` (see
+Reinstall Step 5b below). Restored keys sign the install immediately and
+the firmware keeps trusting them.
 
 ### 10. First deploy + secrets setup
 
@@ -453,12 +469,44 @@ sudo nixos-generate-config --root /mnt --show-hardware-config \
 
 Remove `fileSystems` and `swapDevices` from the generated hardware config — disko provides those.
 
+### Step 5b (optional): preserve Secure Boot keys across reinstall
+
+`disko --mode destroy,format,mount` wipes `/persist`, so keys in
+`/var/lib/sbctl` are lost and the firmware enrollment must be redone —
+unless you back them up first (from the running system before wiping):
+
+```bash
+just secureboot-backup            # saves /var/lib/sbctl to ./sbctl-backup-<hostname>.tar.gz (gitignored)
+# or manually: sudo tar -czpf /tmp/sbctl-backup.tar.gz -C /var/lib sbctl
+```
+
+Copy the archive off-disk (USB/second machine), then after Step 4 above
+(disko has mounted the fresh disk at `/mnt`) restore before installing.
+Both paths matter on impermanence hosts: `/mnt/var/lib/sbctl` is what
+`nixos-install` signs with, `/mnt/persist/var/lib/sbctl` is what survives
+the first reboot:
+
+```bash
+just secureboot-restore ./sbctl-backup-<hostname>.tar.gz
+# or manually:
+# sudo mkdir -p /mnt/var/lib /mnt/persist/var/lib
+# sudo tar -xzpf sbctl-backup-<hostname>.tar.gz -C /mnt/var/lib
+# sudo mkdir -p /mnt/persist/var/lib && sudo cp -a /mnt/var/lib/sbctl /mnt/persist/var/lib/
+```
+
+Skip this step for fresh keys — `nixos-install` works either way thanks to
+`autoGenerateKeys` (installs unsigned, generates on first boot, see Step 9).
+
 ### Step 6: Install
 
 ```bash
 cd /mnt/etc/nixos/nix-config
 sudo nixos-install --flake .#<hostname>
 ```
+
+No `sbctl create-keys` / `nixos-enter` dance needed: with
+`boot.lanzaboote.autoGenerateKeys.enable`, the install succeeds without
+keys and `generate-sb-keys.service` creates them on first boot.
 
 ### Step 7: Create the user password file
 
@@ -482,6 +530,27 @@ sudo reboot
 ```
 
 Remove the USB. On first boot, enter your LUKS passphrase to unlock.
+
+### Step 9: Secure Boot first-boot (only if you did NOT restore keys)
+
+With fresh keys the ESP artifacts from install are still unsigned. On the
+booted system:
+
+```bash
+sbctl status                      # keys should exist (auto-generated)
+sudo nixos-rebuild boot --flake .#<hostname>   # re-sign ESP with new keys
+sudo sbctl verify                 # everything should be signed
+# Put firmware in Setup Mode, then:
+sudo sbctl enroll-keys --microsoft
+sudo reboot                       # enable Secure Boot in firmware, then:
+sbctl status                      # Secure Boot: enabled, Setup Mode: disabled
+```
+
+If you restored keys in Step 5b, skip the re-sign — just verify:
+
+```bash
+sudo sbctl verify && sbctl status
+```
 
 ### Post-install
 

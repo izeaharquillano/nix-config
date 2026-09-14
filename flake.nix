@@ -1,8 +1,4 @@
-# Dendritic entry point: inputs plus a single mkFlake + import-tree call.
-# All configuration lives under `modules/` as `flake.modules.<class>.<name>`
-# pieces (see Doc-Steve/dendritic-design-with-flake-parts). Hosts are composed
-# in `modules/hosts/*/` and instantiated via the `mkNixosHost` factory in
-# `modules/dendritic/lib.nix`.
+# Entry point: inputs + `mkFlake(import-tree ./modules)`; config in `modules/`.
 {
   description = "An Epic NixOS Configuration";
 

@@ -1,6 +1,4 @@
-# Per-system custom packages. Sources live in `pkgs/` and are also exposed via
-# `overlays.default` for NixOS system `pkgs`. Built here with the centralized
-# `pkgs` from `modules/tools/nixpkgs.nix` (allowUnfree + overlays).
+# Custom `pkgs/` packages (also via `overlays.default`); uses centralized `pkgs`.
 {
   perSystem =
     { pkgs, ... }:

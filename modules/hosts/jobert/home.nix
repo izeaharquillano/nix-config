@@ -1,7 +1,5 @@
-# Dendritic home composition root for jobert.
-# `inputs` inside the home module below is the runtime `extraSpecialArgs`
-# (provides `niri`, `noctalia`, ...); dendritic siblings are captured via `hm`.
-# Importing a module IS enabling it — no feature flags.
+# Home composition root for jobert; import = enable.
+# Inner `inputs` is `extraSpecialArgs`; siblings via `hm`.
 { inputs, ... }:
 let
   hm = inputs.self.modules.homeManager;

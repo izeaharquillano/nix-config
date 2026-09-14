@@ -4,7 +4,11 @@
 { inputs, ... }:
 {
   flake.modules.nixos.secureboot =
-    { pkgs, lib, ... }:
+    {
+      pkgs,
+      lib,
+      ...
+    }:
 
     {
       imports = [
@@ -21,6 +25,11 @@
         enable = true;
         pkiBundle = "/var/lib/sbctl";
         configurationLimit = 5;
+        # Auto-generates keys on first boot; nixos-install works keyless.
+        autoGenerateKeys.enable = true;
+        # Enrollment stays manual: `sbctl enroll-keys --microsoft`.
       };
+
+      # Keys persist via impermanence.nix (`/var/lib` + `/var/lib/sbctl`).
     };
 }

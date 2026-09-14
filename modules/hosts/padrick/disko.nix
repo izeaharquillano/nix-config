@@ -2,24 +2,8 @@
 # Dendritic module: flake.modules.nixos.padrick-disko
 {
   flake.modules.nixos.padrick-disko =
-    # Disko layout for padrick: LUKS + btrfs with impermanence + Windows dual boot.
-    #
-    # Partition layout (512GB NVMe):
-    #   1. ESP (1GB)           — shared bootloader for NixOS and Windows
-    #   2. NixOS root (LUKS)   — btrfs subvolumes: root (ephemeral), home, nix, persist
-    #   3. MS reserved (16MB)  — required for Windows
-    #   4. Windows data (128GB) — Windows C: drive, no disko content (installed manually)
-    #
-    # Windows recovery partition is NOT declared — Windows creates its own during install.
-    #
-    # Install order: NixOS first, then Windows.
-    # WARNING: This will WIPE the entire disk. Back up any data first.
-    #
-    # Destroy, format & mount (from the nix-config root on a NixOS live ISO).
-    # disko reads the devices from this host's evaluated system config:
-    #   sudo nix --experimental-features "nix-command flakes" run \
-    #     github:nix-community/disko/latest -- \
-    #     --mode destroy,format,mount --flake .#padrick
+    # LUKS+btrfs, ESP shared with Windows (install NixOS first). WIPES disk.
+    # Deploy: `disko --mode destroy,format,mount --flake .#padrick`
     {
       disko.devices = {
         disk.nixos-padrick = {
