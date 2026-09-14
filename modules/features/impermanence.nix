@@ -87,6 +87,13 @@
 
         fileSystems.${persistPath}.neededForBoot = true;
 
+        # Ephemeral root wipes /var/db/sudo/lectured every boot, so sudo
+        # would re-show its lecture after every reboot. Silence it.
+        # (Alternative: persist "/var/db/sudo/lectured" to keep lecture-once.)
+        security.sudo.extraConfig = ''
+          Defaults lecture = never
+        '';
+
         environment.persistence.${persistPath} = {
           enable = true;
           hideMounts = true;
