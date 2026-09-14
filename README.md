@@ -16,14 +16,12 @@ This repo uses the [dendritic pattern](https://github.com/mightyiam/dendritic) w
 nix-config/
 ├── flake.nix              # Dendritic entry point (mkFlake + import-tree ./modules)
 ├── Justfile               # Task runner (just --list to see all commands)
-├── modules/               # ALL config, auto-imported by import-tree
-│   ├── dendritic/         # flake-parts infra, flake.lib (vars, host factories)
-│   ├── tools/             # perSystem (formatter, checks, devShell, apps, packages), overlays, home-manager wiring
-│   ├── base/              # Cross-platform nix/direnv (Multi-Context Aspect)
-│   ├── nixos/             # System types (desktop/server) + base pieces → [modules/README.md](modules/README.md)
-│   ├── features/          # Composable modules; importing IS enabling
+├── modules/               # ALL config, auto-imported by import-tree (domain groups)
+│   ├── nix/               # flake-parts infra, flake.lib (vars, host factories), perSystem tools
+│   ├── system/            # OS foundation + types (desktop/server, linux-core/linux-gui)
+│   ├── services/          # System daemons (ssh, p2p+zerotier, containers, greetd, desktop)
+│   ├── programs/          # User-facing apps (shell/dev/desktop/gaming/vm/fhs, feature closures)
 │   ├── users/             # Primary user as a reusable feature
-│   ├── home/              # Home Manager pieces + system types → [modules/home/README.md](modules/home/README.md)
 │   └── hosts/             # Per-host composition roots → [modules/hosts/README.md](modules/hosts/README.md)
 ├── overlays/              # Nixpkgs overlays (exposed as overlays.default)
 ├── pkgs/                  # Custom packages (exposed as packages.*)
@@ -36,13 +34,13 @@ nix-config/
 
 | Aspect | Where |
 |---|---|
-| Simple | One file = one `flake.modules.<class>.<name>` (e.g. `nixos/base/ssh.nix` → `nixos.base-ssh`) |
-| Multi-Context | One file populates several classes (`base/nix.nix` → `nixos.base-nix` + `darwin.base-nix`, `users/ize.nix`, `tools/home-manager.nix`) |
-| Inheritance | Layered system types: `nixos.desktop` / `nixos.server`, `home-linux-core` / `home-linux-gui` |
-| Conditional | Options only where a module needs host-specific *values* (`p2p-zerotier.networkId`); enabling is done by importing |
+| Simple | One file = one `flake.modules.<class>.<name>` (e.g. `services/ssh.nix` → `nixos.ssh`) |
+| Multi-Context | One file populates several classes (`system/nix.nix` → `nixos.nix` + `darwin.nix`, `users/ize.nix`, `nix/home-manager.nix`) |
+| Inheritance | Layered system types: `desktop` / `server`, `linux-core` / `linux-gui` |
+| Conditional | Options only where a module needs host-specific *values* (`zerotier.networkId`); enabling is done by importing |
 | Collector | Per-host `<name>-*` pieces merged into hosts; shared concerns collected by system types |
-| Constants | `flake.lib.vars` (user identity), single source in `modules/dendritic/lib.nix` |
-| DRY | Factories in `modules/dendritic/lib.nix` inject identical `specialArgs`/`extraSpecialArgs` everywhere |
+| Constants | `flake.lib.vars` (user identity), single source in `modules/nix/lib.nix` |
+| DRY | Factories in `modules/nix/lib.nix` inject identical `specialArgs`/`extraSpecialArgs` everywhere |
 | Factory | `mkNixosHost` / `mkNixosServerHost` / `mkDarwinHost` instantiate hosts from dendritic modules |
 
 ## Quick Start
@@ -90,7 +88,7 @@ See [modules/hosts/README.md](modules/hosts/README.md) for the full walkthrough 
 
 ## Features
 
-Optional functionality lives in `modules/features/` (system) and `modules/home/base/features/` (home) as plain composable modules — **importing one is enabling it**, no flags. See [modules/README.md](modules/README.md) for details and templates. Each host's `configuration.nix` / `home.nix` lists exactly what it uses:
+Optional functionality lives in `modules/services/` (daemons) and `modules/programs/` (apps) as plain composable modules — **importing one is enabling it**, no flags. Features that span NixOS + Home Manager live together in one domain dir (feature closure: `services/p2p/`, `programs/desktop/niri/`, `programs/desktop/hyprland/`). See [modules/README.md](modules/README.md) for details and templates. Each host's `configuration.nix` / `home.nix` lists exactly what it uses:
 
 ```nix
 # modules/hosts/jobert/configuration.nix (excerpt)
@@ -106,7 +104,7 @@ imports = [
   nixos.gaming # Steam, Gamescope, Gamemode, MangoHud
   nixos.zswap # Zswap with zstd compression
   nixos.p2p # Syncthing, NetBird VPN, LocalSend
-  nixos.p2p-zerotier # ZeroTier VPN (needs networkId, see below)
+  nixos.zerotier # ZeroTier VPN (needs networkId, see below)
   nixos.containers # Docker (rootless), Podman, Distrobox
   nixos.fhs # FHS env + nix-alien for unpatched binaries
   # ...
@@ -116,10 +114,10 @@ imports = [
 ```nix
 # modules/hosts/jobert/home.nix (excerpt)
 imports = [
-  hm.home-linux-gui
-  hm.home-features-vscode # VS Code (or home-features-zed for Zed)
-  hm.home-features-recording # OBS Studio
-  hm.home-features-p2p # Syncthing tray
+  hm.linux-gui
+  hm.vscode # VS Code (or zed for Zed)
+  hm.recording # OBS Studio
+  hm.p2p # Syncthing tray
   # ...
 ];
 ```
@@ -127,7 +125,7 @@ imports = [
 Truly host-specific *values* stay options, set by the importing host:
 
 ```nix
-# ZeroTier network ID for the imported p2p-zerotier module
+# ZeroTier network ID for the imported zerotier module
 features.p2p.zerotier.networkId = "88c5b1f339f6593b";
 ```
 
@@ -244,7 +242,7 @@ The dev shell includes `just`, `nixfmt`, `deadnix`, `statix`, and `agenix`. Run 
 
 ## Custom Library
 
-`flake.lib` (defined in `modules/dendritic/lib.nix`, single source of truth) provides:
+`flake.lib` (defined in `modules/nix/lib.nix`, single source of truth) provides:
 
 - **`vars`** — User identity (`username`, `userfullname`, `useremail`). Injected into every module via `specialArgs`/`extraSpecialArgs`.
 - **`mkNixosHost` / `mkNixosServerHost` / `mkDarwinHost`** — Factories instantiating hosts from dendritic modules with uniform `specialArgs` (`inputs`, `vars`, `hostname`, `username`, `flakeRoot`). They set `networking.hostName` (`mkDefault`), include disko, and bind the per-host Home Manager user; HM settings/agenix come from the composed modules themselves.
@@ -253,8 +251,8 @@ The dev shell includes `just`, `nixfmt`, `deadnix`, `statix`, and `agenix`. Run 
 
 - **Disk Encryption:** LUKS2 full-disk encryption on all NixOS hosts (declared via disko)
 - **Impermanence:** Root btrfs subvolume wiped on every boot; only explicitly persisted state survives
-- **Firewall:** Enabled system-wide, explicit port allowlists (`modules/nixos/base/security.nix`)
-- **SSH:** Key-based auth only, root login denied (`modules/nixos/base/ssh.nix`)
+- **Firewall:** Enabled system-wide, explicit port allowlists (`modules/system/security.nix`)
+- **SSH:** Key-based auth only, root login denied (`modules/services/ssh.nix`)
 - **Secrets:** agenix with age + SSH host keys (see [Secrets Management](#secrets-management))
 - **RealtimeKit:** Grants real-time scheduling to PipeWire
 - **Secure Boot:** Optional via the `secureboot` module (Lanzaboote)
@@ -262,14 +260,14 @@ The dev shell includes `just`, `nixfmt`, `deadnix`, `statix`, and `agenix`. Run 
 
 ## Nix Settings
 
-Configured in `modules/base/nix.nix` and `modules/nixos/base/system.nix`:
+Configured in `modules/system/nix.nix` and `modules/system/system.nix`:
 
 - `features.system.kernelPackage`: Configurable kernel (default: `linuxPackages_latest`)
 - Primary user comes from the `username` specialArg (`flake.lib.vars.username`, default `"ize"`).
 - Experimental features: `nix-command`, `flakes`
 - `warn-dirty = true` (surface uncommitted changes)
 - Automatic weekly `nix.optimise` and garbage collection (14-day retention)
-- **GitHub access token:** Optional, for private flakes / avoiding rate limits. Add via `just secrets-edit nix-access-tokens.age` with content `access-tokens = github.com=ghp_<token>`. Auto-included via `nix.extraOptions` (`!include`) in `modules/nixos/base/secrets.nix` as `0400 owner=<user>` (user-readable, daemon-readable as root) with an empty fallback so fresh hosts without decrypted secrets don't deadlock nix.
+- **GitHub access token:** Optional, for private flakes / avoiding rate limits. Add via `just secrets-edit nix-access-tokens.age` with content `access-tokens = github.com=ghp_<token>`. Auto-included via `nix.extraOptions` (`!include`) in `modules/system/secrets.nix` as `0400 owner=<user>` (user-readable, daemon-readable as root) with an empty fallback so fresh hosts without decrypted secrets don't deadlock nix.
 
 ## Theme
 

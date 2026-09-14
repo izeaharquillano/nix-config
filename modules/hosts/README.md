@@ -28,11 +28,11 @@ All NixOS hosts use LUKS2 full-disk encryption with btrfs and [impermanence](htt
 
 ### padrick: Daily Use ThinkPad
 
-Imports `btrfs`, `impermanence`, `secureboot`, `zswap`, `p2p`, `containers`, `fhs`, `vm-qemu`, `vm-bottles`, `vm-dosbox` (+ HM: `home-features-vscode`, `home-features-p2p`).
+Imports `btrfs`, `impermanence`, `secureboot`, `zswap`, `p2p`, `containers`, `fhs`, `vm-qemu`, `vm-bottles`, `vm-dosbox` (+ HM: `vscode`, `p2p`).
 
 ### jobert: Gaming & Virtualization
 
-Padrick's set, plus `p2p-zerotier` (with `features.p2p.zerotier.networkId`), `gaming` (+ HM: `home-features-recording`). See each host's `configuration.nix` / `home.nix` for the exact composition.
+Padrick's set, plus `zerotier` (with `features.p2p.zerotier.networkId`), `gaming` (+ HM: `recording`). See each host's `configuration.nix` / `home.nix` for the exact composition.
 
 The gaming module configures Steam (with remote play + dedicated server firewall rules), Proton GE, Gamescope, Gamemode, MangoHud, and GOverlay. NVIDIA-specific hardware config is in `modules/hosts/jobert/host-settings.nix` (open driver, VA-API, Wayland env vars, 32-bit OpenGL).
 
@@ -113,7 +113,7 @@ in
       nixos.secureboot
       nixos.zswap
       nixos.p2p
-      # nixos.p2p-zerotier  # + features.p2p.zerotier.networkId below
+      # nixos.zerotier  # + features.p2p.zerotier.networkId below
       # nixos.gaming
       nixos.<name>-disko
       nixos.<name>-hardware
@@ -211,7 +211,7 @@ Optionally, create `noctalia-host-settings.toml` for Noctalia lockscreen widgets
 ### 7. Add Home Manager config
 
 `modules/hosts/<name>/home.nix` (`flake.modules.homeManager.<name>`).
-Niri/Noctalia HM modules come via the `home-linux-gui` collectors, so hosts
+Niri/Noctalia HM modules come via the `linux-gui` collectors, so hosts
 only list the GUI type + features, with host-specific packages inlined
 (no separate `*-home-packages` module):
 
@@ -225,9 +225,9 @@ in
     { pkgs, ... }:
     {
       imports = [
-        hm.home-linux-gui
-        hm.home-features-vscode
-        hm.home-features-p2p
+        hm.linux-gui
+        hm.vscode
+        hm.p2p
       ];
 
       home.packages = with pkgs; [
@@ -330,7 +330,7 @@ in
 }
 ```
 
-No home-manager is included for servers. If you want headless HM tools, define a `flake.modules.homeManager.<name>` importing `home-linux-core` and extend the server factory with a home-manager block.
+No home-manager is included for servers. If you want headless HM tools, define a `flake.modules.homeManager.<name>` importing `linux-core` and extend the server factory with a home-manager block.
 
 > **Note:** Server hosts don't use features or impermanence. The fallback `initialPassword` applies — change it after first boot with `passwd`.
 
@@ -353,8 +353,8 @@ in
 {
   flake.modules.darwin.<name> = {
     imports = [
-      darwin.base-nix
-      darwin.base-direnv
+      darwin.nix
+      darwin.direnv
       darwin.home-manager
     ];
     networking.hostName = "<name>";

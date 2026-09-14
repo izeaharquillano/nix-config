@@ -14,7 +14,7 @@ in
       nixos.secureboot
       nixos.zswap
       nixos.p2p
-      nixos.p2p-zerotier
+      nixos.zerotier
       nixos.containers
       nixos.fhs
       nixos.vm-qemu

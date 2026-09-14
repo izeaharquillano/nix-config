@@ -4,7 +4,7 @@ Raw application configuration files (dotfiles) consumed by Home Manager via `xdg
 
 ## How Dotfiles Are Consumed
 
-In `modules/home/base/core/*.nix` and `modules/home/linux/gui/*.nix`, config files are referenced via `xdg.configFile` through the `flakeRoot` specialArg (so moves never break the paths):
+In `modules/programs/shell/*.nix` and `modules/programs/desktop/*.nix`, config files are referenced via `xdg.configFile` through the `flakeRoot` specialArg (so moves never break the paths):
 
 ```nix
 # Single file
@@ -28,5 +28,5 @@ Host-specific settings live in `modules/hosts/<name>/config/` and are store-copi
 ## Adding a New Dotfile
 
 1. Place config file(s) in `config/<app>/`
-2. Create a dendritic piece in `modules/home/base/core/<app>.nix` or `modules/home/linux/gui/<app>.nix` with the appropriate `xdg.configFile` reference (via `flakeRoot`)
-3. It is picked up by `import-tree` automatically; add it to the `home-linux-core`/`home-linux-gui` collector so hosts compose it
+2. Create a dendritic piece in `modules/programs/<group>/<app>.nix` (or extend the feature closure in `modules/services/<feature>/`) with the appropriate `xdg.configFile` reference (via `flakeRoot`)
+3. It is picked up by `import-tree` automatically; add it to the `linux-core`/`linux-gui` collector so hosts compose it

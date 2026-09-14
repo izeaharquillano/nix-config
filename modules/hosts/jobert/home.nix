@@ -1,4 +1,4 @@
-# Niri/Noctalia HM modules come via `home-linux-gui`.
+# Niri/Noctalia HM modules come via `linux-gui`.
 { inputs, ... }:
 let
   hm = inputs.self.modules.homeManager;
@@ -8,10 +8,10 @@ in
     { pkgs, ... }:
     {
       imports = [
-        hm.home-linux-gui
-        hm.home-features-vscode
-        hm.home-features-recording
-        hm.home-features-p2p
+        hm.linux-gui
+        hm.vscode
+        hm.recording
+        hm.p2p
       ];
 
       home.packages = [

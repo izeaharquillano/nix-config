@@ -1,27 +1,78 @@
-# System Modules
+# Modules
 
-System-level configuration as dendritic `flake.modules.nixos.*` pieces,
-organized by platform. Every `.nix` file under `modules/` is auto-imported by
-`import-tree` — no aggregator files. Cross-file composition is explicit via
-`inputs.self.modules.*`.
+Dendritic `flake.modules.<class>.<name>` pieces, grouped by **domain**
+(following [Doc-Steve's dendritic-design-with-flake-parts](https://github.com/Doc-Steve/dendritic-design-with-flake-parts):
+`programs/` / `services/` / `system/` / `users/` / `hosts/` / `nix/`).
+Every `.nix` file under `modules/` is auto-imported by `import-tree` —
+no aggregator files. File paths are documentation only; the aspect name
+(`flake.modules.<class>.<name>`) is the glue. Cross-file composition is
+explicit via `inputs.self.modules.*`.
 
-## Module Types
+## Domain Groups
 
-- **`base/`** — Cross-platform config (Multi-Context Aspect: same body published as `nixos.*` and `darwin.*`).
-- **`nixos/base/`** — Core NixOS pieces (boot, networking, locale, SSH, secrets, firewall). Always imported via the `desktop`/`server` system types.
-  - `system.nix` — Boot, networking, GC, `features.system.kernelPackage` option. User identity comes from the `username`/`vars` specialArgs (`flake.lib.vars`); the account itself lives in `users/ize.nix`
-  - `locale.nix` — Timezone, locale, hardware clock (UTC)
-  - `ssh.nix` — OpenSSH (key-based auth only, root login denied)
-  - `secrets.nix` — agenix secret declarations (imports agenix itself; `nix-access-tokens` is `0440 root:wheel` + `!include` with a missing-file fallback so fresh hosts don't deadlock)
-  - `security.nix` — Neovim, firewall (base rules), polkit/rtkit
-  - `packages.nix` — Base system packages
-- **`nixos/desktop.nix`** — `desktop` system type (Inheritance Aspect): base + desktop GUI modules + home-manager wiring. Hosts import `nixos.desktop`.
-- **`nixos/desktop/`** — GUI/desktop pieces (greetd, Niri, PipeWire, fonts).
-- **`nixos/server.nix`** — `server` system type (Inheritance Aspect): base modules only, no desktop, no Home Manager.
-- **`features/`** — Optional functionality as plain composable modules; hosts import what they use (importing IS enabling).
-- **`users/`** — The primary user as a reusable Multi-Context feature (`nixos.user-ize` owns the account, `homeManager.user-ize` re-exports `home-base`).
+- **`nix/`** — Flake infra (was `dendritic/` + `tools/` + `base/nix.nix` bits).
+  `flake-parts.nix` (module registry), `lib.nix` (vars, `mkNixosHost`,
+  `mkDiskoBtrfs`), `darwin-fix.nix`, plus per-system wiring:
+  `home-manager.nix`, `nixpkgs.nix`, `overlays.nix`, `packages.nix`,
+  `treefmt.nix`. Also `system/nix.nix` (`nixos.nix` + `darwin.nix`
+  Multi-Context Aspect: shared nix settings) and `system/direnv.nix`.
+- **`system/`** — OS foundation. Always imported via the `desktop`/`server`
+  system types in `system/types/` (Inheritance Aspect).
+  - `nix.nix`, `direnv.nix`, `locale.nix`, `system.nix` (boot, networking,
+    GC, `features.system.kernelPackage` option), `packages.nix`,
+    `secrets.nix` (agenix; `0440 root:wheel` + `!include` fallback),
+    `security.nix` (neovim, firewall, polkit/rtkit)
+  - `storage/` — `btrfs.nix`, `impermanence.nix`
+  - `boot/` — `secureboot.nix` (Lanzaboote, requires impermanence),
+    `zswap.nix`
+  - `types/` — `desktop.nix` (`nix` + `direnv` + `system` + `locale` +
+    `ssh` + `secrets` + `security` + `packages` + `greetd` + `niri` +
+    `hyprland` + `desktop-services` + `home-manager`), `server.nix`
+    (core only, no desktop, no HM), `linux-core.nix` (headless HM:
+    `user-ize` + `shell` + `cli` + `dev` + `terminal` + `nvim`),
+    `linux-gui.nix` (full GUI HM: `linux-core` + `linux-desktop` +
+    `linux-utils` + `apps` + `web` + `hyprland` + `niri` + `noctalia` +
+    `notes`). Hosts import ONE system type + features.
+- **`services/`** — System daemons (`services.*`, `virtualisation.*`,
+  firewall). `ssh.nix`, `greetd.nix`, `desktop.nix` (PipeWire, fonts,
+  bluetooth), `containers.nix` (Podman/Distrobox), `zerotier.nix`
+  (needs `features.p2p.zerotier.networkId`), and `p2p/` as a **feature
+  closure**: `nixos.p2p` (Syncthing/NetBird/LocalSend) + `homeManager.p2p`
+  (tray) in one dir.
+- **`programs/`** — User-facing apps (`programs.*`, HM `programs.*`,
+  app bundles). Feature closures where a feature spans both classes:
+  `desktop/hyprland/` (`nixos.hyprland` + `homeManager.hyprland`) and
+  `desktop/niri/` (`nixos.niri` + `homeManager.niri`) in one dir each.
+  - `desktop/` — `hyprland/`, `niri/`, `noctalia.nix`, `apps.nix`,
+    `web.nix` (Zen), `notes.nix` (Obsidian), `linux-desktop.nix` (XDG/Nemo/GTK)
+  - `shell/` — `shell.nix`, `cli.nix`, `terminal.nix` (kitty), `utils.nix`
+  - `dev/` — `dev.nix` (git/lazygit/npm), `nvim.nix`, `vscode.nix`, `zed.nix`
+  - `media/` — `recording.nix` (OBS)
+  - `gaming.nix`, `virtualisation/` (`vm-qemu`, `vm-bottles`, `vm-dosbox`),
+    `compat/fhs.nix`
+- **`users/`** — The primary user as a reusable Multi-Context feature
+  (`nixos.user-ize` owns the account, `homeManager.user-ize` re-exports
+  `home-base`). User identity comes from the `username`/`vars` specialArgs
+  (`flake.lib.vars`).
+- **`hosts/`** — Per-host composition roots (see `hosts/README.md`):
+  `configuration.nix` composes `nixos.desktop`/`nixos.server` +
+  `nixos.user-ize` + features, `home.nix` composes `linux-gui`/`linux-core`
+  + features, `flake-parts.nix` instantiates via `mkNixosHost`.
 
-To add a module, create a `.nix` file declaring one `flake.modules.<class>.<name>` piece — `import-tree` picks it up automatically. If it should be composed (system types), also add it to the relevant collector (`desktop`/`server`, `home-linux-core`/`home-linux-gui`). Features need no collector: hosts import them directly.
+To add a module, create a `.nix` file declaring one
+`flake.modules.<class>.<name>` piece — `import-tree` picks it up
+automatically. If it should be composed (system types), also add it to the
+relevant collector (`desktop`/`server`, `linux-core`/`linux-gui`).
+Features need no collector: hosts import them directly. If a feature spans
+NixOS + Home Manager, put BOTH aspects in one domain dir
+(e.g. `services/p2p/default.nix`, `programs/desktop/niri/default.nix`) —
+never split `features/` vs `home/.../features/` again.
+
+Aspect naming: the feature name is shared across classes
+(`nixos.niri` + `homeManager.niri` = the `niri` feature;
+`nixos.p2p` + `homeManager.p2p` = the `p2p` feature). No
+`home-features-*` / `home-gui-*` / `home-core-*` / `base-*` /
+`desktop-*` prefixes.
 
 ## Adding a Desktop Host
 
@@ -83,11 +134,11 @@ The `nixosModules.default` output (overlays only — minimal, not the opinionate
 }
 ```
 
-Note: external use requires passing this repo's `specialArgs` (`inputs` with `self` + `nixpkgs`, `flake.lib.vars`, `hostname`, `username`, `flakeRoot`) — see the `mkNixosHost` factory in `modules/dendritic/lib.nix`. `username`/`hostname` are plain strings. Disko is included via the factory's `baseSystemModules`; external use without the factory must also import `inputs.disko.nixosModules.default` if needed.
+Note: external use requires passing this repo's `specialArgs` (`inputs` with `self` + `nixpkgs`, `flake.lib.vars`, `hostname`, `username`, `flakeRoot`) — see the `mkNixosHost` factory in `modules/nix/lib.nix`. `username`/`hostname` are plain strings. Disko is included via the factory's `baseSystemModules`; external use without the factory must also import `inputs.disko.nixosModules.default` if needed.
 
 ## Features
 
-Optional functionality lives in `modules/features/` as plain composable modules — **importing one is enabling it**. Each host's `configuration.nix` lists exactly what it uses:
+Optional functionality lives in `services/` + `programs/` as plain composable modules — **importing one is enabling it**. Each host's `configuration.nix` lists exactly what it uses:
 
 ```nix
 imports = [
@@ -100,26 +151,28 @@ imports = [
   nixos.gaming # Steam, Gamescope, Gamemode, MangoHud
   nixos.zswap # Zswap with zstd compression
   nixos.p2p # Syncthing, NetBird VPN, LocalSend (peers/folders via `features.p2p.syncthing.*`; NetBird key auto-persisted when /persist exists)
-  nixos.p2p-zerotier # ZeroTier VPN (needs networkId, see below)
+  nixos.zerotier # ZeroTier VPN (needs networkId, see below)
   nixos.containers # Podman, Distrobox (Docker disabled)
   nixos.fhs # FHS env + nix-alien for unpatched binaries
 ];
 ```
 
-Home-side counterparts live in `modules/home/base/features/` (`home-features-vscode`, `home-features-zed`, `home-features-recording`, `home-features-p2p`) and are composed in each host's `home.nix` the same way.
+Home-side pieces (`vscode`, `zed`, `recording`, `p2p`) live alongside their
+domain siblings under `programs/` + `services/` and are composed in each
+host's `home.nix` the same way (`linux-gui` + `vscode` + `recording` + `p2p`).
 
 ### P2P + ZeroTier
 
-The `p2p` module configures Syncthing, NetBird (auto-login via agenix setup key), and LocalSend, with firewall ports opened. ZeroTier lives in its own module — import it and set the host-specific network ID:
+The `p2p` feature configures Syncthing, NetBird (auto-login via agenix setup key), and LocalSend, with firewall ports opened (HM tray in the same `services/p2p/` dir). ZeroTier lives in its own module — import it and set the host-specific network ID:
 
 ```nix
-imports = [ nixos.p2p-zerotier ];
+imports = [ nixos.zerotier ];
 features.p2p.zerotier.networkId = "88c5b1f339f6593b";
 ```
 
 ### Adding a New Feature
 
-Create `modules/features/<name>.nix` declaring `flake.modules.nixos.<name>`, then import it in the hosts that need it — no flags, no collectors:
+Create `modules/services/<name>.nix` (daemon) or `modules/programs/<group>/<name>.nix` (app) declaring `flake.modules.nixos.<name>` (and `flake.modules.homeManager.<name>` in the SAME file/dir if it spans both — feature closure), then import it in the hosts that need it — no flags, no collectors:
 
 ```nix
 # Dendritic module: flake.modules.nixos.<name>
