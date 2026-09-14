@@ -1,5 +1,4 @@
-# Collector Aspect: jobert NVIDIA + kernel params
-# Dendritic module: flake.modules.nixos.jobert-host-settings
+# jobert NVIDIA + kernel params.
 {
   flake.modules.nixos.jobert-host-settings =
     {
@@ -25,8 +24,8 @@
         graphics = {
           enable = true;
           enable32Bit = true;
-          extraPackages = with pkgs; [
-            nvidia-vaapi-driver
+          extraPackages = [
+            pkgs.nvidia-vaapi-driver
           ];
         };
 

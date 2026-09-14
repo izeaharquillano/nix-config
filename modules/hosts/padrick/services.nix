@@ -1,13 +1,10 @@
-# Collector Aspect: padrick TLP, upower, mic LED
-# Dendritic module: flake.modules.nixos.padrick-services
+# padrick TLP + mic LED (`resolved`/`upower` come from desktop-services).
 {
   flake.modules.nixos.padrick-services =
     { pkgs, ... }:
 
     {
       services = {
-        resolved.enable = true;
-
         power-profiles-daemon.enable = false;
         tlp = {
           enable = true;
@@ -36,17 +33,10 @@
           };
         };
 
-        upower = {
-          enable = true;
-          percentageLow = 20;
-          percentageCritical = 5;
-          percentageAction = 2;
-          criticalPowerAction = "PowerOff";
-        };
-
         udev.extraRules = ''
+          # Group-writable LED node (avoids 0666).
           ACTION=="add", SUBSYSTEM=="leds", KERNEL=="platform::micmute", \
-          RUN+="${pkgs.coreutils}/bin/chmod 0666 /sys/class/leds/%k/brightness"
+            MODE="0660", GROUP="audio"
         '';
       };
 
@@ -59,11 +49,11 @@
           "wireplumber.service"
         ];
 
-        path = with pkgs; [
-          wireplumber
-          pulseaudio
-          gnugrep
-          coreutils
+        path = [
+          pkgs.wireplumber
+          pkgs.pulseaudio
+          pkgs.gnugrep
+          pkgs.coreutils
         ];
 
         script = ''

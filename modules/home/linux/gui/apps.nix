@@ -1,20 +1,18 @@
-# Simple Aspect: GUI apps (mpv, discord, vpn, ...)
-# Dendritic module: flake.modules.homeManager.home-gui-apps
+# GUI apps (`localsend` comes from `nixos.p2p`; don't duplicate).
 {
   flake.modules.homeManager.home-gui-apps =
     { pkgs, ... }:
 
     {
-      home.packages = with pkgs; [
-        gvfs
-        mpv
-        qimgv
-        gparted
-        localsend
-        proton-vpn
-        discord-ptb
-        pavucontrol
-        nemo-with-extensions
+      home.packages = [
+        pkgs.gvfs # user `gio` CLI; the daemon runs system-wide.
+        pkgs.mpv
+        pkgs.qimgv
+        pkgs.gparted
+        pkgs.proton-vpn
+        pkgs.discord-ptb
+        pkgs.pavucontrol
+        pkgs.nemo-with-extensions
       ];
     };
 }

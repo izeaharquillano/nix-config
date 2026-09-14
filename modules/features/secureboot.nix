@@ -1,12 +1,10 @@
-# Simple Aspect: UEFI Secure Boot via Lanzaboote.
-# Import this module = enabled (pure dendritic: composition decides).
-# Dendritic module: flake.modules.nixos.secureboot
+# UEFI Secure Boot via Lanzaboote (keys under /var/lib/sbctl, persisted by impermanence).
 { inputs, ... }:
 {
   flake.modules.nixos.secureboot =
     {
       pkgs,
-      lib,
+      config,
       ...
     }:
 
@@ -15,21 +13,28 @@
         inputs.lanzaboote.nixosModules.lanzaboote
       ];
 
+      assertions = [
+        {
+          # `or {}` so hosts without impermanence get a clean assertion
+          # failure instead of an attribute-missing eval error.
+          assertion = (config.environment.persistence or { }) ? "/persist";
+          message = "nixos.secureboot requires nixos.impermanence (/var/lib persistence for /var/lib/sbctl keys).";
+        }
+      ];
+
       environment.systemPackages = [
         pkgs.sbctl
       ];
 
-      boot.loader.systemd-boot.enable = lib.mkForce false;
+      # Base sets `mkDefault true`; plain `false` overrides without mkForce.
+      boot.loader.systemd-boot.enable = false;
 
       boot.lanzaboote = {
         enable = true;
         pkiBundle = "/var/lib/sbctl";
         configurationLimit = 5;
-        # Auto-generates keys on first boot; nixos-install works keyless.
-        autoGenerateKeys.enable = true;
+        autoGenerateKeys.enable = true; # keyless nixos-install
         # Enrollment stays manual: `sbctl enroll-keys --microsoft`.
       };
-
-      # Keys persist via impermanence.nix (`/var/lib` + `/var/lib/sbctl`).
     };
 }

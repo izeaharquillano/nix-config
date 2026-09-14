@@ -1,8 +1,8 @@
 # padrick: ThinkPad T14 AMD Gen1, Windows dual-boot, impermanence root.
-# Composition root (`flake.modules.nixos.padrick`); see `flake-parts.nix`.
 { inputs, ... }:
 let
   nixos = inputs.self.modules.nixos;
+  vars = inputs.self.lib.vars;
 in
 {
   flake.modules.nixos.padrick = {
@@ -21,15 +21,19 @@ in
       nixos.vm-dosbox
       nixos.padrick-disko
       nixos.padrick-hardware
-      nixos.padrick-packages
       nixos.padrick-services
       nixos.padrick-host-settings
-      # disko from `desktop`; hardware profile stays per-host.
       inputs.nixos-hardware.nixosModules.lenovo-thinkpad-t14-amd-gen1
     ];
 
-    networking.hostName = "padrick";
+    # Hostname comes from the `mkNixosHost` factory (`mkDefault`);
+    # override here with `mkForce` only if needed without the factory.
 
+    features.p2p.syncthing.devices = {
+      "${vars.syncthingServerName}".id = vars.syncthingServerId;
+    };
+
+    # Pinned per NixOS manual; do NOT bump on update.
     system.stateVersion = "26.05";
   };
 }

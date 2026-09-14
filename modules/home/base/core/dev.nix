@@ -1,22 +1,20 @@
-# Simple Aspect: gcc, lazygit, git identity, npm
-# Dendritic module: flake.modules.homeManager.home-core-dev
+# lazygit, git identity, npm (no compilers here; use a devShell).
 {
   flake.modules.homeManager.home-core-dev =
-    { pkgs, myvars, ... }:
+    { pkgs, vars, ... }:
 
     {
-      home.packages = with pkgs; [
-        gcc
-        lazygit
-        opencode
+      home.packages = [
+        pkgs.lazygit
+        pkgs.opencode
       ];
 
       programs.git = {
         enable = true;
         settings = {
           user = {
-            name = myvars.userfullname;
-            email = myvars.useremail;
+            name = vars.userfullname;
+            email = vars.useremail;
           };
         };
       };

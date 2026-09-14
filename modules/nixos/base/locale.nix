@@ -1,5 +1,4 @@
-# Simple Aspect: timezone Asia/Manila + en_US/en_PH locales
-# Dendritic module: flake.modules.nixos.base-locale
+# Timezone Asia/Manila + en_US/en_PH locales.
 {
   flake.modules.nixos.base-locale =
     _:

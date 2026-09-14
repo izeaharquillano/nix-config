@@ -1,21 +1,9 @@
-# Overlay + `nixosModules.default` exports.
-{ inputs, self, ... }:
+# Overlay exports; `nixosModules.default` is overlays-only for external consumers.
+{ self, ... }:
 {
   flake.overlays.default = import ../../overlays;
 
-  # Overlays via host factories + this module (`pkgs` in `tools/nixpkgs.nix`).
-  flake.nixosModules.default =
-    { ... }:
-    {
-      imports = [
-        self.modules.nixos.desktop
-      ];
-
-      config = {
-        nixpkgs.overlays = [
-          self.overlays.default
-          inputs.nix-alien.overlays.default
-        ];
-      };
-    };
+  flake.nixosModules.default = {
+    nixpkgs.overlays = self.lib.sharedOverlays;
+  };
 }

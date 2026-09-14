@@ -1,5 +1,4 @@
-# Simple Aspect: Zen Browser + policies + spaces
-# Dendritic module: flake.modules.homeManager.home-gui-web
+# Zen Browser; `*Force` overwrites manual changes (set false to merge).
 {
   flake.modules.homeManager.home-gui-web =
     { inputs, ... }:

@@ -117,21 +117,19 @@ in
       # nixos.gaming
       nixos.<name>-disko
       nixos.<name>-hardware
-      nixos.<name>-packages
       nixos.<name>-services
       nixos.<name>-host-settings
-      inputs.disko.nixosModules.default
       # inputs.nixos-hardware.nixosModules.<your-profile>
+      # Note: disko + hostname come from the `mkNixosHost` factory; do not
+      # import `inputs.disko.nixosModules.default` or set `networking.hostName` here.
     ];
-
-    networking.hostName = "<name>";
 
     system.stateVersion = "26.05";
   };
 }
 ```
 
-> **Password setup:** With `impermanence` imported, create `/persist/secrets/hashed-password` during installation (see Step 7 in the reinstall guide). Without it, the fallback `initialPassword` (`changeme`) is used — change it after first boot with `passwd`.
+> **Password setup:** With `impermanence` imported, create `/persist/secrets/hashed-password` during installation (see Step 7 in the reinstall guide). Without it the account has no password (locked, SSH-key only) — set one after first boot with `passwd` if local login is needed.
 
 ### 5. Create host-specific pieces
 
@@ -179,20 +177,11 @@ Each file declares one `flake.modules.nixos.<name>-*` Collector piece.
     };
 }
 
-`modules/hosts/<name>/packages.nix`:
-
-```nix
-# Dendritic module: flake.modules.nixos.<name>-packages
-{
-  flake.modules.nixos.<name>-packages =
-    { pkgs, ... }:
-    {
-      environment.systemPackages = with pkgs; [
-        # host-specific packages
-      ];
-    };
-}
-```
+Host-specific packages are inlined, not separate modules: Home Manager
+packages go in `home.packages` in `home.nix` (above); the rare
+host-specific system package goes in `environment.systemPackages` in
+`host-settings.nix`. Only split out a `packages.nix` collector if the list
+grows large enough to deserve its own file.
 
 ### 6. Create host-specific config files (Wayland)
 
@@ -222,8 +211,9 @@ Optionally, create `noctalia-host-settings.toml` for Noctalia lockscreen widgets
 ### 7. Add Home Manager config
 
 `modules/hosts/<name>/home.nix` (`flake.modules.homeManager.<name>`).
-Dendritic siblings are captured via `hm`; the inner `inputs` is the runtime
-`extraSpecialArgs` (provides `niri`, `noctalia`, ...):
+Niri/Noctalia HM modules come via the `home-linux-gui` collectors, so hosts
+only list the GUI type + features, with host-specific packages inlined
+(no separate `*-home-packages` module):
 
 ```nix
 { inputs, ... }:
@@ -232,15 +222,16 @@ let
 in
 {
   flake.modules.homeManager.<name> =
-    { inputs, ... }:
+    { pkgs, ... }:
     {
       imports = [
         hm.home-linux-gui
         hm.home-features-vscode
         hm.home-features-p2p
-        hm.<name>-home-packages
-        inputs.niri.homeModules.niri
-        inputs.noctalia.homeModules.default
+      ];
+
+      home.packages = with pkgs; [
+        # host-specific packages
       ];
 
       xdg.configFile."niri/niri-host-settings.kdl".source = ./config/niri-host-settings.kdl;
@@ -510,7 +501,7 @@ keys and `generate-sb-keys.service` creates them on first boot.
 
 ### Step 7: Create the user password file
 
-**If `features.impermanence.enable = true`:**
+**If importing `nixos.impermanence` (import = enable):**
 
 Impermanence requires a hashed password file at `/persist/secrets/hashed-password` before first boot. Since `/persist` is already mounted at this point:
 
@@ -519,7 +510,7 @@ mkdir -p /mnt/persist/secrets
 mkpasswd -m SHA-512 > /mnt/persist/secrets/hashed-password
 ```
 
-**If `features.impermanence.enable = false`:**
+**If NOT importing `nixos.impermanence`:**
 
 No action needed — the fallback `initialPassword` is used. **Change it after first boot** with `passwd`.
 

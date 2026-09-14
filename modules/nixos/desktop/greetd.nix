@@ -27,11 +27,12 @@
         TTYReset = true;
         TTYVHangup = true;
         TTYVTDisallocate = true;
+        # Store path required; /bin/kill is absent on NixOS.
         ExecStartPre = [
-          "-/bin/kill -s RTMIN+21 1"
+          "-${pkgs.procps}/bin/kill -s RTMIN+21 1"
         ];
         ExecStopPost = [
-          "-/bin/kill -s RTMIN+20 1"
+          "-${pkgs.procps}/bin/kill -s RTMIN+20 1"
         ];
       };
     };

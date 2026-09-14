@@ -1,11 +1,14 @@
-# Simple Aspect: Noctalia shell + wallpaper.
-# Per-host `host-settings.toml` comes from each host's `home.nix`.
-# Dendritic module: flake.modules.homeManager.home-gui-noctalia
+# Noctalia shell; per-host settings come from each host's `home.nix`.
+{ inputs, ... }:
 {
   flake.modules.homeManager.home-gui-noctalia =
     { config, flakeRoot, ... }:
 
     {
+      imports = [
+        inputs.noctalia.homeModules.default
+      ];
+
       programs.noctalia.enable = true;
 
       xdg.configFile = {

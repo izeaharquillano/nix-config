@@ -1,13 +1,12 @@
-# Simple Aspect: containers (Podman, Distrobox; Docker off by default).
-# Import this module = enabled (pure dendritic: composition decides).
-# Dendritic module: flake.modules.nixos.containers
+# Podman + Distrobox (Docker off).
 {
   flake.modules.nixos.containers =
-    { pkgs, username, ... }:
+    { pkgs, ... }:
 
     {
       virtualisation = {
         docker.enable = false;
+        # Used by podman for unqualified pulls (docker-compat).
         containers.registries.settings = {
           unqualified-search-registries = [
             "docker.io"
@@ -20,7 +19,6 @@
           dockerCompat = true;
         };
       };
-      users.users.${username}.linger = true;
-      environment.systemPackages = with pkgs; [ distrobox ];
+      environment.systemPackages = [ pkgs.distrobox ];
     };
 }

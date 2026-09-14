@@ -33,7 +33,7 @@ fmt:
 # Check formatting without modifying files
 [group('nix')]
 fmt-check:
-    nix fmt -- --check
+    nix fmt -- --fail-on-change
 
 # Enter a nix repl with the flake
 [group('nix')]
@@ -72,20 +72,20 @@ shell:
 
 # ─── Deploy ─────────────────────────────────────────────────────────────────
 
-# Build without switching (auto-detects hostname)
+# Build without switching (defaults to current hostname: just build [host])
 [group('deploy')]
-build:
-    nix build .#nixosConfigurations.$(hostname).config.system.build.toplevel
+build host=shell('hostname'):
+    nix build .#nixosConfigurations.{{host}}.config.system.build.toplevel
 
-# Build and switch (auto-detects hostname)
+# Build and switch (defaults to current hostname: just switch [host])
 [group('deploy')]
-switch:
-    sudo nixos-rebuild switch --flake .#$(hostname)
+switch host=shell('hostname'):
+    sudo nixos-rebuild switch --flake .#{{host}}
 
 # Dry-run build to check for errors without applying
 [group('deploy')]
-dry-build:
-    nix build .#nixosConfigurations.$(hostname).config.system.build.toplevel --dry-run
+dry-build host=shell('hostname'):
+    nix build .#nixosConfigurations.{{host}}.config.system.build.toplevel --dry-run
 
 # ─── Host Shortcuts ─────────────────────────────────────────────────────────
 
@@ -167,13 +167,13 @@ treefmt:
 # Run nix linter (deadnix + statix)
 [group('dev')]
 lint:
-    deadnix --no-lambda-pattern-names .
+    deadnix .
     statix check .
 
 # Check for unused Nix code
 [group('dev')]
 deadnix:
-    deadnix --no-lambda-pattern-names .
+    deadnix .
 
 # Lint Nix code for anti-patterns
 [group('dev')]
@@ -190,8 +190,11 @@ ci-check:
 # Run dry-builds for all hosts (same as CI matrix)
 [group('ci')]
 ci-dry-build:
-    nix build .#nixosConfigurations.padrick.config.system.build.toplevel --dry-run
-    nix build .#nixosConfigurations.jobert.config.system.build.toplevel --dry-run
+    #!/usr/bin/env bash
+    set -euo pipefail
+    for host in $(nix eval --apply 'configs: builtins.concatStringsSep "\n" (builtins.attrNames configs)' .#nixosConfigurations --raw); do
+      nix build ".#nixosConfigurations.${host}.config.system.build.toplevel" --dry-run
+    done
 
 # ─── Git ────────────────────────────────────────────────────────────────────
 

@@ -1,5 +1,4 @@
-# Collector Aspect: padrick amdgpu + kernel params
-# Dendritic module: flake.modules.nixos.padrick-host-settings
+# padrick amdgpu + kernel params.
 {
   flake.modules.nixos.padrick-host-settings =
     { pkgs, ... }:
@@ -12,10 +11,10 @@
       hardware.graphics = {
         enable = true;
         enable32Bit = true;
-        extraPackages = with pkgs; [
-          libva
-          libva-vdpau-driver
-          libvdpau-va-gl
+        extraPackages = [
+          pkgs.libva
+          pkgs.libva-vdpau-driver
+          pkgs.libvdpau-va-gl
         ];
       };
     };

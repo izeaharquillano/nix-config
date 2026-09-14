@@ -1,20 +1,20 @@
-# Home composition root for padrick; import = enable.
-# Inner `inputs` is `extraSpecialArgs`; siblings via `hm`.
+# Niri/Noctalia HM modules come via `home-linux-gui`.
 { inputs, ... }:
 let
   hm = inputs.self.modules.homeManager;
 in
 {
   flake.modules.homeManager.padrick =
-    { inputs, ... }:
+    { pkgs, ... }:
     {
       imports = [
         hm.home-linux-gui
         hm.home-features-vscode
         hm.home-features-p2p
-        hm.padrick-home-packages
-        inputs.niri.homeModules.niri
-        inputs.noctalia.homeModules.default
+      ];
+
+      home.packages = [
+        pkgs.btop
       ];
 
       xdg.configFile = {

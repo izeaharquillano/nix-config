@@ -1,21 +1,23 @@
-# Home composition root for jobert; import = enable.
-# Inner `inputs` is `extraSpecialArgs`; siblings via `hm`.
+# Niri/Noctalia HM modules come via `home-linux-gui`.
 { inputs, ... }:
 let
   hm = inputs.self.modules.homeManager;
 in
 {
   flake.modules.homeManager.jobert =
-    { inputs, ... }:
+    { pkgs, ... }:
     {
       imports = [
         hm.home-linux-gui
         hm.home-features-vscode
         hm.home-features-recording
         hm.home-features-p2p
-        hm.jobert-home-packages
-        inputs.niri.homeModules.niri
-        inputs.noctalia.homeModules.default
+      ];
+
+      home.packages = [
+        pkgs.btop-cuda
+        pkgs.chromium
+        pkgs.prismlauncher
       ];
 
       xdg.configFile = {

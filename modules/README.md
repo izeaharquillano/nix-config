@@ -9,10 +9,10 @@ organized by platform. Every `.nix` file under `modules/` is auto-imported by
 
 - **`base/`** — Cross-platform config (Multi-Context Aspect: same body published as `nixos.*` and `darwin.*`).
 - **`nixos/base/`** — Core NixOS pieces (boot, networking, locale, SSH, secrets, firewall). Always imported via the `desktop`/`server` system types.
-  - `system.nix` — Boot, networking, GC, `mySystem.kernelPackage` option. User identity comes from the `username` specialArg (`flake.lib.vars`); the account itself lives in `users/ize.nix`
+  - `system.nix` — Boot, networking, GC, `features.system.kernelPackage` option. User identity comes from the `username`/`vars` specialArgs (`flake.lib.vars`); the account itself lives in `users/ize.nix`
   - `locale.nix` — Timezone, locale, hardware clock (UTC)
   - `ssh.nix` — OpenSSH (key-based auth only, root login denied)
-  - `secrets.nix` — agenix secret declarations (imports agenix itself; `nix-access-tokens` is `0400 owner=<user>` + `!include` with a missing-file fallback so fresh hosts don't deadlock)
+  - `secrets.nix` — agenix secret declarations (imports agenix itself; `nix-access-tokens` is `0440 root:wheel` + `!include` with a missing-file fallback so fresh hosts don't deadlock)
   - `security.nix` — Neovim, firewall (base rules), polkit/rtkit
   - `packages.nix` — Base system packages
 - **`nixos/desktop.nix`** — `desktop` system type (Inheritance Aspect): base + desktop GUI modules + home-manager wiring. Hosts import `nixos.desktop`.
@@ -49,7 +49,8 @@ imports = [
 
 ## Using as an External Module
 
-The `nixosModules.default` output (desktop system type plus overlays) can be consumed by other flakes:
+The `nixosModules.default` output (overlays only — minimal, not the opinionated
+`desktop` type) can be consumed by other flakes:
 
 ```nix
 {
@@ -62,11 +63,14 @@ The `nixosModules.default` output (desktop system type plus overlays) can be con
     nixosConfigurations.myhost = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
       specialArgs = {
-        inherit (nix-config.lib) vars myvars mylib;
+        inherit (nix-config.lib) vars;
         username = "myuser";
         hostname = "myhost";
         flakeRoot = nix-config;
-        inputs = { inherit nixpkgs; };
+        inputs = {
+          inherit nixpkgs;
+          self = nix-config;
+        };
       };
       modules = [
         nix-config.nixosModules.default
@@ -79,7 +83,7 @@ The `nixosModules.default` output (desktop system type plus overlays) can be con
 }
 ```
 
-Note: external use requires passing this repo's `specialArgs` (`inputs`, `flake.lib.mylib` (compat shim), `myvars`/`flake.lib.vars`, `hostname`, `username`, `flakeRoot`) — see the `mkNixosHost` factory in `modules/dendritic/lib.nix`. `username`/`hostname` are plain strings (no `mySystem.username` option exists).
+Note: external use requires passing this repo's `specialArgs` (`inputs` with `self` + `nixpkgs`, `flake.lib.vars`, `hostname`, `username`, `flakeRoot`) — see the `mkNixosHost` factory in `modules/dendritic/lib.nix`. `username`/`hostname` are plain strings. Disko is included via the factory's `baseSystemModules`; external use without the factory must also import `inputs.disko.nixosModules.default` if needed.
 
 ## Features
 
@@ -87,15 +91,15 @@ Optional functionality lives in `modules/features/` as plain composable modules 
 
 ```nix
 imports = [
-  nixos.btrfs # BTRFS compression/tuning (compress=zstd:3, noatime, ssd)
-  nixos.impermanence # Ephemeral root, persistent /persist subvolume
-  nixos.secureboot # UEFI Secure Boot via Lanzaboote
+  nixos.btrfs # BTRFS compression/tuning (compress=zstd:3, noatime; device opts in mkDiskoBtrfs)
+  nixos.impermanence # Ephemeral root, persistent /persist subvolume (`features.impermanence.rollbackDevice`)
+  nixos.secureboot # UEFI Secure Boot via Lanzaboote (requires impermanence)
   nixos.vm-qemu # QEMU/KVM, virt-manager, SPICE
   nixos.vm-bottles # Wine runner
   nixos.vm-dosbox # DOSBox emulator
   nixos.gaming # Steam, Gamescope, Gamemode, MangoHud
   nixos.zswap # Zswap with zstd compression
-  nixos.p2p # Syncthing, NetBird VPN, LocalSend (peers/folders via `features.p2p.syncthing.*`)
+  nixos.p2p # Syncthing, NetBird VPN, LocalSend (peers/folders via `features.p2p.syncthing.*`; NetBird key auto-persisted when /persist exists)
   nixos.p2p-zerotier # ZeroTier VPN (needs networkId, see below)
   nixos.containers # Podman, Distrobox (Docker disabled)
   nixos.fhs # FHS env + nix-alien for unpatched binaries
@@ -132,7 +136,8 @@ Only add an option if the module needs a host-specific *value* (like `networkId`
 
 ## Overriding Modules Per Host
 
-Use `lib.mkForce` or `lib.mkDefault` in `modules/hosts/<name>/configuration.nix`:
+Prefer plain assignment in the host collector. `mkDefault` for shared-type
+values, `mkForce` only to beat another default:
 
 ```nix
 { lib, ... }:

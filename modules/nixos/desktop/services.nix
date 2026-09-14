@@ -1,4 +1,5 @@
-# Simple Aspect: Hyprland, PipeWire, fonts, bluetooth
+# Simple Aspect: PipeWire, fonts, bluetooth (compositor-agnostic).
+# Hyprland lives in `desktop-hyprland.nix`; Niri in `desktop-niri.nix`.
 # Dendritic module: flake.modules.nixos.desktop-services
 {
   flake.modules.nixos.desktop-services =
@@ -8,20 +9,26 @@
       programs = {
         zsh.enable = true;
         dconf.enable = true;
-
-        hyprland = {
-          enable = true;
-          withUWSM = true;
-        };
       };
 
-      fonts.packages = with pkgs; [
-        nerd-fonts.jetbrains-mono
+      fonts.packages = [
+        pkgs.nerd-fonts.jetbrains-mono
       ];
 
       services = {
         blueman.enable = true;
         fwupd.enable = true;
+
+        # Shared desktop defaults (was duplicated per host).
+        resolved.enable = true;
+
+        upower = {
+          enable = true;
+          percentageLow = 20;
+          percentageCritical = 5;
+          percentageAction = 2;
+          criticalPowerAction = "PowerOff";
+        };
 
         xserver.xkb = {
           layout = "us";
@@ -40,18 +47,9 @@
 
       xdg.portal = {
         enable = true;
-        config = {
-          hyprland = {
-            default = [
-              "hyprland"
-              "gtk"
-            ];
-            "org.freedesktop.impl.portal.ScreenCast" = [ "hyprland" ];
-          };
-        };
         extraPortals = [
-          pkgs.xdg-desktop-portal-hyprland
           pkgs.xdg-desktop-portal-gtk
+          pkgs.xdg-desktop-portal-gnome
         ];
       };
 

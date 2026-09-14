@@ -1,10 +1,10 @@
-# Custom `pkgs/` packages (also via `overlays.default`); uses centralized `pkgs`.
+# Re-export overlay packages as `packages.*` (defined in `overlays/`).
 {
   perSystem =
     { pkgs, ... }:
     {
       packages = {
-        gruvbox-material-yazi = pkgs.callPackage ../../pkgs/gruvbox-material-yazi.nix { };
+        inherit (pkgs) gruvbox-material-yazi;
       };
     };
 }

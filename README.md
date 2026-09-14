@@ -17,7 +17,7 @@ nix-config/
 ├── flake.nix              # Dendritic entry point (mkFlake + import-tree ./modules)
 ├── Justfile               # Task runner (just --list to see all commands)
 ├── modules/               # ALL config, auto-imported by import-tree
-│   ├── dendritic/         # flake-parts infra, flake.lib (vars, mylib, host factories)
+│   ├── dendritic/         # flake-parts infra, flake.lib (vars, host factories)
 │   ├── tools/             # perSystem (formatter, checks, devShell, apps, packages), overlays, home-manager wiring
 │   ├── base/              # Cross-platform nix/direnv (Multi-Context Aspect)
 │   ├── nixos/             # System types (desktop/server) + base pieces → [modules/README.md](modules/README.md)
@@ -224,7 +224,7 @@ Update the key binding in `secrets/secrets.nix` with the new host key, then reke
 | `formatter.<system>` | nixfmt + shfmt wrapper |
 | `apps.<system>.agenix` | agenix CLI as a flake app |
 | `devShells.<system>.default` | Dev shell (nixfmt, deadnix, statix, agenix) |
-| `lib` | Dendritic helpers: `vars`, `mylib`, host factories |
+| `lib` | Dendritic helpers: `vars`, `sharedOverlays`, host factories |
 | `modules` | Published dendritic modules (`nixos.*`, `darwin.*`, `homeManager.*`) |
 
 ## Formatting & CI
@@ -246,9 +246,8 @@ The dev shell includes `just`, `nixfmt`, `deadnix`, `statix`, and `agenix`. Run 
 
 `flake.lib` (defined in `modules/dendritic/lib.nix`, single source of truth) provides:
 
-- **`vars` / `myvars`** — User identity (`username`, `userfullname`, `useremail`). Injected into every module via `specialArgs`/`extraSpecialArgs`.
-- **`mylib`** — Empty backwards-compat shim (former `scanPaths`/`relativeToRoot` removed; `import-tree` auto-imports everything under `modules/`).
-- **`mkNixosHost` / `mkNixosServerHost` / `mkDarwinHost`** — Factories instantiating hosts from dendritic modules with uniform `specialArgs` (`inputs`, `myvars`, `hostname`, `username`, `flakeRoot`). They only bind the per-host Home Manager user; HM settings/agenix/disko come from the composed modules themselves.
+- **`vars`** — User identity (`username`, `userfullname`, `useremail`). Injected into every module via `specialArgs`/`extraSpecialArgs`.
+- **`mkNixosHost` / `mkNixosServerHost` / `mkDarwinHost`** — Factories instantiating hosts from dendritic modules with uniform `specialArgs` (`inputs`, `vars`, `hostname`, `username`, `flakeRoot`). They set `networking.hostName` (`mkDefault`), include disko, and bind the per-host Home Manager user; HM settings/agenix come from the composed modules themselves.
 
 ## Security
 
@@ -265,10 +264,10 @@ The dev shell includes `just`, `nixfmt`, `deadnix`, `statix`, and `agenix`. Run 
 
 Configured in `modules/base/nix.nix` and `modules/nixos/base/system.nix`:
 
-- `mySystem.kernelPackage`: Configurable kernel (default: `linuxPackages_latest`)
-- Primary user comes from the `username` specialArg (`flake.lib.vars.username`, default `"ize"`) — no `mySystem.username` option.
-- Experimental features: `nix-command`, `flakes`, `recursive-nix`
-- `sandbox = true` (Linux only), `warn-dirty = false`
+- `features.system.kernelPackage`: Configurable kernel (default: `linuxPackages_latest`)
+- Primary user comes from the `username` specialArg (`flake.lib.vars.username`, default `"ize"`).
+- Experimental features: `nix-command`, `flakes`
+- `warn-dirty = true` (surface uncommitted changes)
 - Automatic weekly `nix.optimise` and garbage collection (14-day retention)
 - **GitHub access token:** Optional, for private flakes / avoiding rate limits. Add via `just secrets-edit nix-access-tokens.age` with content `access-tokens = github.com=ghp_<token>`. Auto-included via `nix.extraOptions` (`!include`) in `modules/nixos/base/secrets.nix` as `0400 owner=<user>` (user-readable, daemon-readable as root) with an empty fallback so fresh hosts without decrypted secrets don't deadlock nix.
 

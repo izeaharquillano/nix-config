@@ -1,6 +1,4 @@
-# Simple Aspect: VS Code with extensions.
-# Import this module = enabled (pure dendritic: composition decides).
-# Dendritic module: flake.modules.homeManager.home-features-vscode
+# VS Code + extensions.
 {
   flake.modules.homeManager.home-features-vscode =
     { pkgs, flakeRoot, ... }:

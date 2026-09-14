@@ -1,13 +1,7 @@
-# Multi-Context Aspect: direnv enabled at system level on every OS.
-# Dendritic modules: flake.modules.nixos.base-direnv, flake.modules.darwin.base-direnv
-{ ... }:
+# System-level direnv (NixOS + darwin).
+_:
 let
-  direnv-body =
-    { ... }:
-
-    {
-      programs.direnv.enable = true;
-    };
+  direnv-body = _: { programs.direnv.enable = true; };
 in
 {
   flake.modules.nixos.base-direnv = direnv-body;

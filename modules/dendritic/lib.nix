@@ -1,5 +1,4 @@
-# User identity + host factories (`mkNixosHost`/`mkNixosServerHost`/`mkDarwinHost`).
-# Factories inject shared `specialArgs` (hostname, flakeRoot, inputs, myvars, username).
+# Host factories + shared identity/overlays.
 {
   inputs,
   self,
@@ -11,30 +10,35 @@ let
     username = "ize";
     userfullname = "Izeah Arquillano";
     useremail = "izeaharquillano@gmail.com";
+    # Shared Syncthing peer; hosts reference this instead of pasting the ID.
+    syncthingServerName = "Server";
+    syncthingServerId = "JDJRA5Z-2BXVR3Z-GTHRJND-AIJLXZW-TAMJRXF-CYYTJMM-6LKWWT7-QCD32AA";
   };
 
   inherit (vars) username;
+
+  # Canonical overlay list — consumed by host factories AND perSystem pkgs.
+  sharedOverlays = [
+    self.overlays.default
+    inputs.nix-alien.overlays.default
+  ];
 
   specialArgsFor = hostname: {
     inherit
       inputs
       hostname
       username
-      mylib
+      vars
       ;
-    myvars = vars;
     flakeRoot = self;
   };
 
-  # Empty legacy `mylib` shim for external compat; add no helpers here.
-  mylib = { };
-
-  baseSystemModules = [
+  baseSystemModules = hostname: [
+    inputs.disko.nixosModules.default
     {
-      nixpkgs.overlays = [
-        self.overlays.default
-        inputs.nix-alien.overlays.default
-      ];
+      nixpkgs.overlays = sharedOverlays;
+      # Single definition of hostname; hosts may override with mkForce if needed.
+      networking.hostName = lib.mkDefault hostname;
     }
   ];
 
@@ -53,8 +57,114 @@ in
   };
 
   config.flake.lib = {
-    inherit mylib vars;
-    myvars = vars;
+    inherit vars sharedOverlays;
+
+    # Destructive disko layout; `diskName` must match format-time name or boot fails.
+    # Deploy: `disko --mode destroy,format,mount --flake .#<host>`
+    # NOTE: `luksExtraFormatArgs` defaults to LUKS2/argon2id (format-only).
+    mkDiskoBtrfs =
+      {
+        diskName,
+        device,
+        withWindows ? false,
+        windowsSize ? "122070M",
+        swapSize ? "8G",
+        luksExtraFormatArgs ? [
+          "--type luks2"
+          "--cipher aes-xts-plain64"
+          "--hash sha512"
+          "--iter-time 5000"
+          "--key-size 256"
+          "--pbkdf argon2id"
+        ],
+      }:
+      {
+        disko.devices = {
+          disk.${diskName} = {
+            type = "disk";
+            inherit device;
+            content = {
+              type = "gpt";
+              partitions = {
+                ESP = {
+                  priority = 1;
+                  name = "ESP";
+                  start = "1M";
+                  end = "1G";
+                  type = "EF00";
+                  content = {
+                    type = "filesystem";
+                    format = "vfat";
+                    mountpoint = "/boot";
+                    mountOptions = [
+                      "fmask=0177"
+                      "dmask=0077"
+                      "noexec"
+                      "nosuid"
+                      "nodev"
+                    ];
+                  };
+                };
+                luks = {
+                  size = "100%";
+                  content = {
+                    type = "luks";
+                    name = "cryptroot";
+                    settings.allowDiscards = true;
+                    initrdUnlock = true;
+                    extraFormatArgs = luksExtraFormatArgs;
+                    content = {
+                      type = "btrfs";
+                      extraArgs = [
+                        "-L"
+                        "nixos"
+                        "-f"
+                      ];
+                      subvolumes = {
+                        "/root" = {
+                          mountpoint = "/";
+                        };
+                        "/home" = {
+                          mountpoint = "/home";
+                        };
+                        "/nix" = {
+                          mountpoint = "/nix";
+                        };
+                        "/persist" = {
+                          mountpoint = "/persist";
+                          mountOptions = [
+                            "compress=zstd:3"
+                            "noatime"
+                            "ssd"
+                            "discard=async"
+                            "commit=120"
+                          ];
+                        };
+                        "/swap" = {
+                          mountpoint = "/swap";
+                          swap.swapfile.size = swapSize;
+                        };
+                      };
+                    };
+                  };
+                };
+              }
+              // lib.optionalAttrs withWindows {
+                "Microsoft reserved" = {
+                  type = "0C01";
+                  priority = 290;
+                  size = "16M";
+                };
+                "Windows data" = {
+                  type = "0700";
+                  priority = 300;
+                  size = windowsSize;
+                };
+              };
+            };
+          };
+        };
+      };
 
     mkNixosHost =
       hostname: system:
@@ -66,9 +176,10 @@ in
           # HM + agenix come from composition; factory binds the HM user only.
           (homeManagerUsersBlock hostname)
         ]
-        ++ baseSystemModules;
+        ++ baseSystemModules hostname;
       };
 
+    # Headless variant (no HM binding).
     mkNixosServerHost =
       hostname: system:
       inputs.nixpkgs.lib.nixosSystem {
@@ -77,7 +188,7 @@ in
         modules = [
           self.modules.nixos.${hostname}
         ]
-        ++ baseSystemModules;
+        ++ baseSystemModules hostname;
       };
 
     mkDarwinHost =
@@ -97,12 +208,10 @@ in
           agenixDarwin
           inputs.home-manager.darwinModules.home-manager
           {
-            nixpkgs.overlays = [ self.overlays.default ];
-            home-manager = {
-              users.${username} = self.modules.homeManager.${hostname};
-              extraSpecialArgs = specialArgsFor hostname;
-            };
+            nixpkgs.overlays = sharedOverlays;
+            networking.hostName = lib.mkDefault hostname;
           }
+          (homeManagerUsersBlock hostname)
         ];
       };
   };

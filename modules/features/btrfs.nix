@@ -1,6 +1,6 @@
-# Simple Aspect: BTRFS compression/tuning.
-# Import this module = enabled (pure dendritic: composition decides).
-# Dendritic module: flake.modules.nixos.btrfs
+# BTRFS compression/tuning. Disko sets device-specific opts in `mkDiskoBtrfs`
+# (ESP, LUKS, /persist ssd/discard/commit); this module adds generic
+# compress/noatime to the remaining btrfs mounts (merged with disko opts).
 {
   flake.modules.nixos.btrfs =
     { lib, ... }:
@@ -9,18 +9,15 @@
       btrfsOpts = [
         "compress=zstd:3"
         "noatime"
-        "ssd"
-        "discard=async"
-        "commit=120"
       ];
     in
     {
       fileSystems =
         lib.genAttrs
           [
+            "/"
             "/home"
             "/nix"
-            "/persist"
           ]
           (_path: {
             options = btrfsOpts;

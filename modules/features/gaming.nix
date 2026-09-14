@@ -1,14 +1,12 @@
-# Simple Aspect: gaming stack (Steam, Gamescope, Gamemode, MangoHud).
-# Import this module = enabled (pure dendritic: composition decides).
-# Dendritic module: flake.modules.nixos.gaming
+# Gaming stack (Steam, Gamescope, Gamemode, MangoHud).
 {
   flake.modules.nixos.gaming =
     { pkgs, ... }:
 
     {
-      environment.systemPackages = with pkgs; [
-        mangohud
-        goverlay
+      environment.systemPackages = [
+        pkgs.mangohud
+        pkgs.goverlay
       ];
 
       programs = {
@@ -16,15 +14,14 @@
           enable = true;
           remotePlay.openFirewall = true;
           dedicatedServer.openFirewall = true;
-          extraCompatPackages = with pkgs; [
-            proton-ge-bin
+          extraCompatPackages = [
+            pkgs.proton-ge-bin
           ];
         };
 
         gamescope = {
           enable = true;
           capSysNice = false;
-          args = [ "--rt" ];
         };
 
         gamemode.enable = true;

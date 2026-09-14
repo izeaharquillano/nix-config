@@ -1,5 +1,4 @@
-# Simple Aspect: Niri compositor + Wayland env
-# Dendritic module: flake.modules.nixos.desktop-niri
+# Niri compositor + Wayland env.
 {
   flake.modules.nixos.desktop-niri =
     _:

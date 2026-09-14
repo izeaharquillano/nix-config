@@ -1,5 +1,7 @@
-# Single `import nixpkgs` (allowUnfree + overlays) for `perSystem` consumers.
-# System modules get overlays via host factories; no `legacyPackages` elsewhere.
+# Per-system `pkgs` for dev shells/checks/packages (allowUnfree + `sharedOverlays`).
+# Target systems configure their own `nixpkgs` via factories (`baseSystemModules`)
+# + `base-nix` (`nixpkgs.config.allowUnfree`); this import is intentionally
+# separate and only affects `perSystem` outputs.
 { inputs, self, ... }:
 {
   perSystem =
@@ -8,10 +10,7 @@
       _module.args.pkgs = import inputs.nixpkgs {
         inherit system;
         config.allowUnfree = true;
-        overlays = [
-          self.overlays.default
-          inputs.nix-alien.overlays.default
-        ];
+        overlays = self.lib.sharedOverlays;
       };
     };
 }

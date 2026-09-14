@@ -1,6 +1,4 @@
-# Simple Aspect: agenix identity + nix-access-tokens
-# Dendritic module: flake.modules.nixos.base-secrets
-# Imports agenix directly so `nixosModules.default` keeps `age.secrets`.
+# agenix identity + nix-access-tokens.
 { inputs, ... }:
 {
   flake.modules.nixos.base-secrets =
@@ -19,11 +17,7 @@
       age = {
         identityPaths = [ "/etc/ssh/ssh_host_ed25519_key" ];
 
-        # Group-readable (0440 root:wheel): the Nix *client* parses `!include`
-        # below as the invoking uid, while the daemon runs as root. 0400
-        # root-only would break user invocations; 0644 would leak the token
-        # to every local process. User `ize` is in `wheel`, so both read.
-        # See https://wiki.nixos.org/wiki/Agenix
+        # 0440 root:wheel so user + daemon both read `!include` (https://wiki.nixos.org/wiki/Agenix).
         secrets.nix-access-tokens = {
           file = "${flakeRoot}/secrets/nix-access-tokens.age";
           owner = "root";
@@ -36,14 +30,15 @@
         !include ${config.age.secrets.nix-access-tokens.path}
       '';
 
-      # Empty placeholder if undecryptable; `!include` must never break nix.
+      # Empty placeholder if undecryptable so `!include` never breaks nix.
       system.activationScripts.nixAccessTokensFallback = lib.stringAfter [ "agenixInstall" ] ''
         tokenPath="${config.age.secrets.nix-access-tokens.path}"
         if [ ! -e "$tokenPath" ]; then
+          echo "agenix: $tokenPath missing (fresh host without host key?) — writing empty placeholder; expect GitHub rate limits until rekeyed" >&2
           mkdir -p "$(dirname "$tokenPath")"
           : > "$tokenPath"
-          chown root:wheel "$tokenPath" || true
-          chmod 0440 "$tokenPath" || true
+          chown root:wheel "$tokenPath"
+          chmod 0440 "$tokenPath"
         fi
       '';
     };

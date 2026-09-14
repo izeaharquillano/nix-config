@@ -1,18 +1,20 @@
-# Inheritance Aspect: headless home configuration (no GUI).
-# Dendritic module: flake.modules.homeManager.home-linux-core
+# Headless home (no GUI).
 { inputs, ... }:
+let
+  hm = inputs.self.modules.homeManager;
+in
 {
   flake.modules.homeManager.home-linux-core = {
-    imports = with inputs.self.modules.homeManager; [
-      user-ize
-      home-core-shell
-      home-core-cli
-      home-core-dev
-      home-core-terminal
-      home-core-nvim
-      home-core-notes
-      home-linux-desktop
-      home-linux-utils
+    imports = [
+      hm.user-ize
+      hm.home-core-shell
+      hm.home-core-cli
+      hm.home-core-dev
+      hm.home-core-terminal
+      hm.home-core-nvim
+      hm.home-core-notes
+      hm.home-linux-desktop
+      hm.home-linux-utils
     ];
   };
 }

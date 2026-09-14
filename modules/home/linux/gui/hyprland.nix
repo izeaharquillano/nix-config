@@ -1,5 +1,3 @@
-# Simple Aspect: Hyprland dotfiles (recursive)
-# Dendritic module: flake.modules.homeManager.home-gui-hyprland
 {
   flake.modules.homeManager.home-gui-hyprland =
     { flakeRoot, ... }:

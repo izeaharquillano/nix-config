@@ -1,8 +1,7 @@
-# Simple Aspect: bash, zsh, starship, zoxide
-# Dendritic module: flake.modules.homeManager.home-core-shell
+# bash, zsh, starship, zoxide.
 {
   flake.modules.homeManager.home-core-shell =
-    { pkgs, flakeRoot, ... }:
+    { flakeRoot, ... }:
 
     let
       shellAliases = {
@@ -18,6 +17,7 @@
         bash = {
           enable = true;
           enableCompletion = true;
+          # This HM rev has no `initContent` for bash.
           initExtra = ''
             bind -s '"\C-w": kill-word'
           '';
@@ -33,6 +33,13 @@
             bindkey "^[[F" end-of-line
             bindkey "^[[3~" delete-char
           '';
+        };
+
+        # Provides `eza` for the aliases above.
+        eza = {
+          enable = true;
+          enableBashIntegration = false;
+          enableZshIntegration = false;
         };
 
         starship = {

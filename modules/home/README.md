@@ -32,7 +32,7 @@ Config files in `config/` are consumed via `xdg.configFile` store copies referen
 
 ## Home Manager Backup
 
-HM renames conflicting files with `.hm-bak` instead of failing (`home-manager.backupFileExtension = "hm-bak"` in `modules/dendritic/lib.nix`). Clean up after verifying.
+HM renames conflicting files with `.hm-bak` instead of failing (`home-manager.backupFileExtension = "hm-bak"` in `modules/tools/home-manager.nix`). Clean up after verifying.
 
 ## Adding a Module
 
@@ -64,22 +64,18 @@ let
   hm = inputs.self.modules.homeManager;
 in
 {
-  flake.modules.homeManager.<name> =
-    { inputs, ... }:
-    {
-      imports = [
-        hm.home-linux-gui
-        hm.home-features-vscode
-        hm.home-features-p2p
-        hm.<name>-home-packages
-        inputs.niri.homeModules.niri
-        inputs.noctalia.homeModules.default
-      ];
+  flake.modules.homeManager.<name> = {
+    imports = [
+      hm.home-linux-gui
+      hm.home-features-vscode
+      hm.home-features-p2p
+      hm.<name>-home-packages
+    ];
 
-      xdg.configFile."niri/niri-host-settings.kdl".source = ./config/niri-host-settings.kdl;
-      xdg.configFile."hypr/hypr-host-settings.lua".source = ./config/hypr-host-settings.lua;
-      xdg.configFile."noctalia/host-settings.toml".source = ./config/noctalia-host-settings.toml;
-    };
+    xdg.configFile."niri/niri-host-settings.kdl".source = ./config/niri-host-settings.kdl;
+    xdg.configFile."hypr/hypr-host-settings.lua".source = ./config/hypr-host-settings.lua;
+    xdg.configFile."noctalia/host-settings.toml".source = ./config/noctalia-host-settings.toml;
+  };
 }
 ```
 

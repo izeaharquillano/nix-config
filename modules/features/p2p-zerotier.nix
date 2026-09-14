@@ -1,7 +1,4 @@
-# Simple Aspect: ZeroTier networking.
-# Import this module = enabled (pure dendritic: composition decides).
-# networkId is host-specific; set by the importing host.
-# Dendritic module: flake.modules.nixos.p2p-zerotier
+# ZeroTier networking (`networkId` set per host).
 {
   flake.modules.nixos.p2p-zerotier =
     { lib, config, ... }:
@@ -25,7 +22,8 @@
         networking.firewall.allowedUDPPorts = [ 9993 ];
         services.zerotierone = {
           enable = true;
-          joinNetworks = lib.mkIf (config.features.p2p.zerotier.networkId != null) [
+          # Assertion above guarantees non-null; no mkIf needed.
+          joinNetworks = [
             config.features.p2p.zerotier.networkId
           ];
         };

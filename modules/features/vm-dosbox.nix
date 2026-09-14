@@ -1,11 +1,9 @@
-# Simple Aspect: DOSBox emulator.
-# Import this module = enabled (pure dendritic: composition decides).
-# Dendritic module: flake.modules.nixos.vm-dosbox
+# DOSBox emulator.
 {
   flake.modules.nixos.vm-dosbox =
     { pkgs, ... }:
 
     {
-      environment.systemPackages = with pkgs; [ dosbox ];
+      environment.systemPackages = [ pkgs.dosbox ];
     };
 }

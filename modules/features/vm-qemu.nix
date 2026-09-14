@@ -1,11 +1,8 @@
-# Simple Aspect: QEMU/KVM virtual machines (libvirtd, virt-manager, SPICE).
-# Import this module = enabled (pure dendritic: composition decides).
-# Dendritic module: flake.modules.nixos.vm-qemu
+# QEMU/KVM (libvirtd, virt-manager, SPICE).
 {
   flake.modules.nixos.vm-qemu =
     {
       pkgs,
-      lib,
       username,
       ...
     }:
@@ -27,17 +24,17 @@
       users.users.${username}.extraGroups = [ "libvirtd" ];
       networking.firewall.trustedInterfaces = [ "virbr0" ];
 
-      # No libvirt secrets in use; clear credential loading (fails without key).
+      # No libvirt secrets; plain assignment so hosts can override.
       systemd.services.libvirtd = {
-        serviceConfig.LoadCredentialEncrypted = lib.mkForce [ "" ];
+        serviceConfig.LoadCredentialEncrypted = [ "" ];
       };
 
-      environment.systemPackages = with pkgs; [
-        dnsmasq
-        virt-viewer
-        spice
-        spice-vdagent
-        spice-gtk
+      environment.systemPackages = [
+        pkgs.dnsmasq
+        pkgs.virt-viewer
+        pkgs.spice
+        pkgs.spice-vdagent
+        pkgs.spice-gtk
       ];
     };
 }

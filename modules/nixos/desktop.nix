@@ -1,24 +1,24 @@
-# Inheritance Aspect: desktop system type (base + desktop envs + HM).
-# Dendritic module: flake.modules.nixos.desktop
+# Desktop type: base + Niri/Hyprland + HM (disko stays per-host; drop `desktop-hyprland` for Niri-only).
 { inputs, ... }:
+let
+  nixos = inputs.self.modules.nixos;
+in
 {
   flake.modules.nixos.desktop = {
     imports = [
-      inputs.disko.nixosModules.default
-    ]
-    ++ (with inputs.self.modules.nixos; [
-      base-nix
-      base-direnv
-      base-system
-      base-locale
-      base-ssh
-      base-secrets
-      base-security
-      base-packages
-      desktop-greetd
-      desktop-niri
-      desktop-services
-      home-manager
-    ]);
+      nixos.base-nix
+      nixos.base-direnv
+      nixos.base-system
+      nixos.base-locale
+      nixos.base-ssh
+      nixos.base-secrets
+      nixos.base-security
+      nixos.base-packages
+      nixos.desktop-greetd
+      nixos.desktop-niri
+      nixos.desktop-hyprland
+      nixos.desktop-services
+      nixos.home-manager
+    ];
   };
 }

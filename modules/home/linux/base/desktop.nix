@@ -1,5 +1,4 @@
-# Simple Aspect: XDG dirs, Nemo, GTK/Papirus, Qt, dconf
-# Dendritic module: flake.modules.homeManager.home-linux-desktop
+# XDG dirs, Nemo, GTK/Papirus, Qt, dconf.
 {
   flake.modules.homeManager.home-linux-desktop =
     { pkgs, ... }:
@@ -23,8 +22,8 @@
             "inode/directory" = [ "nemo.desktop" ];
             "application/x-gnome-saved-search" = [ "nemo.desktop" ];
           };
-          defaultApplicationPackages = with pkgs; [
-            qimgv
+          defaultApplicationPackages = [
+            pkgs.qimgv
           ];
         };
       };

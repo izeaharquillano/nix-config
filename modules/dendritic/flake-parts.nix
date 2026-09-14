@@ -1,8 +1,4 @@
-# Enables `flake.modules` namespacing + supported systems.
-# NOTE: `nix flake check` (Nix 2.34.8) warns `unknown flake output 'modules'`
-# because its schema allowlist predates the generic `modules.<kind>.<name>`
-# output (see NixOS/nix#15899). Harmless — checks still pass. Do not work
-# around it by dropping this import; `self.modules.*` composition depends on it.
+# `flake.modules` namespacing; harmless `unknown output 'modules'` warning, see NixOS/nix#15899.
 { inputs, ... }:
 {
   imports = [
@@ -11,8 +7,8 @@
 
   systems = [
     "x86_64-linux"
-    "aarch64-linux"
+    # Add aarch64-linux / aarch64-darwin back when a host actually uses them;
+    # extra systems triple perSystem eval (pkgs, checks, formatter, packages).
     # x86_64-darwin dropped in nixpkgs-unstable 26.11; do not re-add.
-    "aarch64-darwin"
   ];
 }

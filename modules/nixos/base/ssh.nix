@@ -1,16 +1,12 @@
-# Simple Aspect: OpenSSH, key-only, no root login
-# Dendritic module: flake.modules.nixos.base-ssh
+# OpenSSH, key-only, no root login.
 {
-  flake.modules.nixos.base-ssh =
-    { pkgs, ... }:
-
-    {
-      services.openssh = {
-        enable = true;
-        settings = {
-          PasswordAuthentication = false;
-          PermitRootLogin = "no";
-        };
+  flake.modules.nixos.base-ssh = {
+    services.openssh = {
+      enable = true;
+      settings = {
+        PasswordAuthentication = false;
+        PermitRootLogin = "no";
       };
     };
+  };
 }

@@ -1,8 +1,8 @@
 # jobert: AMD+NVIDIA gaming/work laptop.
-# Composition root (`flake.modules.nixos.jobert`); see `flake-parts.nix`.
 { inputs, ... }:
 let
   nixos = inputs.self.modules.nixos;
+  vars = inputs.self.lib.vars;
 in
 {
   flake.modules.nixos.jobert = {
@@ -23,19 +23,22 @@ in
       nixos.gaming
       nixos.jobert-disko
       nixos.jobert-hardware
-      nixos.jobert-packages
       nixos.jobert-services
       nixos.jobert-host-settings
-      # disko from `desktop`; hardware profiles stay per-host.
       inputs.nixos-hardware.nixosModules.common-cpu-amd
       inputs.nixos-hardware.nixosModules.common-pc-laptop
       inputs.nixos-hardware.nixosModules.common-pc-ssd
     ];
 
-    networking.hostName = "jobert";
+    # Hostname comes from the `mkNixosHost` factory (`mkDefault`).
+
+    features.p2p.syncthing.devices = {
+      "${vars.syncthingServerName}".id = vars.syncthingServerId;
+    };
 
     features.p2p.zerotier.networkId = "88c5b1f339f6593b";
 
+    # Pinned per NixOS manual; do NOT bump on update.
     system.stateVersion = "26.05";
   };
 }

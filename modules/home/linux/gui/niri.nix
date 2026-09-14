@@ -1,10 +1,12 @@
-# Simple Aspect: Niri config file
-# Dendritic module: flake.modules.homeManager.home-gui-niri
+{ inputs, ... }:
 {
   flake.modules.homeManager.home-gui-niri =
     { flakeRoot, ... }:
-
     {
+      imports = [
+        inputs.niri.homeModules.niri
+      ];
+
       xdg.configFile."niri/config.kdl".source = flakeRoot + /config/niri/config.kdl;
     };
 }

@@ -1,5 +1,3 @@
-# Simple Aspect: home stateVersion, username, homeDirectory
-# Dendritic module: flake.modules.homeManager.home-base
 {
   flake.modules.homeManager.home-base =
     {

@@ -213,9 +213,10 @@ main() {
   local state_after
   state_after="$(get_state_${compositor})"
 
-  read -r new_w new_h <<<"$(jq --raw-output --arg output "${focused_output}" '
-    .[] | select(.name == $output) | "\(.width) \(.height)"
-  ' <<<"${state_after}")"
+  # Reuse the per-compositor helper: Niri state is an object keyed by output
+  # name, Hyprland is an array — a hardcoded Hyprland-only `jq '.[]...'` breaks Niri.
+  # `get_output_info_*` returns `x y width height scale`.
+  read -r _ _ new_w new_h _ <<<"$(get_output_info_${compositor} "${state_after}" "${focused_output}")"
 
   local dx=$((new_w - old_w))
   local dy=$((new_h - old_h))
@@ -231,7 +232,7 @@ main() {
     "${old_h}" \
     "${new_scale}"
 
-  noctalia msg notification-show "Output ${focused_output} scale: ${new_scale}x" "output-scale"
+  noctalia msg notification-show "Output ${focused_output} scale: ${new_scale}x" "output-scale" || true
 }
 
 main "${@}"

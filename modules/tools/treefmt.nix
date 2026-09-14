@@ -17,8 +17,14 @@
 
       preCommitEval = inputs.pre-commit-hooks.lib.${system}.run {
         src = self;
+        excludes = [
+          "secrets/.*\\.age$"
+          "_img/.*"
+        ];
         hooks = {
           nixfmt.enable = true;
+          statix.enable = true;
+          deadnix.enable = true;
         };
       };
     in
