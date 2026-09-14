@@ -31,6 +31,7 @@
 
       options.features.impermanence.rollbackDevice = lib.mkOption {
         type = lib.types.str;
+        # Must match `name = "cryptroot"` in `mkDiskoBtrfs` (`modules/dendritic/lib.nix`).
         default = "/dev/mapper/cryptroot";
         description = "Unlocked LUKS device containing the btrfs `/root` subvolume wiped on boot.";
       };
@@ -68,7 +69,7 @@
             if [[ -e /btrfs_tmp/root ]]; then
               btrfs subvolume list -o /btrfs_tmp/root |
                 cut -f9 -d' ' |
-                while read subvolume; do
+                while IFS= read -r subvolume; do
                   echo "deleting /$subvolume subvolume..."
                   btrfs subvolume delete "/btrfs_tmp/$subvolume"
                 done

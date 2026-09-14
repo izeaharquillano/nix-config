@@ -13,6 +13,9 @@ let
     # Shared Syncthing peer; hosts reference this instead of pasting the ID.
     syncthingServerName = "Server";
     syncthingServerId = "JDJRA5Z-2BXVR3Z-GTHRJND-AIJLXZW-TAMJRXF-CYYTJMM-6LKWWT7-QCD32AA";
+    # Single source for Obsidian vault location; must stay in sync between
+    # `nixos.p2p` (Syncthing folder path) and `home-gui-notes` (vault target).
+    obsidianVaultRel = "Documents/obsidian";
   };
 
   inherit (vars) username;
@@ -106,6 +109,11 @@ in
                   };
                 };
                 luks = {
+                  # `100%` = remainder after fixed-size partitions. Keep luks
+                  # last (priority 400, after Windows 290/300) so dual-boot
+                  # keeps its reservation; no explicit priority = same effect
+                  # but implicit ordering is fragile.
+                  priority = 400;
                   size = "100%";
                   content = {
                     type = "luks";

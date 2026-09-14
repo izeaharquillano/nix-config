@@ -1,4 +1,4 @@
-# Headless home (no GUI).
+# Headless home (no GUI); GUI pieces live in `home-linux-gui` only.
 { inputs, ... }:
 let
   hm = inputs.self.modules.homeManager;
@@ -12,9 +12,6 @@ in
       hm.home-core-dev
       hm.home-core-terminal
       hm.home-core-nvim
-      hm.home-core-notes
-      hm.home-linux-desktop
-      hm.home-linux-utils
     ];
   };
 }

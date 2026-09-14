@@ -24,11 +24,6 @@
       users.users.${username}.extraGroups = [ "libvirtd" ];
       networking.firewall.trustedInterfaces = [ "virbr0" ];
 
-      # No libvirt secrets; plain assignment so hosts can override.
-      systemd.services.libvirtd = {
-        serviceConfig.LoadCredentialEncrypted = [ "" ];
-      };
-
       environment.systemPackages = [
         pkgs.dnsmasq
         pkgs.virt-viewer

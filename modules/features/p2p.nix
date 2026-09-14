@@ -6,9 +6,9 @@
       flakeRoot,
       config,
       username,
+      vars,
       ...
     }:
-
     {
       options.features.p2p.syncthing = {
         devices = lib.mkOption {
@@ -51,7 +51,7 @@
         obsidianEnable = lib.mkOption {
           type = lib.types.bool;
           default = true;
-          description = "Sync `Documents/obsidian` (must match `home-core-notes`).";
+          description = "Sync obsidian vault (must match `home-gui-notes`, see `vars.obsidianVaultRel`).";
         };
       };
 
@@ -65,7 +65,7 @@
         {
           # No host key at boot, so persist the decrypted key in /persist for netbird.
           age.secrets.netbird-setup-key = {
-            file = "${flakeRoot}/secrets/netbird-setup-key.age";
+            file = flakeRoot + /secrets/netbird-setup-key.age;
             owner = "root";
             group = "root";
             mode = "0400";
@@ -101,7 +101,7 @@
               folders =
                 lib.optionalAttrs config.features.p2p.syncthing.obsidianEnable {
                   "Obsidian" = {
-                    path = "${homeDir}/Documents/obsidian";
+                    path = "${homeDir}/${vars.obsidianVaultRel}";
                     devices = builtins.attrNames config.features.p2p.syncthing.devices;
                   };
                 }

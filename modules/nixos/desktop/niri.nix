@@ -1,16 +1,11 @@
 # Niri compositor + Wayland env.
 {
-  flake.modules.nixos.desktop-niri =
-    _:
+  flake.modules.nixos.desktop-niri = {
+    programs.niri.enable = true;
 
-    {
-      programs.niri.enable = true;
-
-      systemd.user.services.niri.enableDefaultPath = false;
-
-      environment.sessionVariables = {
-        NIXOS_OZONE_WL = "1";
-        MOZ_ENABLE_WAYLAND = "1";
-      };
+    environment.sessionVariables = {
+      NIXOS_OZONE_WL = "1";
+      MOZ_ENABLE_WAYLAND = "1";
     };
+  };
 }

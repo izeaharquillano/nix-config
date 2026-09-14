@@ -6,10 +6,10 @@
     let
       shellAliases = {
         svim = "sudoedit";
-        ls = "eza --icons=always --color=always --group-directories-first";
-        ll = "eza -alF --icons=always --color=always --group-directories-first";
+        ls = "eza --icons=always --color=auto --group-directories-first";
+        ll = "eza -alF --icons=always --color=auto --group-directories-first";
         lll = "eza -al --icons=always --group-directories-first --git --color-scale=all --color-scale-mode=gradient";
-        lt = "eza --tree --level=2 --icons=always --color=always";
+        lt = "eza --tree --level=2 --icons=always --color=auto";
       };
     in
     {

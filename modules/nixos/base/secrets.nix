@@ -19,7 +19,7 @@
 
         # 0440 root:wheel so user + daemon both read `!include` (https://wiki.nixos.org/wiki/Agenix).
         secrets.nix-access-tokens = {
-          file = "${flakeRoot}/secrets/nix-access-tokens.age";
+          file = flakeRoot + /secrets/nix-access-tokens.age;
           owner = "root";
           group = "wheel";
           mode = "0440";
@@ -31,14 +31,16 @@
       '';
 
       # Empty placeholder if undecryptable so `!include` never breaks nix.
+      # Best-effort only: if `agenixInstall` itself aborts activation on a
+      # decrypt failure (fresh host not yet in `secrets.nix`), this never runs —
+      # follow the two-pass rekey workflow in the README. Covers the case where
+      # agenix warns but leaves the path missing/empty.
       system.activationScripts.nixAccessTokensFallback = lib.stringAfter [ "agenixInstall" ] ''
         tokenPath="${config.age.secrets.nix-access-tokens.path}"
-        if [ ! -e "$tokenPath" ]; then
-          echo "agenix: $tokenPath missing (fresh host without host key?) — writing empty placeholder; expect GitHub rate limits until rekeyed" >&2
+        if [ ! -s "$tokenPath" ]; then
+          echo "agenix: $tokenPath missing or empty (fresh host without host key?) — writing empty placeholder; expect GitHub rate limits until rekeyed" >&2
           mkdir -p "$(dirname "$tokenPath")"
-          : > "$tokenPath"
-          chown root:wheel "$tokenPath"
-          chmod 0440 "$tokenPath"
+          install -m 0440 -o root -g wheel /dev/null "$tokenPath" || true
         fi
       '';
     };

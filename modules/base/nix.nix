@@ -46,7 +46,12 @@ let
             "https://cache.nixos.org"
           ]
           ++ extraSubstituters;
-          trusted-public-keys = extraKeys;
+          # Assigning replaces the nixpkgs default (cache.nixos.org key),
+          # so re-include it explicitly alongside extras.
+          trusted-public-keys = [
+            "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
+          ]
+          ++ extraKeys;
         };
       };
     };

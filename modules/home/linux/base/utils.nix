@@ -19,8 +19,6 @@
           ];
           text = builtins.readFile (flakeRoot + /scripts/output-scale);
         })
-      ]
-      ++ [
         pkgs.p7zip
         pkgs.ncdu
         pkgs.xdg-user-dirs

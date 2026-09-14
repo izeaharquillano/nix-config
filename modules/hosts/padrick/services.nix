@@ -68,7 +68,7 @@
           }
           update_led
 
-          pactl subscribe | grep --line-buffered "Event 'change' on source" | while read -r _; do
+          pactl subscribe | grep --line-buffered "Event 'change' on source" | while IFS= read -r _; do
             update_led
           done
         '';

@@ -7,11 +7,14 @@ in
   flake.modules.homeManager.home-linux-gui = {
     imports = [
       hm.home-linux-core
+      hm.home-linux-desktop
+      hm.home-linux-utils
       hm.home-gui-apps
       hm.home-gui-web
       hm.home-gui-hyprland
       hm.home-gui-niri
       hm.home-gui-noctalia
+      hm.home-gui-notes
     ];
   };
 }
