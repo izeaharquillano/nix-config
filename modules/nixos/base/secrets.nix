@@ -7,7 +7,6 @@
     {
       config,
       lib,
-      username,
       flakeRoot,
       ...
     }:
@@ -20,13 +19,16 @@
       age = {
         identityPaths = [ "/etc/ssh/ssh_host_ed25519_key" ];
 
-        # Owner-readable (0400); root reads via DAC, 0644 would leak the token.
+        # Group-readable (0440 root:wheel): the Nix *client* parses `!include`
+        # below as the invoking uid, while the daemon runs as root. 0400
+        # root-only would break user invocations; 0644 would leak the token
+        # to every local process. User `ize` is in `wheel`, so both read.
         # See https://wiki.nixos.org/wiki/Agenix
         secrets.nix-access-tokens = {
           file = "${flakeRoot}/secrets/nix-access-tokens.age";
-          owner = username;
-          group = "users";
-          mode = "0400";
+          owner = "root";
+          group = "wheel";
+          mode = "0440";
         };
       };
 
@@ -40,8 +42,8 @@
         if [ ! -e "$tokenPath" ]; then
           mkdir -p "$(dirname "$tokenPath")"
           : > "$tokenPath"
-          chown ${username}:users "$tokenPath" || true
-          chmod 0400 "$tokenPath" || true
+          chown root:wheel "$tokenPath" || true
+          chmod 0440 "$tokenPath" || true
         fi
       '';
     };
