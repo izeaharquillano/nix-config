@@ -34,9 +34,12 @@
         };
 
         udev.extraRules = ''
-          # Group-writable LED node (avoids 0666).
+          # Group-writable LED node (0660 audio, not world-writable).
+          # MODE/GROUP alone doesn't stick on thinkpad_acpi leds, so enforce via RUN.
           ACTION=="add", SUBSYSTEM=="leds", KERNEL=="platform::micmute", \
-            MODE="0660", GROUP="audio"
+            MODE="0660", GROUP="audio", \
+            RUN+="${pkgs.coreutils}/bin/chgrp audio /sys/class/leds/%k/brightness", \
+            RUN+="${pkgs.coreutils}/bin/chmod 0660 /sys/class/leds/%k/brightness"
         '';
       };
 
@@ -44,10 +47,19 @@
         description = "Mic Mute LED Sync";
         wantedBy = [ "graphical-session.target" ];
         partOf = [ "graphical-session.target" ];
+        wants = [
+          "pipewire.service"
+          "wireplumber.service"
+        ];
         after = [
           "pipewire.service"
           "wireplumber.service"
         ];
+
+        serviceConfig = {
+          Restart = "always";
+          RestartSec = "2s";
+        };
 
         path = [
           pkgs.wireplumber
@@ -60,16 +72,30 @@
           readonly LED_PATH="/sys/class/leds/platform::micmute/brightness"
 
           update_led() {
-            if wpctl get-volume @DEFAULT_AUDIO_SOURCE@ | grep -q MUTED; then
-              echo "1" > "$LED_PATH" 2>/dev/null || true
+            vol=$(wpctl get-volume @DEFAULT_AUDIO_SOURCE@ 2>/dev/null) || return 0
+            if printf '%s\n' "$vol" | grep -q MUTED; then
+              val=1
             else
-              echo "0" > "$LED_PATH" 2>/dev/null || true
+              val=0
             fi
+            (printf '%s' "$val" > "$LED_PATH") 2>/dev/null || true
           }
+
+          # Wait for a default source (fixes 'Translate ID -1' when starting early).
+          for _ in $(seq 1 60); do
+            if wpctl get-volume @DEFAULT_AUDIO_SOURCE@ >/dev/null 2>&1; then
+              break
+            fi
+            sleep 0.5
+          done
           update_led
 
-          pactl subscribe | grep --line-buffered "Event 'change' on source" | while IFS= read -r _; do
-            update_led
+          # Resubscribe if pactl ever exits so the service never goes dead silently.
+          while true; do
+            pactl subscribe 2>/dev/null | grep --line-buffered "Event 'change' on source" | while IFS= read -r _; do
+              update_led
+            done
+            sleep 1
           done
         '';
       };
