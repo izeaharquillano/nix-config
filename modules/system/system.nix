@@ -35,6 +35,15 @@
         networking.networkmanager.enable = lib.mkDefault true;
         hardware.enableRedistributableFirmware = lib.mkDefault true;
 
+        # Shorten offline boot wait (upstream `nm-online` default is 30s).
+        # Ordering-only `after = network-online.target` consumers (e.g. HM)
+        # still get network-first when it's quick, but don't stall offline.
+        systemd.services.NetworkManager-wait-online.serviceConfig.ExecStart =
+          lib.mkIf config.networking.networkmanager.enable [
+            ""
+            "${lib.getExe' config.networking.networkmanager.package "nm-online"} -s -q --timeout=10"
+          ];
+
         nix = {
           gc = {
             automatic = true;

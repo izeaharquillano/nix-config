@@ -11,8 +11,9 @@ let
     };
   };
 
-  # HM activation waits for network (Zen mods need it) without pulling
-  # `NetworkManager-wait-online` into boot (`enable = true` there blocks boot).
+  # HM activation waits for network (Zen mods fetch at activation).
+  # `NetworkManager-wait-online` timeout is shortened in `nixos.system`,
+  # so offline boots stall briefly instead of the 30s upstream default.
   nixos-network-online =
     { username, ... }:
     {
