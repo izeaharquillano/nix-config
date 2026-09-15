@@ -5,7 +5,6 @@
 {
   flake.modules.nixos.impermanence =
     {
-      config,
       lib,
       pkgs,
       inputs,
