@@ -26,7 +26,9 @@ explicit via `inputs.self.modules.*`.
     GC, `features.system.kernelPackage` option), `packages.nix`,
     `secrets.nix` (agenix; `0440 root:wheel` + `!include` fallback),
     `security.nix` (neovim, firewall, polkit/rtkit)
-  - `storage/` — `btrfs.nix`, `impermanence.nix`
+  - `storage/` — `btrfs.nix`, `impermanence.nix` (fs-agnostic `/persist`),
+    `impermanence-btrfs.nix` (btrfs-only initrd rollback; ext4 hosts use
+    `impermanence` alone with tmpfs `/`)
   - `boot/` — `secureboot.nix` (Lanzaboote, requires impermanence),
     `zswap.nix`
   - `types/` — `desktop.nix` (`nix` + `direnv` + `system` + `locale` +
@@ -42,8 +44,8 @@ explicit via `inputs.self.modules.*`.
     hosts import them explicitly). Hosts import one NixOS type (`desktop`/`server`) + one HM
     type (`linux-gui`/`linux-core`) + the features they need.
     `desktop-full.nix` collects the uncontroversial desktop core
-    (`desktop` + `user-ize` + `btrfs` + `impermanence` + `secureboot` +
-    `zswap` + `p2p` + `fhs`, plus the shared Syncthing peer) so hosts only
+    (`desktop` + `user-ize` + `btrfs` + `impermanence` +
+    `impermanence-btrfs` + `secureboot` + `zswap` + `p2p` + `fhs`, plus the shared Syncthing peer) so hosts only
     list their deltas (greetd, compositors, `docker`/`podman`, `vm-qemu`, `gaming`,
     `zerotier`); plain `desktop` remains the minimal base.
 - **`services/`** — System daemons (`services.*`, `virtualisation.*`,
@@ -104,7 +106,7 @@ in
   flake.modules.nixos.<name> = {
     imports = [
       inputs.disko.nixosModules.default
-      nixos.desktop-full # core: desktop + user-ize + btrfs + impermanence + secureboot + zswap + p2p + fhs
+      nixos.desktop-full # core: desktop + user-ize + btrfs + impermanence + impermanence-btrfs + secureboot + zswap + p2p + fhs
       nixos.greetd # login manager (explicit per host, needs a compositor)
       nixos.niri # Compositor (explicit per host)
       nixos.hyprland # Compositor (explicit per host)
@@ -183,7 +185,7 @@ Optional functionality lives in `services/` + `programs/` as plain composable mo
 ```nix
 imports = [
   inputs.disko.nixosModules.default # explicit per host (not hidden in the factory)
-  nixos.desktop-full # desktop + user-ize + btrfs + impermanence + secureboot + zswap + p2p + fhs
+  nixos.desktop-full # desktop + user-ize + btrfs + impermanence + impermanence-btrfs + secureboot + zswap + p2p + fhs
   nixos.greetd # login manager (explicit per host, needs a compositor)
   nixos.niri # Niri compositor (explicit per host)
   nixos.hyprland # Hyprland compositor (explicit per host)

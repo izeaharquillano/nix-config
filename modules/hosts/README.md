@@ -20,7 +20,7 @@ All NixOS hosts use LUKS2 full-disk encryption with btrfs and [impermanence](htt
 
 **LUKS settings:** LUKS2, AES-XTS-Plain64, SHA-512, Argon2id, TRIM enabled.
 
-**Impermanence:** Root btrfs subvolume is wiped on every boot via a systemd service in initrd. `/home`, `/nix`, and `/persist` are separate persistent subvolumes. System state (`/var/lib/nixos`, `/etc/machine-id`, `/etc/ssh`, NetworkManager, Bluetooth) is persisted via impermanence bind mounts.
+**Impermanence:** Filesystem-agnostic `/persist` bind-mounts (`nixos.impermanence`) plus btrfs-only initrd rollback of the `/root` subvolume (`nixos.impermanence-btrfs`). `/home`, `/nix`, and `/persist` are separate persistent subvolumes. System state (`/var/lib/nixos`, `/etc/machine-id`, `/etc/ssh`, NetworkManager, Bluetooth) is persisted via impermanence bind mounts. Future ext4 hosts use `nixos.impermanence` alone with a tmpfs `/`.
 
 **Swap:** zswap handles compressed swap in RAM. A swapfile on btrfs provides overflow. Hibernation is not configured.
 
@@ -90,8 +90,8 @@ Remove `fileSystems` and `swapDevices` from the generated hardware config — di
 ### 4. Create `modules/hosts/<name>/configuration.nix`
 
 The composition root. It pulls together disko, the `desktop-full` core type
-(`desktop` + `user-ize` + `btrfs` + `impermanence` + `secureboot` + `zswap` +
-`p2p` + `fhs`), this host's feature deltas and `_`-local pieces
+(`desktop` + `user-ize` + `btrfs` + `impermanence` + `impermanence-btrfs` +
+`secureboot` + `zswap` + `p2p` + `fhs`), this host's feature deltas and `_`-local pieces
 (`_disko`, `_hardware-configuration`, `_services`, `_host-settings`;
 host-specific packages stay inlined in `home.nix` / `_host-settings.nix`;
 only split out a `_packages.nix` (underscore-prefixed, like all host-local

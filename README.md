@@ -95,7 +95,7 @@ Optional functionality lives in `modules/services/` (daemons) and `modules/progr
 # modules/hosts/jobert/configuration.nix (excerpt; see modules/README for what each does)
 imports = [
   inputs.disko.nixosModules.default # explicit per host (not hidden in the factory)
-  nixos.desktop-full # desktop + user-ize + btrfs + impermanence + secureboot + zswap + p2p + fhs
+  nixos.desktop-full # desktop + user-ize + btrfs + impermanence + impermanence-btrfs + secureboot + zswap + p2p + fhs
   nixos.greetd # login manager (explicit per host, needs a compositor)
   nixos.niri
   nixos.hyprland
@@ -267,7 +267,7 @@ The dev shell includes `just`, `deadnix`, `statix`, and `agenix` (nixfmt/shfmt c
 ## Security
 
 - **Disk Encryption:** LUKS2 full-disk encryption on all NixOS hosts (declared via disko)
-- **Impermanence:** Root btrfs subvolume wiped on every boot; only explicitly persisted state survives
+- **Impermanence:** Ephemeral root with persistent state (`nixos.impermanence`); btrfs hosts also wipe the `/root` subvolume on every boot (`nixos.impermanence-btrfs`); only explicitly persisted state survives
 - **Firewall:** Enabled system-wide; port allowlists live with their features (`services/zerotier.nix`, `services/p2p/`, `programs/gaming.nix`, `programs/virtualisation/vm-qemu.nix`, per-host `_services.nix`)
 - **SSH:** Key-based auth only, root login denied, login limited to the primary user (`AllowUsers`), auth throttling (`modules/services/ssh.nix`)
 - **Secrets:** agenix with age + SSH host keys (see [Secrets Management](#secrets-management))

@@ -14,6 +14,7 @@ in
         nixos.user-ize
         nixos.btrfs
         nixos.impermanence
+        nixos.impermanence-btrfs
         nixos.secureboot
         nixos.zswap
         nixos.p2p

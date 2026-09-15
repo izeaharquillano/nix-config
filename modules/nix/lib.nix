@@ -21,7 +21,7 @@ let
 
   inherit (vars) username;
 
-  # Also feeds impermanence `rollbackDevice`; renaming one side bricks rollback.
+  # Also feeds impermanence-btrfs `rollbackDevice`; renaming one side bricks rollback.
   diskoCryptName = "cryptroot";
 
   # Used by host configs and perSystem pkgs.
