@@ -1,6 +1,6 @@
 # Hosts
 
-Each subdirectory is a machine (`padrick/`, `jobert/`; future macOS hosts live under `darwin/`). Each host folder is a dendritic composition root: per-aspect files declare `flake.modules.nixos.<name>-*` pieces, `configuration.nix` composes them into `flake.modules.nixos.<name>`, `home.nix` composes `flake.modules.homeManager.<name>`, and `flake-parts.nix` instantiates `nixosConfigurations.<name>` via the `mkNixosHost` factory.
+Each subdirectory is a machine (`padrick/`, `jobert/`; future macOS hosts live under `darwin/`). Each host folder is a dendritic composition root: per-aspect files declare `flake.modules.nixos.<name>-*` pieces, `configuration.nix` composes them into `flake.modules.nixos.<name>`, `home.nix` composes `flake.modules.homeManager.<name>` (desktop/headless HM; servers have no `home.nix`), and `flake-parts.nix` instantiates `nixosConfigurations.<name>` via `mkNixosHost` (or `mkNixosServerHost` / `mkDarwinHost`; see below).
 
 ## Current Hosts
 
@@ -57,7 +57,7 @@ sudo nixos-generate-config --show-hardware-config > modules/hosts/<name>/hardwar
 
 ```bash
 cp modules/hosts/jobert/disko.nix modules/hosts/<name>/disko.nix
-# Edit: update device = "/dev/disk/by-id/..." and swap.swapfile.size
+# Edit: update device = "/dev/disk/by-id/..." and swapSize (default "8G")
 ```
 
 **Option B: Dual-boot with Windows on same disk**
@@ -69,20 +69,21 @@ cp modules/hosts/padrick/disko.nix modules/hosts/<name>/disko.nix
 ```
 
 For both options, wrap the disko layout as a dendritic piece of this host
-(`flake.modules.nixos.<name>-disko`). Every host file follows the same shape —
-a thin `flake.modules.*` declaration around the plain module body, which
-`import-tree` picks up automatically (no aggregator files):
+(`flake.modules.nixos.<name>-disko`) via the `mkDiskoBtrfs` factory. Every
+host file follows the same shape — a thin `flake.modules.*` declaration
+around the plain module body, which `import-tree` picks up automatically
+(no aggregator files):
 
 ```nix
 # Dendritic module: flake.modules.nixos.<name>-disko
+{ inputs, ... }:
 {
-  flake.modules.nixos.<name>-disko =
-    { ... }:
-    {
-      disko.devices = {
-        # ...your disk layout...
-      };
-    };
+  flake.modules.nixos.<name>-disko = inputs.self.lib.mkDiskoBtrfs {
+    diskName = "nixos-<name>";
+    device = "/dev/disk/by-id/<actual-disk-id>";
+    # withWindows = true; windowsSize = "122070M"; # dual-boot only
+    # swapSize = "8G";
+  };
 }
 ```
 
@@ -92,7 +93,9 @@ Remove `fileSystems` and `swapDevices` from the generated hardware config — di
 
 The composition root. It pulls together the `desktop` system type,
 the reusable `user-ize` feature, this host's `*-disko`, `*-hardware`,
-`*-packages`, `*-services`, `*-host-settings` pieces, external modules,
+`*-services`, `*-host-settings` pieces (host-specific packages stay inlined
+in `home.nix` / `host-settings.nix`; only split out a `packages.nix` if the
+list grows large), external modules,
 and exactly the feature modules this host needs (importing one IS
 enabling it) — all referenced via `inputs.self.modules.nixos`
 (never relative `../../../`):
@@ -129,7 +132,7 @@ in
 }
 ```
 
-> **Password setup:** With `impermanence` imported, create `/persist/secrets/hashed-password` during installation (see Step 7 in the reinstall guide). Without it the account has no password (locked, SSH-key only) — set one after first boot with `passwd` if local login is needed.
+> **Password setup:** With `impermanence` imported, create `/persist/secrets/hashed-password` during installation (see Step 7 in the reinstall guide). Without impermanence the fallback `initialPassword` (`changeme` in `users/ize.nix`) applies — change it after first boot with `passwd`.
 
 ### 5. Create host-specific pieces
 
@@ -236,7 +239,9 @@ in
 
       xdg.configFile."niri/niri-host-settings.kdl".source = ./config/niri-host-settings.kdl;
       xdg.configFile."hypr/hypr-host-settings.lua".source = ./config/hypr-host-settings.lua;
+      xdg.configFile."noctalia/host-settings.toml".source = ./config/noctalia-host-settings.toml;
     };
+  };
 }
 ```
 
@@ -275,12 +280,7 @@ the firmware keeps trusting them.
 
 ### 10. First deploy + secrets setup
 
-```bash
-sudo nixos-rebuild switch --flake .#<name>
-ssh-keyscan <name> 2>/dev/null | grep ssh-ed25519
-# Add key to secrets/secrets.nix and rekey (see root README)
-sudo nixos-rebuild switch --flake .#<name>
-```
+Follow the two-pass workflow in [Adding a New Host to Secrets](../../README.md#adding-a-new-host-to-secrets): deploy once (generates host keys), `ssh-keyscan`, add the key + `just secrets-rekey` from an existing authorized host, deploy again.
 
 ## Adding a New Server Host
 
@@ -310,11 +310,12 @@ in
       nixos.server
       nixos.user-ize
       nixos.<name>-hardware
-      # nixos.<name>-packages  # optional
-      # nixos.<name>-services  # optional
+      # nixos.<name>-services  # optional (host-specific system packages stay
+      # inlined in host-settings.nix unless large enough for their own file)
     ];
 
-    networking.hostName = "<name>";
+    # Hostname comes from the `mkNixosServerHost` factory (`mkDefault`);
+    # override here with `mkForce` only if needed without the factory.
 
     system.stateVersion = "26.05";
   };
@@ -332,7 +333,7 @@ in
 
 No home-manager is included for servers. If you want headless HM tools, define a `flake.modules.homeManager.<name>` importing `linux-core` and extend the server factory with a home-manager block.
 
-> **Note:** Server hosts don't use features or impermanence. The fallback `initialPassword` applies — change it after first boot with `passwd`.
+> **Note:** Server hosts typically skip desktop/GUI features and impermanence. The fallback `initialPassword` applies — change it after first boot with `passwd`.
 
 ## Adding a New macOS Host
 
@@ -395,12 +396,12 @@ darwin-rebuild switch --flake .#<name>
 
 ## Disabling Services Per Host
 
-Services enabled in shared modules apply to all hosts automatically (everything under `modules/` is imported by `import-tree`). To disable on a specific host, use `lib.mkForce` in the host's `configuration.nix`. See [modules/README.md](../README.md#overriding-modules-per-host) for examples.
+Modules collected by the shared system types (`desktop`/`server`, `linux-core`/`linux-gui`) apply to every host using that type; features only apply when a host imports them. (Note: `import-tree` imports files, enabling happens via composition.) To disable on a specific host, use `lib.mkForce` in the host's `configuration.nix`. See [modules/README.md](../README.md#overriding-modules-per-host) for examples.
 
-## BTRFS: Disable COW for Steam
+## BTRFS: Disable COW for Steam (gaming hosts)
 
 ```bash
-sudo chattr +C ~/.local/share/steam
+sudo chattr +C ~/.local/share/Steam
 ```
 
 Must be done before any files are written to the directory. If Steam is already installed, move the folder, create a fresh one, apply the attribute, then move files back.
@@ -422,7 +423,7 @@ Boot the NixOS live ISO.
 ### Step 2: Find your disk
 
 ```bash
-ls /dev/disk/by-id/ | grep nvme
+ls /dev/disk/by-id/  # NVMe: grep nvme; SATA: grep ata; VM: grep virtio
 ```
 
 ### Step 3: Update disko config
@@ -433,8 +434,7 @@ cd nix-config
 
 # Update the disk ID in the disko config
 $EDITOR modules/hosts/<hostname>/disko.nix
-# Change: device = "/dev/disk/by-id/TODO-YOUR-DISK-ID";
-# To:     device = "/dev/disk/by-id/<actual-disk-id>";
+# Set: device = "/dev/disk/by-id/<actual-disk-id>";
 ```
 
 ### Step 4: Run disko
@@ -450,6 +450,14 @@ sudo nix --experimental-features "nix-command flakes" run \
 ```
 
 Enter a LUKS passphrase when prompted.
+
+After disko mounts the fresh disk at `/mnt`, place the edited repo where
+`nixos-install` expects it:
+
+```bash
+sudo mkdir -p /mnt/etc/nixos
+sudo cp -a ~/nix-config /mnt/etc/nixos/nix-config  # adjust source if you cloned elsewhere
+```
 
 ### Step 5: Generate hardware config
 
@@ -524,18 +532,7 @@ Remove the USB. On first boot, enter your LUKS passphrase to unlock.
 
 ### Step 9: Secure Boot first-boot (only if you did NOT restore keys)
 
-With fresh keys the ESP artifacts from install are still unsigned. On the
-booted system:
-
-```bash
-sbctl status                      # keys should exist (auto-generated)
-sudo nixos-rebuild boot --flake .#<hostname>   # re-sign ESP with new keys
-sudo sbctl verify                 # everything should be signed
-# Put firmware in Setup Mode, then:
-sudo sbctl enroll-keys --microsoft
-sudo reboot                       # enable Secure Boot in firmware, then:
-sbctl status                      # Secure Boot: enabled, Setup Mode: disabled
-```
+With fresh keys the ESP artifacts from install are still unsigned. Follow the enroll flow in [Secure Boot (first boot)](#9-secure-boot-first-boot-not-install-time): `sbctl status` → `sudo nixos-rebuild boot` (re-sign) → `sudo sbctl verify` → `sudo sbctl enroll-keys --microsoft` in Setup Mode → reboot → enable Secure Boot → `sbctl status`.
 
 If you restored keys in Step 5b, skip the re-sign — just verify:
 
@@ -545,22 +542,17 @@ sudo sbctl verify && sbctl status
 
 ### Post-install
 
-```bash
-ssh-keyscan <hostname> 2>/dev/null | grep ssh-ed25519
-# Add key to secrets/secrets.nix from another authorized host, then rekey
-sudo agenix --rekey
-sudo nixos-rebuild switch --flake .#<hostname>
-```
+Follow [Adding a New Host to Secrets](../../README.md#adding-a-new-host-to-secrets): `ssh-keyscan`, add the key from another authorized host, `just secrets-rekey`, then `sudo nixos-rebuild switch --flake .#<hostname>`.
 
 ### padrick: Windows Dual-Boot Install
 
 After NixOS is installed and working on padrick, install Windows alongside it:
 
 1. **Boot the Windows installer** from a USB
-2. **Select the "Windows data" partition** (128GB, type 0700) as the install target
+2. **Select the "Windows data" partition** (~119 GiB via `windowsSize = "122070M"`, type 0700) as the install target
 3. Windows will detect the existing ESP and may create its own recovery partition
 4. **Do NOT format the ESP** — NixOS bootloader lives there
-5. After Windows install, you should be able to boot either OS from the firmware menu (F12 on ThinkPad) or configure systemd-boot to chainload Windows
+5. After Windows install, you should be able to boot either OS from the firmware menu (F12 on ThinkPad) or configure Lanzaboote/systemd-boot to chainload Windows
 
 If Windows creates a duplicate recovery partition, that's harmless — it just uses a bit of extra space. If you want to reclaim it later, you can delete it from Windows Disk Management.
 
@@ -571,4 +563,4 @@ sudo bootctl install  # re-register NixOS as primary
 # Then add a Windows entry manually or via a NixOS module
 ```
 
-**Reverting to pure NixOS:** If Windows dual-boot causes issues, remove the `"Microsoft reserved"` and `"Windows data"` partitions from `disko.nix`, then rebuild. The LUKS/btrfs partitions will expand to fill the disk.
+**Reverting to pure NixOS:** If Windows dual-boot causes issues, remove the `"Microsoft reserved"` and `"Windows data"` partitions from `disko.nix` (`withWindows = false`), then re-run `disko --mode destroy,format,mount` + `nixos-install` (a rebuild alone won't resize existing partitions). The LUKS/btrfs partitions will then fill the disk.

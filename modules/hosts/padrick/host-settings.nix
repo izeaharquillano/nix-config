@@ -4,6 +4,8 @@
     { pkgs, ... }:
 
     {
+      # Delayed AMDGPU (no early KMS): early initrd driver spams whitespace
+      # on the console during the LUKS passphrase prompt on this ThinkPad.
       hardware.amdgpu.initrd.enable = false;
 
       boot.kernelParams = [ "acpi.ec_no_wakeup=1" ];

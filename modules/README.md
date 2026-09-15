@@ -10,15 +10,16 @@ explicit via `inputs.self.modules.*`.
 
 ## Domain Groups
 
-- **`nix/`** — Flake infra (was `dendritic/` + `tools/` + `base/nix.nix` bits).
-  `flake-parts.nix` (module registry), `lib.nix` (vars, `mkNixosHost`,
-  `mkDiskoBtrfs`), `darwin-fix.nix`, plus per-system wiring:
+- **`nix/`** — Flake infra.
+  `flake-parts.nix` (module registry), `lib.nix` (vars, `mkNixosHost` /
+  `mkNixosServerHost` / `mkDarwinHost`, `mkDiskoBtrfs`, `sharedOverlays`),
+  `darwin-fix.nix`, plus per-system wiring:
   `home-manager.nix`, `nixpkgs.nix`, `overlays.nix`, `packages.nix`,
-  `treefmt.nix`. Also `system/nix.nix` (`nixos.nix` + `darwin.nix`
-  Multi-Context Aspect: shared nix settings) and `system/direnv.nix`.
+  `treefmt.nix`.
 - **`system/`** — OS foundation. Always imported via the `desktop`/`server`
   system types in `system/types/` (Inheritance Aspect).
-  - `nix.nix`, `direnv.nix`, `locale.nix`, `system.nix` (boot, networking,
+  - `nix.nix` (`nixos.nix` + `darwin.nix` Multi-Context: shared nix settings),
+    `direnv.nix`, `locale.nix`, `system.nix` (boot, networking,
     GC, `features.system.kernelPackage` option), `packages.nix`,
     `secrets.nix` (agenix; `0440 root:wheel` + `!include` fallback),
     `security.nix` (neovim, firewall, polkit/rtkit)
@@ -32,10 +33,11 @@ explicit via `inputs.self.modules.*`.
     `user-ize` + `shell` + `cli` + `dev` + `terminal` + `nvim`),
     `linux-gui.nix` (full GUI HM: `linux-core` + `linux-desktop` +
     `linux-utils` + `apps` + `web` + `hyprland` + `niri` + `noctalia` +
-    `notes`). Hosts import ONE system type + features.
+    `notes`). Hosts import one NixOS type (`desktop`/`server`) + one HM
+    type (`linux-gui`/`linux-core`) + the features they need.
 - **`services/`** — System daemons (`services.*`, `virtualisation.*`,
   firewall). `ssh.nix`, `greetd.nix`, `desktop.nix` (PipeWire, fonts,
-  bluetooth), `containers.nix` (Podman/Distrobox), `zerotier.nix`
+  bluetooth), `containers.nix` (Docker rootless, Podman/Distrobox), `zerotier.nix`
   (needs `features.p2p.zerotier.networkId`), and `p2p/` as a **feature
   closure**: `nixos.p2p` (Syncthing/NetBird/LocalSend) + `homeManager.p2p`
   (tray) in one dir.
@@ -45,7 +47,7 @@ explicit via `inputs.self.modules.*`.
   `desktop/niri/` (`nixos.niri` + `homeManager.niri`) in one dir each.
   - `desktop/` — `hyprland/`, `niri/`, `noctalia.nix`, `apps.nix`,
     `web.nix` (Zen), `notes.nix` (Obsidian), `linux-desktop.nix` (XDG/Nemo/GTK)
-  - `shell/` — `shell.nix`, `cli.nix`, `terminal.nix` (kitty), `utils.nix`
+  - `shell/` — `shell.nix`, `cli.nix`, `terminal.nix` (kitty), `utils.nix` (`linux-utils` aspect)
   - `dev/` — `dev.nix` (git/lazygit/npm), `nvim.nix`, `vscode.nix`, `zed.nix`
   - `media/` — `recording.nix` (OBS)
   - `gaming.nix`, `virtualisation/` (`vm-qemu`, `vm-bottles`, `vm-dosbox`),
@@ -57,7 +59,8 @@ explicit via `inputs.self.modules.*`.
 - **`hosts/`** — Per-host composition roots (see `hosts/README.md`):
   `configuration.nix` composes `nixos.desktop`/`nixos.server` +
   `nixos.user-ize` + features, `home.nix` composes `linux-gui`/`linux-core`
-  + features, `flake-parts.nix` instantiates via `mkNixosHost`.
+  + features, `flake-parts.nix` instantiates via `mkNixosHost` (or
+  `mkNixosServerHost` / `mkDarwinHost`).
 
 To add a module, create a `.nix` file declaring one
 `flake.modules.<class>.<name>` piece — `import-tree` picks it up
@@ -65,14 +68,11 @@ automatically. If it should be composed (system types), also add it to the
 relevant collector (`desktop`/`server`, `linux-core`/`linux-gui`).
 Features need no collector: hosts import them directly. If a feature spans
 NixOS + Home Manager, put BOTH aspects in one domain dir
-(e.g. `services/p2p/default.nix`, `programs/desktop/niri/default.nix`) —
-never split `features/` vs `home/.../features/` again.
+(e.g. `services/p2p/default.nix`, `programs/desktop/niri/default.nix`).
 
 Aspect naming: the feature name is shared across classes
 (`nixos.niri` + `homeManager.niri` = the `niri` feature;
-`nixos.p2p` + `homeManager.p2p` = the `p2p` feature). No
-`home-features-*` / `home-gui-*` / `home-core-*` / `base-*` /
-`desktop-*` prefixes.
+`nixos.p2p` + `homeManager.p2p` = the `p2p` feature).
 
 ## Adding a Desktop Host
 
@@ -88,7 +88,7 @@ imports = [
 
 ## Adding a Server Host
 
-Compose `nixos.server` instead, and instantiate with `mkNixosServerHost` in the host's `flake-parts.nix` (no home-manager):
+Compose `nixos.server` instead, and instantiate with `mkNixosServerHost` in the host's `flake-parts.nix` (no home-manager). Hostname comes from the factory (`mkDefault`), same as desktop — override with `mkForce` only if needed:
 
 ```nix
 imports = [
@@ -134,7 +134,7 @@ The `nixosModules.default` output (overlays only — minimal, not the opinionate
 }
 ```
 
-Note: external use requires passing this repo's `specialArgs` (`inputs` with `self` + `nixpkgs`, `flake.lib.vars`, `hostname`, `username`, `flakeRoot`) — see the `mkNixosHost` factory in `modules/nix/lib.nix`. `username`/`hostname` are plain strings. Disko is included via the factory's `baseSystemModules`; external use without the factory must also import `inputs.disko.nixosModules.default` if needed.
+Note: external use requires passing this repo's `specialArgs` (full `inputs` set, `flake.lib.vars`, `hostname`, `username`, `flakeRoot`) — see the `mkNixosHost` factory in `modules/nix/lib.nix`. The example above is minimal and omits most inputs (disko, home-manager, agenix, etc.); prefer the factory or pass through all inputs. `username`/`hostname` are plain strings. Disko is included via the factory's `baseSystemModules`; external use without the factory must also import `inputs.disko.nixosModules.default` if needed.
 
 ## Features
 
@@ -152,7 +152,7 @@ imports = [
   nixos.zswap # Zswap with zstd compression
   nixos.p2p # Syncthing, NetBird VPN, LocalSend (peers/folders via `features.p2p.syncthing.*`; NetBird key auto-persisted when /persist exists)
   nixos.zerotier # ZeroTier VPN (needs networkId, see below)
-  nixos.containers # Podman, Distrobox (Docker disabled)
+  nixos.containers # Docker rootless, Podman, Distrobox
   nixos.fhs # FHS env + nix-alien for unpatched binaries
 ];
 ```

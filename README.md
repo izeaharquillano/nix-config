@@ -73,8 +73,9 @@ nix flake update nixpkgs
 # Rebuild after updating (or: just switch)
 sudo nixos-rebuild switch --flake .#<hostname>
 
-# Roll back to a previous generation (or: just list-gens)
-sudo nix-env --list-generations --profile /nix/var/nix/profiles/system
+# Roll back to a previous generation (list with: just list-gens)
+sudo nixos-rebuild switch --rollback
+# or: sudo nixos-rebuild switch --switch-generation <num> --flake .#<hostname>
 
 # Clean up old generations (or: just gc)
 sudo nix-collect-garbage -d
@@ -88,25 +89,25 @@ See [modules/hosts/README.md](modules/hosts/README.md) for the full walkthrough 
 
 ## Features
 
-Optional functionality lives in `modules/services/` (daemons) and `modules/programs/` (apps) as plain composable modules — **importing one is enabling it**, no flags. Features that span NixOS + Home Manager live together in one domain dir (feature closure: `services/p2p/`, `programs/desktop/niri/`, `programs/desktop/hyprland/`). See [modules/README.md](modules/README.md) for details and templates. Each host's `configuration.nix` / `home.nix` lists exactly what it uses:
+Optional functionality lives in `modules/services/` (daemons) and `modules/programs/` (apps) as plain composable modules — **importing one is enabling it**, no flags. Features that span NixOS + Home Manager live together in one domain dir (feature closure: `services/p2p/`, `programs/desktop/niri/`, `programs/desktop/hyprland/`). The canonical annotated list + templates live in [modules/README.md](modules/README.md#features). Each host's `configuration.nix` / `home.nix` lists exactly what it uses (excerpt from `jobert`):
 
 ```nix
-# modules/hosts/jobert/configuration.nix (excerpt)
+# modules/hosts/jobert/configuration.nix (excerpt; see modules/README for what each does)
 imports = [
   nixos.desktop
   nixos.user-ize
-  nixos.btrfs # BTRFS compression/tuning
-  nixos.impermanence # Ephemeral root, persistent /persist
-  nixos.secureboot # UEFI Secure Boot via Lanzaboote
-  nixos.vm-qemu # QEMU/KVM, virt-manager, SPICE
-  nixos.vm-bottles # Wine runner
-  nixos.vm-dosbox # DOSBox emulator
-  nixos.gaming # Steam, Gamescope, Gamemode, MangoHud
-  nixos.zswap # Zswap with zstd compression
-  nixos.p2p # Syncthing, NetBird VPN, LocalSend
-  nixos.zerotier # ZeroTier VPN (needs networkId, see below)
-  nixos.containers # Docker (rootless), Podman, Distrobox
-  nixos.fhs # FHS env + nix-alien for unpatched binaries
+  nixos.btrfs
+  nixos.impermanence
+  nixos.secureboot
+  nixos.vm-qemu
+  nixos.vm-bottles
+  nixos.vm-dosbox
+  nixos.gaming
+  nixos.zswap
+  nixos.p2p
+  nixos.zerotier
+  nixos.containers
+  nixos.fhs
   # ...
 ];
 ```
@@ -197,6 +198,7 @@ Update the key binding in `secrets/secrets.nix` with the new host key, then reke
 |---|---|
 | `nixpkgs` | NixOS packages (unstable) |
 | `home-manager` | User environment management |
+| `nix-darwin` | macOS system management (for future `darwin/` hosts) |
 | `disko` | Declarative disk partitioning (LUKS + btrfs) |
 | `lanzaboote` | Secure Boot (UEFI) |
 | `nixos-hardware` | NixOS hardware modules |
@@ -205,6 +207,7 @@ Update the key binding in `secrets/secrets.nix` with the new host key, then reke
 | `niri` | Niri Wayland compositor |
 | `noctalia` | Wayland shell/bar |
 | `zen-browser` | Zen Browser (Firefox-based) |
+| `nix-alien` | Run unpatched binaries (used by `nixos.fhs` + `sharedOverlays`) |
 | `flake-parts` | Flake module system composing `modules/` |
 | `import-tree` | Recursive auto-import of `modules/` (dendritic file layout) |
 | `treefmt-nix` | Nix code formatting (nixfmt, shfmt) |
@@ -215,24 +218,25 @@ Update the key binding in `secrets/secrets.nix` with the new host key, then reke
 | Output | Purpose |
 |---|---|
 | `nixosConfigurations.<host>` | NixOS system configurations (instantiated in `modules/hosts/*/flake-parts.nix`) |
-| `nixosModules.default` | Reusable desktop module for external flakes |
-| `overlays.default` | Nixpkgs overlay (auto-loaded) |
+| `darwinConfigurations.<host>` | nix-darwin configurations (none yet; see `modules/hosts/README.md` macOS section) |
+| `nixosModules.default` | Overlays-only module for external flakes (not the opinionated `desktop` type) |
+| `overlays.default` | Nixpkgs overlay (auto-loaded via `sharedOverlays` + `nix-alien`) |
 | `packages.<system>.gruvbox-material-yazi` | Custom package |
-| `checks.<system>` | Formatting + per-host evaluation checks |
+| `checks.<system>` | Formatting + pre-commit (nixfmt, statix, deadnix); per-host eval is CI dry-builds |
 | `formatter.<system>` | nixfmt + shfmt wrapper |
 | `apps.<system>.agenix` | agenix CLI as a flake app |
-| `devShells.<system>.default` | Dev shell (nixfmt, deadnix, statix, agenix) |
-| `lib` | Dendritic helpers: `vars`, `sharedOverlays`, host factories |
+| `devShells.<system>.default` | Dev shell (`just`, treefmt, `nixfmt`, `deadnix`, `statix`, `agenix`) |
+| `lib` | Dendritic helpers: `vars`, `sharedOverlays`, `mkDiskoBtrfs`, host factories |
 | `modules` | Published dendritic modules (`nixos.*`, `darwin.*`, `homeManager.*`) |
 
 ## Formatting & CI
 
 ```bash
 nix fmt                # Format all .nix files (or: just fmt)
-nix fmt -- --check     # Check without modifying (or: just fmt-check)
+nix fmt -- --fail-on-change  # Check without modifying (or: just fmt-check)
 ```
 
-Uses `treefmt-nix` (nixfmt for Nix, shfmt for shell scripts) and `pre-commit-hooks` for git-level enforcement. CI runs on push/PR to `main`: flake checks + dry builds for all hosts.
+Uses `treefmt-nix` (nixfmt for Nix, shfmt for shell scripts) and `pre-commit-hooks` (nixfmt, statix, deadnix) for git-level enforcement. CI runs on push/PR to `main`: flake checks + lint (statix, deadnix, treefmt) + dry builds for all hosts.
 
 ## direnv
 
@@ -244,8 +248,8 @@ The dev shell includes `just`, `nixfmt`, `deadnix`, `statix`, and `agenix`. Run 
 
 `flake.lib` (defined in `modules/nix/lib.nix`, single source of truth) provides:
 
-- **`vars`** — User identity (`username`, `userfullname`, `useremail`). Injected into every module via `specialArgs`/`extraSpecialArgs`.
-- **`mkNixosHost` / `mkNixosServerHost` / `mkDarwinHost`** — Factories instantiating hosts from dendritic modules with uniform `specialArgs` (`inputs`, `vars`, `hostname`, `username`, `flakeRoot`). They set `networking.hostName` (`mkDefault`), include disko, and bind the per-host Home Manager user; HM settings/agenix come from the composed modules themselves.
+- **`vars`** — User identity (`username`, `userfullname`, `useremail`) + shared `syncthingServer*` / `obsidianVaultRel`. Injected into every module via `specialArgs`/`extraSpecialArgs`.
+- **`mkNixosHost` / `mkNixosServerHost` / `mkDarwinHost`** — Factories instantiating hosts from dendritic modules with uniform `specialArgs` (`inputs`, `vars`, `hostname`, `username`, `flakeRoot`). They set `networking.hostName` (`mkDefault`) and include disko/nixpkgs overlays. `mkNixosHost` (+ `mkDarwinHost`) also binds the per-host Home Manager user; `mkNixosServerHost` is headless (no HM). HM settings/agenix come from the composed modules themselves.
 
 ## Security
 
@@ -260,14 +264,14 @@ The dev shell includes `just`, `nixfmt`, `deadnix`, `statix`, and `agenix`. Run 
 
 ## Nix Settings
 
-Configured in `modules/system/nix.nix` and `modules/system/system.nix`:
+Configured in `modules/system/nix.nix`, `modules/system/system.nix`, and `modules/system/secrets.nix`:
 
 - `features.system.kernelPackage`: Configurable kernel (default: `linuxPackages_latest`)
 - Primary user comes from the `username` specialArg (`flake.lib.vars.username`, default `"ize"`).
 - Experimental features: `nix-command`, `flakes`
 - `warn-dirty = true` (surface uncommitted changes)
 - Automatic weekly `nix.optimise` and garbage collection (14-day retention)
-- **GitHub access token:** Optional, for private flakes / avoiding rate limits. Add via `just secrets-edit nix-access-tokens.age` with content `access-tokens = github.com=ghp_<token>`. Auto-included via `nix.extraOptions` (`!include`) in `modules/system/secrets.nix` as `0400 owner=<user>` (user-readable, daemon-readable as root) with an empty fallback so fresh hosts without decrypted secrets don't deadlock nix.
+- **GitHub access token:** Optional, for private flakes / avoiding rate limits. Add via `just secrets-edit nix-access-tokens.age` with content `access-tokens = github.com=ghp_<token>`. Auto-included via `nix.extraOptions` (`!include`) in `modules/system/secrets.nix` as `0440 root:wheel` (user + daemon readable) with an empty fallback so fresh hosts without decrypted secrets don't deadlock nix.
 
 ## Theme
 

@@ -1,11 +1,18 @@
-# Podman + Distrobox (Docker off).
+# Docker rootless + Podman + Distrobox.
 {
   flake.modules.nixos.containers =
     { pkgs, ... }:
 
     {
       virtualisation = {
-        docker.enable = false;
+        docker = {
+          enable = false;
+          autoPrune.enable = true;
+          rootless = {
+            enable = true;
+            setSocketVariable = true;
+          };
+        };
         # Used by podman for unqualified pulls (docker-compat).
         containers.registries.settings = {
           unqualified-search-registries = [

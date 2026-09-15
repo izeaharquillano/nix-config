@@ -1,10 +1,20 @@
-# Config
+# config/ Dotfiles
 
 Raw application configuration files (dotfiles) consumed by Home Manager via `xdg.configFile` store copies. These are **not** Nix modules — for Nix-native configuration, use `programs.<name>` in Home Manager modules instead.
 
+| Path | Consumed by |
+|---|---|
+| `kitty/kitty.conf` | `programs/shell/terminal.nix` (`hm.terminal`) |
+| `hypr/` (lua) | `programs/desktop/hyprland/` (`hm.hyprland`, recursive) |
+| `niri/config.kdl` | `programs/desktop/niri/` (`hm.niri`) |
+| `noctalia/config.toml` | `programs/desktop/noctalia.nix` (`hm.noctalia`; wallpapers from `_img/wallpapers`) |
+| `nvim/` | `programs/dev/nvim.nix` (`hm.nvim`, recursive) |
+| `starship.toml` | `programs/shell/shell.nix` (`hm.shell`) |
+| `tmux/tmux.conf`, `vscode/` | Referenced by their respective HM modules (see `programs/`) |
+
 ## How Dotfiles Are Consumed
 
-In `modules/programs/shell/*.nix` and `modules/programs/desktop/*.nix`, config files are referenced via `xdg.configFile` through the `flakeRoot` specialArg (so moves never break the paths):
+In `modules/programs/*/*.nix` (e.g. `shell/terminal.nix`, `shell/shell.nix`, `desktop/hyprland/`, `desktop/niri/`, `dev/nvim.nix`), config files are referenced via `xdg.configFile` through the `flakeRoot` specialArg (so moves never break the paths):
 
 ```nix
 # Single file
@@ -23,10 +33,10 @@ Host-specific settings live in `modules/hosts/<name>/config/` and are store-copi
 
 - **Niri**: `niri-host-settings.kdl` — included by `config.kdl` via `include "./niri-host-settings.kdl"`
 - **Hyprland**: `hypr-host-settings.lua` — loaded via `require("hypr-host-settings")`
-- **Noctalia**: `noctalia-host-settings.toml` — wired to `host-settings.toml` by the host's `home.nix`
+- **Noctalia**: `noctalia-host-settings.toml` — wired to `noctalia/host-settings.toml` by the host's `home.nix`
 
 ## Adding a New Dotfile
 
 1. Place config file(s) in `config/<app>/`
 2. Create a dendritic piece in `modules/programs/<group>/<app>.nix` (or extend the feature closure in `modules/services/<feature>/`) with the appropriate `xdg.configFile` reference (via `flakeRoot`)
-3. It is picked up by `import-tree` automatically; add it to the `linux-core`/`linux-gui` collector so hosts compose it
+3. It is picked up by `import-tree` automatically. If it belongs in the base system, add it to the `linux-core`/`linux-gui` collector; if it is an optional feature (e.g. `vscode`, `recording`, `p2p`), hosts import it directly in `home.nix` instead.
