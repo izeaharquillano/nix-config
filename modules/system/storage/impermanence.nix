@@ -21,15 +21,6 @@
       config =
         let
           persistPath = "/persist";
-          cleanDirs = [
-            ".cache"
-            ".local/state"
-            ".local/share/Trash"
-            ".thumbnails"
-          ];
-          cleanExcludeFiles = [
-            ".local/state/noctalia/.setup-complete"
-          ];
         in
         {
           # Auth comes from /persist, not a static password.
@@ -83,35 +74,6 @@
               ${pkgs.systemd}/bin/systemd-machine-id-setup --print > ${persistPath}/etc/machine-id
             fi
           '';
-
-          systemd.services.clean-home = {
-            description = "Wipe ephemeral home directories on boot";
-            wantedBy = [ "multi-user.target" ];
-            after = [ "local-fs.target" ];
-            before = [ "home-manager-${username}.service" ];
-            serviceConfig = {
-              Type = "oneshot";
-              RemainAfterExit = true;
-            };
-            script = ''
-              set -euo pipefail
-              for d in ${
-                lib.escapeShellArgs (map (d: "${config.users.users.${username}.home}/${d}") cleanDirs)
-              }; do
-                  if [ ! -d "$d" ]; then
-                    continue
-                  fi
-                  echo "cleaning $d..."
-                  ${lib.getExe' pkgs.findutils "find"} "$d" -mindepth 1 -maxdepth 1 -exec ${lib.getExe' pkgs.coreutils "rm"} -rf -- {} +
-                done
-                for f in ${
-                  lib.escapeShellArgs (map (f: "${config.users.users.${username}.home}/${f}") cleanExcludeFiles)
-                }; do
-                  ${lib.getExe' pkgs.coreutils "mkdir"} -p "$(${lib.getExe' pkgs.coreutils "dirname"} "$f")"
-                  ${lib.getExe' pkgs.coreutils "touch"} "$f"
-                done
-            '';
-          };
         };
     };
 }
