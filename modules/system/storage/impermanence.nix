@@ -50,7 +50,7 @@
           requires = [ "initrd-root-device.target" ];
           after = [
             "initrd-root-device.target"
-            "systemd-cryptsetup@cryptroot.service"
+            "systemd-cryptsetup@${inputs.self.lib.diskoCryptName}.service"
           ];
           before = [ "sysroot.mount" ];
 

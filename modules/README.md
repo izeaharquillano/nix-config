@@ -30,10 +30,10 @@ explicit via `inputs.self.modules.*`.
   - `boot/` — `secureboot.nix` (Lanzaboote, requires impermanence),
     `zswap.nix`
   - `types/` — `desktop.nix` (`nix` + `direnv` + `system` + `locale` +
-    `ssh` + `secrets` + `security` + `packages` + `greetd` +
+    `ssh` + `secrets` + `security` + `packages` +
     `desktop-services` + `home-manager`; compositors `niri`/`hyprland`
-    are NOT collected — hosts import `nixos.niri`/`nixos.hyprland`
-    explicitly), `server.nix`
+    and `greetd` are NOT collected — hosts import `nixos.greetd` +
+    `nixos.niri`/`nixos.hyprland` explicitly), `server.nix`
     (core only, no desktop, no HM), `linux-core.nix` (headless HM:
     `user-ize` + `shell` + `cli` + `dev` + `terminal` + `nvim`),
     `linux-gui.nix` (full GUI HM: `linux-core` + `linux-desktop` +
@@ -44,7 +44,7 @@ explicit via `inputs.self.modules.*`.
     `desktop-full.nix` collects the uncontroversial desktop core
     (`desktop` + `user-ize` + `btrfs` + `impermanence` + `secureboot` +
     `zswap` + `p2p` + `fhs`, plus the shared Syncthing peer) so hosts only
-    list their deltas (compositors, `docker`/`podman`, `vm-qemu`, `gaming`,
+    list their deltas (greetd, compositors, `docker`/`podman`, `vm-qemu`, `gaming`,
     `zerotier`); plain `desktop` remains the minimal base.
 - **`services/`** — System daemons (`services.*`, `virtualisation.*`,
   firewall). `ssh.nix` (key-only, `AllowUsers`), `greetd.nix`, `desktop.nix` (PipeWire, fonts,
@@ -100,28 +100,25 @@ let
   vars = inputs.self.lib.vars;
 in
 {
-  flake.modules.nixos.<name> =
-    { lib, ... }:
-    {
-      imports = [
-        inputs.disko.nixosModules.default
-        nixos.desktop-full # core: desktop + user-ize + btrfs + impermanence + secureboot + zswap + p2p + fhs
-        nixos.niri # Compositor (explicit per host)
-        nixos.hyprland # Compositor (explicit per host)
-        # ...other feature deltas + host-local `./_*.nix` pieces + external modules...
-      ];
+  # Overlays/hostname/stateVersion come from `mkNixosHost` (`modules/nix/lib.nix`).
+  flake.modules.nixos.<name> = {
+    imports = [
+      inputs.disko.nixosModules.default
+      nixos.desktop-full # core: desktop + user-ize + btrfs + impermanence + secureboot + zswap + p2p + fhs
+      nixos.greetd # login manager (explicit per host, needs a compositor)
+      nixos.niri # Compositor (explicit per host)
+      nixos.hyprland # Compositor (explicit per host)
+      # ...other feature deltas + host-local `./_*.nix` pieces + external modules...
+    ];
 
-      nixpkgs.overlays = inputs.self.lib.sharedOverlays;
-      networking.hostName = lib.mkDefault "<name>";
-
-      home-manager.users.${vars.username} = hm.<name>;
-    };
+    home-manager.users.${vars.username} = hm.<name>;
+  };
 }
 ```
 
 ## Adding a Server Host
 
-Compose `nixos.server` instead, and instantiate with `mkNixosServerHost` in the host's `flake-parts.nix` (no home-manager). Set hostname/overlays explicitly, same as desktop:
+Compose `nixos.server` instead, and instantiate with `mkNixosServerHost` in the host's `flake-parts.nix` (no home-manager). Overlays/hostname/stateVersion come from the factory, same as desktop:
 
 ```nix
 { inputs, ... }:
@@ -129,23 +126,16 @@ let
   nixos = inputs.self.modules.nixos;
 in
 {
-  flake.modules.nixos.<name> =
-    { lib, ... }:
-    {
-      imports = [
-        inputs.disko.nixosModules.default
-        nixos.server
-        nixos.user-ize
-        ./_hardware-configuration.nix
-        # ./_services.nix  # optional (host-specific system packages stay
-        # inlined in _host-settings.nix unless large enough for their own file)
-      ];
-
-      nixpkgs.overlays = inputs.self.lib.sharedOverlays;
-      networking.hostName = lib.mkDefault "<name>";
-
-      system.stateVersion = inputs.self.lib.vars.stateVersion;
-    };
+  flake.modules.nixos.<name> = {
+    imports = [
+      inputs.disko.nixosModules.default
+      nixos.server
+      nixos.user-ize
+      ./_hardware-configuration.nix
+      # ./_services.nix  # optional (host-specific system packages stay
+      # inlined in _host-settings.nix unless large enough for their own file)
+    ];
+  };
 }
 ```
 

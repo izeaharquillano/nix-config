@@ -64,22 +64,26 @@
       config =
         let
           homeDir = config.users.users.${username}.home;
-          # `or {}`: hosts without impermanence lack the option entirely.
-          hasPersist = (config.environment.persistence or { }) ? "/persist";
         in
         {
-          # Persisted copy bypasses agenix tmpfs (survives reboot; LUKS +
-          # `0400` mitigate). Exclude `/persist/secrets` from backups.
+          # Default tmpfs path (`/run/agenix/...`). Safe on impermanence now
+          # that identity points at `/persist/etc/ssh` directly: activation
+          # decrypts before services start, and `netbird` has
+          # `Restart=always` + login loops on `NeedsLogin`.
           age.secrets.netbird-setup-key = {
             file = flakeRoot + /secrets/netbird-setup-key.age;
             owner = "root";
             group = "root";
             mode = "0400";
-          }
-          // lib.optionalAttrs hasPersist {
-            path = "/persist/secrets/netbird-setup-key";
-            symlink = false;
           };
+
+          # One-time cleanup of the pre-migration plaintext copy; only fires
+          # when the new tmpfs secret exists, so a failed decrypt keeps it.
+          system.activationScripts.netbirdSetupKeyCleanup = lib.stringAfter [ "agenixInstall" ] ''
+            if [ -s "${config.age.secrets.netbird-setup-key.path}" ]; then
+              rm -f /persist/secrets/netbird-setup-key
+            fi
+          '';
 
           # Ordering vs HM lives in `nix/home-manager.nix`.
           services.netbird = {

@@ -13,6 +13,8 @@ stdenvNoCC.mkDerivation {
     rev = "e0fd2d800aeb6adb680496b1a5ef125b901b7413";
     hash = "sha256-mfIdFIe++jRDbTQBcLlpAq91JzmgL2SvqPxkYuCnKdQ=";
   };
+  dontConfigure = true;
+  dontBuild = true;
   # Keep the upstream tree layout (`flavor.toml` at root) so
   # `programs.yazi.flavors` consumes it unchanged.
   installPhase = ''

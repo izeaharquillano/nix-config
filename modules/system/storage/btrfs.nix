@@ -19,7 +19,7 @@
             "/nix"
           ]
           (_path: {
-            options = btrfsOpts;
+            options = lib.mkDefault btrfsOpts;
           });
 
       services.btrfs.autoScrub = {

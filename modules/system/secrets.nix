@@ -15,7 +15,15 @@
       ];
 
       age = {
-        identityPaths = [ "/etc/ssh/ssh_host_ed25519_key" ];
+        # Persistent path first: on impermanence hosts `/etc/ssh` is a
+        # bind-mount that may not exist when `agenixInstall` runs on boot
+        # (ryantm/agenix#45 — switch succeeds, boot decrypt fails).
+        # `/persist` has `neededForBoot`, so it is always ready.
+        # Second entry covers non-impermanence hosts / fresh installs.
+        identityPaths = [
+          "/persist/etc/ssh/ssh_host_ed25519_key"
+          "/etc/ssh/ssh_host_ed25519_key"
+        ];
 
         # 0440 root:wheel so user + daemon both read `!include` (https://wiki.nixos.org/wiki/Agenix).
         secrets.nix-access-tokens = {

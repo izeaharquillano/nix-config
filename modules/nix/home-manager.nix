@@ -1,36 +1,21 @@
 # Shared HM wiring (NixOS + darwin); hosts bind the user in `configuration.nix`.
 { inputs, ... }:
 let
-  home-manager-config =
-    {
-      inputs,
-      username,
-      vars,
-      flakeRoot,
-      ...
-    }:
-    {
-      home-manager = {
-        useGlobalPkgs = true;
-        useUserPackages = true;
-        backupFileExtension = "hm-bak";
-        # Forward `flake.lib.specialArgs` — keep in sync with it.
-        extraSpecialArgs = {
-          inherit
-            inputs
-            username
-            vars
-            flakeRoot
-            ;
-        };
-      };
+  home-manager-config = _: {
+    home-manager = {
+      useGlobalPkgs = true;
+      useUserPackages = true;
+      backupFileExtension = "hm-bak";
+      # Single source: `flake.lib.specialArgs` (`modules/nix/lib.nix`).
+      extraSpecialArgs = inputs.self.lib.specialArgs;
     };
+  };
 
-  # HM waits for network (Zen mods need it).
+  # HM activation waits for network (Zen mods need it) without pulling
+  # `NetworkManager-wait-online` into boot (`enable = true` there blocks boot).
   nixos-network-online =
     { username, ... }:
     {
-      systemd.services.NetworkManager-wait-online.enable = true;
       systemd.services."home-manager-${username}" = {
         after = [ "network-online.target" ];
         wants = [ "network-online.target" ];

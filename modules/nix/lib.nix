@@ -49,9 +49,15 @@ in
         hostname: system:
         inputs.nixpkgs.lib.nixosSystem {
           inherit system specialArgs;
-          # Loads only the host root; disko/overlays/hostname/HM binding are per-host.
+          # Host root + shared boilerplate (overlays/hostname/stateVersion);
+          # disko/HM binding stay per-host in `configuration.nix`.
           modules = [
             self.modules.nixos.${hostname}
+            {
+              nixpkgs.overlays = sharedOverlays;
+              networking.hostName = lib.mkDefault hostname;
+              system.stateVersion = vars.stateVersion;
+            }
           ];
         };
     in
@@ -67,12 +73,19 @@ in
       # Alias: "headless" just means the host binds no HM user.
       mkNixosServerHost = mkNixosHost;
 
-      # One more compositor file = edit here, not N `home.nix` files.
-      mkHostConfigFiles = dir: {
-        "niri/niri-host-settings.kdl".source = dir + /niri-host-settings.kdl;
-        "hypr/hypr-host-settings.lua".source = dir + /hypr-host-settings.lua;
-        "noctalia/host-settings.toml".source = dir + /noctalia-host-settings.toml;
-      };
+      # Missing files are skipped so a host with only one compositor
+      # doesn't need all three stubs.
+      mkHostConfigFiles =
+        dir:
+        lib.optionalAttrs (builtins.pathExists (dir + /niri-host-settings.kdl)) {
+          "niri/niri-host-settings.kdl".source = dir + /niri-host-settings.kdl;
+        }
+        // lib.optionalAttrs (builtins.pathExists (dir + /hypr-host-settings.lua)) {
+          "hypr/hypr-host-settings.lua".source = dir + /hypr-host-settings.lua;
+        }
+        // lib.optionalAttrs (builtins.pathExists (dir + /noctalia-host-settings.toml)) {
+          "noctalia/host-settings.toml".source = dir + /noctalia-host-settings.toml;
+        };
 
       # Wipes the disk (`diskName` is immutable once formatted).
       # Deploy: `disko --mode destroy,format,mount --flake .#<host>`

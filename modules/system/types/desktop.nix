@@ -1,4 +1,4 @@
-# Desktop core + HM wiring. Compositors stay per-host, not collected here.
+# Desktop core + HM wiring. Compositors and greetd stay per-host, not collected here.
 { inputs, ... }:
 let
   nixos = inputs.self.modules.nixos;
@@ -14,7 +14,6 @@ in
       nixos.secrets
       nixos.security
       nixos.packages
-      nixos.greetd
       nixos.desktop-services
       nixos.home-manager
     ];
