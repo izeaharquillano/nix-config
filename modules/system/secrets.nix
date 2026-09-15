@@ -41,6 +41,8 @@
       # Empty placeholder if undecryptable so `!include` never breaks nix.
       # Skipped when `agenixInstall` itself aborts (fresh host) — follow the
       # two-pass rekey workflow in the README for that case.
+      # (`agenixInstall` is agenix's internal activation script name;
+      # re-check on `nix flake update agenix`.)
       system.activationScripts.nixAccessTokensFallback = lib.stringAfter [ "agenixInstall" ] ''
         tokenPath="${config.age.secrets.nix-access-tokens.path}"
         if [ ! -s "$tokenPath" ]; then

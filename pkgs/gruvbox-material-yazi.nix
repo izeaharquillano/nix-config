@@ -6,7 +6,7 @@
 
 stdenvNoCC.mkDerivation {
   pname = "gruvbox-material-yazi";
-  version = "unstable-e0fd2d8";
+  version = "unstable-2026-05-06-e0fd2d8";
   src = fetchFromGitHub {
     owner = "matt-dong-123";
     repo = "gruvbox-material.yazi";

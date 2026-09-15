@@ -23,7 +23,7 @@
           "_img/.*"
         ];
         hooks = {
-          nixfmt.enable = true;
+          # nixfmt lives in treefmt (`nix fmt` + `checks.formatting`) — not duplicated here.
           statix.enable = true;
           deadnix.enable = true;
         };
@@ -52,7 +52,6 @@
             inputs.agenix.packages.${system}.default
             pkgs.just
             pkgs.jq # `just ci-dry-build` parses `nix eval --json`
-            pkgs.nixfmt
             pkgs.deadnix
             pkgs.statix
           ];

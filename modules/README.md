@@ -174,7 +174,7 @@ The `nixosModules.default` output (overlays only — minimal, not the opinionate
 }
 ```
 
-Note: external use requires passing this repo's `specialArgs` (`inputs`, `username`, `vars`, `flakeRoot` — see `flake.lib.specialArgs` and the `mkNixosHost` factory in `modules/nix/lib.nix`). The example above is minimal and omits most inputs (disko, home-manager, agenix, etc.); prefer the factory or pass through all inputs. Disko/overlays/hostname are set explicitly in host `configuration.nix` files; external use must import `inputs.disko.nixosModules.default` if needed.
+Note: external use requires passing this repo's `specialArgs` (`inputs`, `username`, `vars`, `flakeRoot` — see `flake.lib.specialArgs` and the `mkNixosHost` factory in `modules/nix/lib.nix`). The example above is minimal and omits most inputs (disko, home-manager, agenix, etc.); prefer the factory or pass through all inputs. Disko and the HM user binding stay explicit per host (`mkNixosHost` injects overlays/hostname/stateVersion); external use must import `inputs.disko.nixosModules.default` if needed.
 
 ## Features
 
@@ -184,6 +184,7 @@ Optional functionality lives in `services/` + `programs/` as plain composable mo
 imports = [
   inputs.disko.nixosModules.default # explicit per host (not hidden in the factory)
   nixos.desktop-full # desktop + user-ize + btrfs + impermanence + secureboot + zswap + p2p + fhs
+  nixos.greetd # login manager (explicit per host, needs a compositor)
   nixos.niri # Niri compositor (explicit per host)
   nixos.hyprland # Hyprland compositor (explicit per host)
   nixos.vm-qemu # QEMU/KVM, virt-manager, SPICE (+ `homeManager.vm-qemu`: viewer clients)

@@ -101,6 +101,7 @@ host-local pieces via relative `./_*.nix` (never `../../../`):
 
 ```nix
 # Dendritic composition root: flake.modules.nixos.<name>
+# (Overlays/hostname/stateVersion come from `mkNixosHost` — don't repeat them here.)
 { inputs, ... }:
 let
   nixos = inputs.self.modules.nixos;
@@ -108,34 +109,26 @@ let
   vars = inputs.self.lib.vars;
 in
 {
-  flake.modules.nixos.<name> =
-    { lib, ... }:
-    {
-      imports = [
-        inputs.disko.nixosModules.default
-        nixos.desktop-full
-        nixos.niri
-        nixos.hyprland
-        # nixos.zerotier  # + features.p2p.zerotier.networkId below
-        # nixos.gaming    # + hm.gaming in home.nix
-        # nixos.docker
-        # nixos.podman    # + hm.podman in home.nix
-        ./_disko.nix
-        ./_hardware-configuration.nix
-        ./_services.nix
-        ./_host-settings.nix
-        # inputs.nixos-hardware.nixosModules.<your-profile>
-      ];
+  flake.modules.nixos.<name> = {
+    imports = [
+      inputs.disko.nixosModules.default
+      nixos.desktop-full
+      nixos.greetd
+      nixos.niri
+      nixos.hyprland
+      # nixos.zerotier  # + features.p2p.zerotier.networkId below
+      # nixos.gaming    # + hm.gaming in home.nix
+      # nixos.docker
+      # nixos.podman    # + hm.podman in home.nix
+      ./_disko.nix
+      ./_hardware-configuration.nix
+      ./_services.nix
+      ./_host-settings.nix
+      # inputs.nixos-hardware.nixosModules.<your-profile>
+    ];
 
-      nixpkgs.overlays = inputs.self.lib.sharedOverlays;
-      networking.hostName = lib.mkDefault "<name>";
-
-      home-manager.users.${vars.username} = hm.<name>;
-
-      system = {
-        inherit (vars) stateVersion;
-      };
-    };
+    home-manager.users.${vars.username} = hm.<name>;
+  };
 }
 ```
 
@@ -301,28 +294,22 @@ sudo nixos-generate-config --show-hardware-config > modules/hosts/<name>/_hardwa
 
 ```nix
 # Dendritic composition root: flake.modules.nixos.<name>
+# (Overlays/hostname/stateVersion come from the factory — don't repeat them here.)
 { inputs, ... }:
 let
   nixos = inputs.self.modules.nixos;
 in
 {
-  flake.modules.nixos.<name> =
-    { lib, ... }:
-    {
-      imports = [
-        inputs.disko.nixosModules.default
-        nixos.server
-        nixos.user-ize
-        ./_hardware-configuration.nix
-        # ./_services.nix  # optional (host-specific system packages stay
-        # inlined in _host-settings.nix unless large enough for their own file)
-      ];
-
-      nixpkgs.overlays = inputs.self.lib.sharedOverlays;
-      networking.hostName = lib.mkDefault "<name>";
-
-      system.stateVersion = inputs.self.lib.vars.stateVersion;
-    };
+  flake.modules.nixos.<name> = {
+    imports = [
+      inputs.disko.nixosModules.default
+      nixos.server
+      nixos.user-ize
+      ./_hardware-configuration.nix
+      # ./_services.nix  # optional (host-specific system packages stay
+      # inlined in _host-settings.nix unless large enough for their own file)
+    ];
+  };
 }
 ```
 

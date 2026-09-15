@@ -29,7 +29,7 @@ xdg.configFile."hypr" = {
 
 ## Host-Specific Configs
 
-Host-specific settings live in `modules/hosts/<name>/config/` and are store-copied by the host's HM file:
+Host-specific settings live in `modules/hosts/<name>/config/` and are store-copied by the host's HM file via the shared `mkHostConfigFiles ./config` helper (missing files are skipped, so a host with only one compositor doesn't need all three stubs):
 
 - **Niri**: `niri-host-settings.kdl` — included by `config.kdl` via `include "./niri-host-settings.kdl"`
 - **Hyprland**: `hypr-host-settings.lua` — loaded via `require("hypr-host-settings")`

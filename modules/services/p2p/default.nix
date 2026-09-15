@@ -79,6 +79,8 @@
 
           # One-time cleanup of the pre-migration plaintext copy; only fires
           # when the new tmpfs secret exists, so a failed decrypt keeps it.
+          # (`agenixInstall` is agenix's internal activation script name;
+          # re-check on `nix flake update agenix`.)
           system.activationScripts.netbirdSetupKeyCleanup = lib.stringAfter [ "agenixInstall" ] ''
             if [ -s "${config.age.secrets.netbird-setup-key.path}" ]; then
               rm -f /persist/secrets/netbird-setup-key

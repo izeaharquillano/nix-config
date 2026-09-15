@@ -85,7 +85,7 @@ sudo nix-collect-garbage -d
 
 See [modules/hosts/README.md](modules/hosts/README.md) for the full walkthrough with code templates (dendritic pieces, disko disk layout, hardware config, services, Home Manager, Secure Boot enrollment, secrets setup, and reinstallation instructions).
 
-**TL;DR:** create `modules/hosts/<name>/` with host-local `_`-prefixed modules (copy `_disko.nix`/hardware from an existing host, update disk ID), compose them in `configuration.nix` (`desktop-full` + the feature deltas the host needs + `./_*.nix` pieces + explicit disko/overlays/hostname/HM binding), compose `home.nix`, instantiate in `flake-parts.nix` with `mkNixosHost "<name>" "x86_64-linux"`, format the disk from a NixOS live ISO via `disko --mode destroy,format,mount --flake .#<name>`, deploy, add the host key to `secrets/secrets.nix`, rekey, deploy again.
+**TL;DR:** create `modules/hosts/<name>/` with host-local `_`-prefixed modules (copy `_disko.nix`/hardware from an existing host, update disk ID), compose them in `configuration.nix` (`desktop-full` + `greetd` + the feature deltas the host needs + `./_*.nix` pieces; disko + HM binding stay explicit per host while overlays/hostname/stateVersion come from the `mkNixosHost` factory), compose `home.nix`, instantiate in `flake-parts.nix` with `mkNixosHost "<name>" "x86_64-linux"`, format the disk from a NixOS live ISO via `disko --mode destroy,format,mount --flake .#<name>`, deploy, add the host key to `secrets/secrets.nix`, rekey, deploy again.
 
 ## Features
 
@@ -96,6 +96,7 @@ Optional functionality lives in `modules/services/` (daemons) and `modules/progr
 imports = [
   inputs.disko.nixosModules.default # explicit per host (not hidden in the factory)
   nixos.desktop-full # desktop + user-ize + btrfs + impermanence + secureboot + zswap + p2p + fhs
+  nixos.greetd # login manager (explicit per host, needs a compositor)
   nixos.niri
   nixos.hyprland
   nixos.vm-qemu
@@ -119,6 +120,7 @@ imports = [
   hm.p2p # Syncthing tray
   hm.podman # Distrobox CLI
   hm.fhs # nix-alien CLI
+  hm.vm-qemu # QEMU viewer clients
   hm.vm-bottles # Wine runner
   hm.vm-dosbox # DOSBox emulator
   hm.gaming # MangoHud/GOverlay
@@ -166,6 +168,13 @@ sudo agenix -i /etc/ssh/ssh_host_ed25519_key --rekey
 | `nix-access-tokens.age` | Always | Nix/GitHub access tokens for private flakes |
 | `netbird-setup-key.age` | Hosts importing `nixos.p2p` | NetBird VPN auto-login key |
 
+### Impermanence + agenix
+
+On impermanence hosts `/etc/ssh` is a bind-mount that may not exist yet when the `agenixInstall` activation script runs on boot (decrypt fails on boot, succeeds on `switch`). Two guards cover this:
+
+1. `age.identityPaths` lists the persistent path first — `modules/system/secrets.nix` uses `["/persist/etc/ssh/ssh_host_ed25519_key" "/etc/ssh/ssh_host_ed25519_key"]` (`/persist` has `neededForBoot`, so it is always ready; the second entry covers non-impermanence hosts and fresh installs).
+2. Secrets decrypt to tmpfs (`/run/agenix/`, the agenix default). The NetBird daemon has `Restart=always` and the login unit loops on `NeedsLogin`, so a transient decrypt race self-heals. A one-time cleanup in `modules/services/p2p/default.nix` removes the pre-migration plaintext copy at `/persist/secrets/netbird-setup-key`, but only when the new tmpfs secret exists.
+
 ### Adding a Secret
 
 1. Create: `just secrets-edit <secret-name>.age`
@@ -173,12 +182,12 @@ sudo agenix -i /etc/ssh/ssh_host_ed25519_key --rekey
 3. Rekey from an existing authorized host: `just secrets-rekey`
 4. Reference in a module:
    ```nix
-   age.secrets.<secret-name> = {
-     file = "${flakeRoot}/secrets/<secret-name>.age";
-     owner = "root";
-     group = "root";
-     mode = "0400";
-   };
+    age.secrets.<secret-name> = {
+      file = flakeRoot + /secrets/<secret-name>.age;
+      owner = "root";
+      group = "root";
+      mode = "0400";
+    };
    ```
 
 ### Adding a New Host to Secrets
@@ -224,10 +233,10 @@ Update the key binding in `secrets/secrets.nix` with the new host key, then reke
 | `nixosModules.default` | Overlays-only module for external flakes (not the opinionated `desktop` type) |
 | `overlays.default` | Nixpkgs overlay (auto-loaded via `sharedOverlays` + `nix-alien`) |
 | `packages.<system>.gruvbox-material-yazi` | Custom package |
-| `checks.<system>` | Formatting + pre-commit (nixfmt, statix, deadnix); per-host eval is CI dry-builds |
+| `checks.<system>` | Formatting + pre-commit (statix, deadnix; nixfmt via treefmt) + `checks.formatting`; per-host eval is CI dry-builds |
 | `formatter.<system>` | nixfmt + shfmt wrapper |
 | `apps.<system>.agenix` | agenix CLI as a flake app |
-| `devShells.<system>.default` | Dev shell (`just`, treefmt, `nixfmt`, `deadnix`, `statix`, `agenix`) |
+| `devShells.<system>.default` | Dev shell (`just`, treefmt formatters, `deadnix`, `statix`, `agenix`) |
 | `lib` | Dendritic helpers: `vars`, `sharedOverlays`, `mkDiskoBtrfs`, host factories |
 | `modules` | Published dendritic modules (`nixos.*`, `darwin.*`, `homeManager.*`) |
 
@@ -238,13 +247,13 @@ nix fmt                # Format all .nix files (or: just fmt)
 nix fmt -- --fail-on-change  # Check without modifying (or: just fmt-check)
 ```
 
-Uses `treefmt-nix` (nixfmt for Nix, shfmt for shell scripts) and `pre-commit-hooks` (nixfmt, statix, deadnix) for git-level enforcement. CI runs on push/PR to `main`: flake checks + lint (statix, deadnix, treefmt) + dry builds for all hosts.
+Uses `treefmt-nix` (nixfmt for Nix, shfmt for shell scripts) and `pre-commit-hooks` (statix, deadnix) for git-level enforcement. CI runs on push/PR to `main`: flake checks + lint (statix, deadnix, treefmt) + dry builds for all hosts.
 
 ## direnv
 
 The `.envrc` contains `use flake`, loading the dev shell automatically. Requires [direnv](https://direnv.net/) and `direnv allow` once. Add `accept-flake-config = true` to `~/.config/nix/nix.conf` if prompted.
 
-The dev shell includes `just`, `nixfmt`, `deadnix`, `statix`, and `agenix`. Run `just --list` to see all available commands.
+The dev shell includes `just`, `deadnix`, `statix`, and `agenix` (nixfmt/shfmt come via the treefmt devShell). Run `just --list` to see all available commands.
 
 ## Custom Library
 
@@ -253,7 +262,7 @@ The dev shell includes `just`, `nixfmt`, `deadnix`, `statix`, and `agenix`. Run 
 - **`vars`** — User identity (`username`, `userfullname`, `useremail`) + shared `syncthingServer*` / `obsidianVaultRel` / `stateVersion`. Injected into every module via `specialArgs`/`extraSpecialArgs` (forwarded to HM by `nixos.home-manager`).
 - **`specialArgs` / `sharedOverlays`** — Minimal uniform module args (`inputs`, `username`, `vars`, `flakeRoot`; no `hostname` — use `config.networking.hostName`) and the canonical overlay list, consumed explicitly by host `configuration.nix` files.
 - **`mkHostConfigFiles`** — Shared per-host Wayland config-file helper (one more compositor file = one edit, not N hosts).
-- **`mkNixosHost` / `mkDarwinHost`** — Minimal factories instantiating hosts from dendritic modules with uniform `specialArgs`. (`mkNixosServerHost` is an alias; headless just means no HM user binding.) Disko, `nixpkgs.overlays`, `networking.hostName`, and the per-host Home Manager user binding live explicitly in each host's `configuration.nix` (importing IS enabling). HM settings/agenix come from the composed modules themselves.
+- **`mkNixosHost` / `mkDarwinHost`** — Minimal factories instantiating hosts from dendritic modules with uniform `specialArgs`. (`mkNixosServerHost` is an alias; headless just means no HM user binding.) `mkNixosHost` also injects `nixpkgs.overlays`, `networking.hostName`, and `system.stateVersion`, so host `configuration.nix` files only carry disko, feature imports, `./_*.nix` pieces, and the per-host Home Manager user binding (importing IS enabling). HM settings/agenix come from the composed modules themselves.
 
 ## Security
 
