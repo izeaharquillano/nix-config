@@ -1,14 +1,11 @@
-# Simple Aspect: base system packages
-# Dendritic module: flake.modules.nixos.packages
+# Root/system tools only (`efibootmgr` needs EFI access); per-user CLIs
+# belong in HM (`homeManager.cli`).
 {
   flake.modules.nixos.packages =
     { pkgs, ... }:
 
     {
       environment.systemPackages = [
-        pkgs.wget
-        pkgs.tmux
-        # System tool (needs root); was in linux-utils.
         pkgs.efibootmgr
       ];
     };

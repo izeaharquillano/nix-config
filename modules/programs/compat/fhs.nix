@@ -1,4 +1,4 @@
-# FHS env (nix-ld) + nix-alien for unpatched binaries.
+# FHS env: system nix-ld + per-user nix-alien.
 {
   flake.modules.nixos.fhs =
     { pkgs, ... }:
@@ -12,8 +12,13 @@
           pkgs.zlib
         ];
       };
+    };
 
-      environment.systemPackages = [
+  flake.modules.homeManager.fhs =
+    { pkgs, ... }:
+
+    {
+      home.packages = [
         pkgs.nix-alien
       ];
     };

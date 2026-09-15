@@ -1,5 +1,4 @@
-# Simple Aspect: zswap with zstd; swappiness 10 (override per-host if OOMing).
-# Dendritic module: flake.modules.nixos.zswap
+# zswap with zstd; swappiness 10 (override per-host if OOMing).
 {
   flake.modules.nixos.zswap =
     { lib, ... }:

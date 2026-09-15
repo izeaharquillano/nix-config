@@ -1,19 +1,15 @@
-# Gaming stack (Steam, Gamescope, Gamemode, MangoHud).
+# Gaming: system Steam/Gamescope/Gamemode + per-user overlay tools.
 {
   flake.modules.nixos.gaming =
     { pkgs, ... }:
 
     {
-      environment.systemPackages = [
-        pkgs.mangohud
-        pkgs.goverlay
-      ];
-
       programs = {
         steam = {
           enable = true;
           remotePlay.openFirewall = true;
-          dedicatedServer.openFirewall = true;
+          # Roaming laptop, not a hosted server.
+          dedicatedServer.openFirewall = false;
           extraCompatPackages = [
             pkgs.proton-ge-bin
           ];
@@ -26,5 +22,15 @@
 
         gamemode.enable = true;
       };
+    };
+
+  flake.modules.homeManager.gaming =
+    { pkgs, ... }:
+
+    {
+      home.packages = [
+        pkgs.mangohud
+        pkgs.goverlay
+      ];
     };
 }

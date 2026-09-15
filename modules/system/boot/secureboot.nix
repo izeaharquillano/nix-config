@@ -1,4 +1,4 @@
-# UEFI Secure Boot via Lanzaboote (keys under /var/lib/sbctl, persisted by impermanence).
+# Secure Boot via Lanzaboote (keys in /var/lib/sbctl, kept by impermanence).
 { inputs, ... }:
 {
   flake.modules.nixos.secureboot =
@@ -15,8 +15,7 @@
 
       assertions = [
         {
-          # `or {}` so hosts without impermanence get a clean assertion
-          # failure instead of an attribute-missing eval error.
+          # `or {}`: clean assertion failure instead of a missing-attr error.
           assertion = (config.environment.persistence or { }) ? "/persist";
           message = "nixos.secureboot requires nixos.impermanence (/var/lib persistence for /var/lib/sbctl keys).";
         }
@@ -26,7 +25,7 @@
         pkgs.sbctl
       ];
 
-      # Base sets `mkDefault true`; plain `false` overrides without mkForce.
+      # Base is `mkDefault true`, so plain `false` wins without `mkForce`.
       boot.loader.systemd-boot.enable = false;
 
       boot.lanzaboote = {

@@ -1,14 +1,19 @@
-# polkit, rtkit, firewall, neovim.
+# polkit, rtkit, firewall, neovim, sudo posture.
 {
   flake.modules.nixos.security = {
     security = {
       polkit.enable = true;
       rtkit.enable = true;
+      sudo = {
+        wheelNeedsPassword = true;
+        execWheelOnly = true;
+      };
     };
 
     networking.firewall = {
       enable = true;
-      allowPing = true;
+      # Roaming laptops: stay quiet on untrusted LANs.
+      allowPing = false;
     };
 
     programs.neovim = {

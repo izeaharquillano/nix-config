@@ -1,4 +1,4 @@
-# CLI tools + yazi + tmux (`eza`/`zoxide` come from shell).
+# CLI tools + yazi + tmux (`bat` lives in `shell`, backing `MANPAGER`).
 {
   flake.modules.homeManager.cli =
     { pkgs, flakeRoot, ... }:
@@ -9,8 +9,9 @@
         pkgs.jq
         pkgs.fzf
         pkgs.curl
+        pkgs.wget
+        pkgs.tmux
         pkgs.unzip
-        pkgs.bat
         pkgs.ripgrep
         pkgs.tealdeer
         pkgs.fastfetch

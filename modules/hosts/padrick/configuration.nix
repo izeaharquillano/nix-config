@@ -1,39 +1,38 @@
-# padrick: ThinkPad T14 AMD Gen1, Windows dual-boot, impermanence root.
+# padrick: ThinkPad T14 AMD, Windows dual-boot, impermanence root.
+# `_`-prefixed pieces are host-local (ignored by import-tree).
 { inputs, ... }:
 let
   nixos = inputs.self.modules.nixos;
+  hm = inputs.self.modules.homeManager;
   vars = inputs.self.lib.vars;
 in
 {
-  flake.modules.nixos.padrick = {
-    imports = [
-      nixos.desktop
-      nixos.user-ize
-      nixos.btrfs
-      nixos.impermanence
-      nixos.secureboot
-      nixos.zswap
-      nixos.p2p
-      nixos.containers
-      nixos.fhs
-      nixos.vm-qemu
-      nixos.vm-bottles
-      nixos.vm-dosbox
-      nixos.padrick-disko
-      nixos.padrick-hardware
-      nixos.padrick-services
-      nixos.padrick-host-settings
-      inputs.nixos-hardware.nixosModules.lenovo-thinkpad-t14-amd-gen1
-    ];
+  flake.modules.nixos.padrick =
+    { lib, ... }:
+    {
+      imports = [
+        inputs.disko.nixosModules.default
+        nixos.desktop-full
+        nixos.niri
+        nixos.hyprland
+        nixos.docker
+        nixos.podman
+        nixos.vm-qemu
+        ./_disko.nix
+        ./_hardware-configuration.nix
+        ./_services.nix
+        ./_host-settings.nix
+        inputs.nixos-hardware.nixosModules.lenovo-thinkpad-t14-amd-gen1
+      ];
 
-    # Hostname comes from the `mkNixosHost` factory (`mkDefault`);
-    # override here with `mkForce` only if needed without the factory.
+      nixpkgs.overlays = inputs.self.lib.sharedOverlays;
+      networking.hostName = lib.mkDefault "padrick";
 
-    features.p2p.syncthing.devices = {
-      "${vars.syncthingServerName}".id = vars.syncthingServerId;
+      home-manager.users.${vars.username} = hm.padrick;
+
+      # Pinned; do NOT bump (single source: `vars.stateVersion`).
+      system = {
+        inherit (vars) stateVersion;
+      };
     };
-
-    # Pinned per NixOS manual; do NOT bump on update.
-    system.stateVersion = "26.05";
-  };
 }

@@ -10,3 +10,8 @@ result-*
 
 # Secure Boot key backups (secret material, never commit)
 sbctl-backup-*.tar.gz
+
+# Plaintext/decrypted secret material (never commit; see `just secrets-decrypt`)
+secrets/*.decrypted
+secrets/*.plaintext
+*.key

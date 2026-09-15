@@ -1,14 +1,17 @@
-# Simple Aspect: PipeWire, fonts, bluetooth (compositor-agnostic).
-# Hyprland lives in `programs/desktop/hyprland/`; Niri in `programs/desktop/niri/`.
-# Dendritic module: flake.modules.nixos.desktop-services
+# PipeWire, fonts, bluetooth (compositor-agnostic).
 {
   flake.modules.nixos.desktop-services =
     { pkgs, ... }:
 
     {
       programs = {
-        zsh.enable = true;
         dconf.enable = true;
+      };
+
+      # Hosts add only `extraPackages` + drivers.
+      hardware.graphics = {
+        enable = true;
+        enable32Bit = true;
       };
 
       fonts.packages = [
@@ -19,7 +22,7 @@
         blueman.enable = true;
         fwupd.enable = true;
 
-        # Shared desktop defaults (was duplicated per host).
+        # Shared desktop defaults (were duplicated per host).
         resolved.enable = true;
 
         upower = {

@@ -10,47 +10,31 @@ let
     username = "ize";
     userfullname = "Izeah Arquillano";
     useremail = "izeaharquillano@gmail.com";
-    # Shared Syncthing peer; hosts reference this instead of pasting the ID.
+    # Shared Syncthing peer (don't paste the ID per host).
     syncthingServerName = "Server";
     syncthingServerId = "JDJRA5Z-2BXVR3Z-GTHRJND-AIJLXZW-TAMJRXF-CYYTJMM-6LKWWT7-QCD32AA";
-    # Single source for Obsidian vault location; must stay in sync between
-    # `nixos.p2p` (Syncthing folder path) and `notes` (vault target).
+    # Must match the Syncthing folder path (`nixos.p2p`) and vault target (`notes`).
     obsidianVaultRel = "Documents/obsidian";
+    # Pinned per manuals; do NOT bump on update.
+    stateVersion = "26.05";
   };
 
   inherit (vars) username;
 
-  # Canonical overlay list — consumed by host factories AND perSystem pkgs.
+  # Also feeds impermanence `rollbackDevice`; renaming one side bricks rollback.
+  diskoCryptName = "cryptroot";
+
+  # Used by host configs and perSystem pkgs.
   sharedOverlays = [
     self.overlays.default
     inputs.nix-alien.overlays.default
   ];
 
-  specialArgsFor = hostname: {
-    inherit
-      inputs
-      hostname
-      username
-      vars
-      ;
+  # Shared by every NixOS/HM eval. No `hostname` (unused); `inputs` is for
+  # external modules. Mirrored as HM `extraSpecialArgs` — keep in sync.
+  specialArgs = {
+    inherit inputs username vars;
     flakeRoot = self;
-  };
-
-  baseSystemModules = hostname: [
-    inputs.disko.nixosModules.default
-    {
-      nixpkgs.overlays = sharedOverlays;
-      # Single definition of hostname; hosts may override with mkForce if needed.
-      networking.hostName = lib.mkDefault hostname;
-    }
-  ];
-
-  # Binds the HM user only; shared HM settings live in `tools/home-manager.nix`.
-  homeManagerUsersBlock = hostname: {
-    home-manager = {
-      users.${username} = self.modules.homeManager.${hostname};
-      extraSpecialArgs = specialArgsFor hostname;
-    };
   };
 in
 {
@@ -59,168 +43,153 @@ in
     default = { };
   };
 
-  config.flake.lib = {
-    inherit vars sharedOverlays;
+  config.flake.lib =
+    let
+      mkNixosHost =
+        hostname: system:
+        inputs.nixpkgs.lib.nixosSystem {
+          inherit system specialArgs;
+          # Loads only the host root; disko/overlays/hostname/HM binding are per-host.
+          modules = [
+            self.modules.nixos.${hostname}
+          ];
+        };
+    in
+    {
+      inherit
+        vars
+        sharedOverlays
+        specialArgs
+        diskoCryptName
+        mkNixosHost
+        ;
 
-    # Destructive disko layout; `diskName` must match format-time name or boot fails.
-    # Deploy: `disko --mode destroy,format,mount --flake .#<host>`
-    # NOTE: `luksExtraFormatArgs` defaults to LUKS2/argon2id (format-only).
-    mkDiskoBtrfs =
-      {
-        diskName,
-        device,
-        withWindows ? false,
-        windowsSize ? "122070M",
-        swapSize ? "8G",
-        luksExtraFormatArgs ? [
-          "--type luks2"
-          "--cipher aes-xts-plain64"
-          "--hash sha512"
-          "--iter-time 5000"
-          "--key-size 256"
-          "--pbkdf argon2id"
-        ],
-      }:
-      {
-        disko.devices = {
-          disk.${diskName} = {
-            type = "disk";
-            inherit device;
-            content = {
-              type = "gpt";
-              partitions = {
-                ESP = {
-                  priority = 1;
-                  name = "ESP";
-                  start = "1M";
-                  end = "1G";
-                  type = "EF00";
-                  content = {
-                    type = "filesystem";
-                    format = "vfat";
-                    mountpoint = "/boot";
-                    mountOptions = [
-                      "fmask=0177"
-                      "dmask=0077"
-                      "noexec"
-                      "nosuid"
-                      "nodev"
-                    ];
-                  };
-                };
-                luks = {
-                  # `100%` = remainder after fixed-size partitions. Keep luks
-                  # last (priority 400, after Windows 290/300) so dual-boot
-                  # keeps its reservation; no explicit priority = same effect
-                  # but implicit ordering is fragile.
-                  priority = 400;
-                  size = "100%";
-                  content = {
-                    type = "luks";
-                    name = "cryptroot";
-                    settings.allowDiscards = true;
-                    initrdUnlock = true;
-                    extraFormatArgs = luksExtraFormatArgs;
+      # Alias: "headless" just means the host binds no HM user.
+      mkNixosServerHost = mkNixosHost;
+
+      # One more compositor file = edit here, not N `home.nix` files.
+      mkHostConfigFiles = dir: {
+        "niri/niri-host-settings.kdl".source = dir + /niri-host-settings.kdl;
+        "hypr/hypr-host-settings.lua".source = dir + /hypr-host-settings.lua;
+        "noctalia/host-settings.toml".source = dir + /noctalia-host-settings.toml;
+      };
+
+      # Wipes the disk (`diskName` is immutable once formatted).
+      # Deploy: `disko --mode destroy,format,mount --flake .#<host>`
+      mkDiskoBtrfs =
+        {
+          diskName,
+          device,
+          withWindows ? false,
+          windowsSize ? "122070M",
+          swapSize ? "8G",
+          luksExtraFormatArgs ? [
+            "--type luks2"
+            "--cipher aes-xts-plain64"
+            "--hash sha512"
+            "--iter-time 5000"
+            "--key-size 256"
+            "--pbkdf argon2id"
+          ],
+        }:
+        {
+          disko.devices = {
+            disk.${diskName} = {
+              type = "disk";
+              inherit device;
+              content = {
+                type = "gpt";
+                partitions = {
+                  ESP = {
+                    priority = 1;
+                    name = "ESP";
+                    start = "1M";
+                    end = "1G";
+                    type = "EF00";
                     content = {
-                      type = "btrfs";
-                      extraArgs = [
-                        "-L"
-                        "nixos"
-                        "-f"
+                      type = "filesystem";
+                      format = "vfat";
+                      mountpoint = "/boot";
+                      mountOptions = [
+                        "fmask=0177"
+                        "dmask=0077"
+                        "noexec"
+                        "nosuid"
+                        "nodev"
                       ];
-                      subvolumes = {
-                        "/root" = {
-                          mountpoint = "/";
-                        };
-                        "/home" = {
-                          mountpoint = "/home";
-                        };
-                        "/nix" = {
-                          mountpoint = "/nix";
-                        };
-                        "/persist" = {
-                          mountpoint = "/persist";
-                          mountOptions = [
-                            "compress=zstd:3"
-                            "noatime"
-                            "ssd"
-                            "discard=async"
-                            "commit=120"
-                          ];
-                        };
-                        "/swap" = {
-                          mountpoint = "/swap";
-                          swap.swapfile.size = swapSize;
+                    };
+                  };
+                  luks = {
+                    # `100%` = remainder; keep last so dual-boot keeps its reservation.
+                    priority = 400;
+                    size = "100%";
+                    content = {
+                      type = "luks";
+                      name = diskoCryptName;
+                      settings.allowDiscards = true;
+                      initrdUnlock = true;
+                      extraFormatArgs = luksExtraFormatArgs;
+                      content = {
+                        type = "btrfs";
+                        extraArgs = [
+                          "-L"
+                          "nixos"
+                          "-f"
+                        ];
+                        subvolumes = {
+                          "/root" = {
+                            mountpoint = "/";
+                          };
+                          "/home" = {
+                            mountpoint = "/home";
+                          };
+                          "/nix" = {
+                            mountpoint = "/nix";
+                          };
+                          "/persist" = {
+                            mountpoint = "/persist";
+                            mountOptions = [
+                              "compress=zstd:3"
+                              "noatime"
+                              "ssd"
+                              "discard=async"
+                              "commit=120"
+                            ];
+                          };
+                          "/swap" = {
+                            mountpoint = "/swap";
+                            swap.swapfile.size = swapSize;
+                          };
                         };
                       };
                     };
                   };
-                };
-              }
-              // lib.optionalAttrs withWindows {
-                "Microsoft reserved" = {
-                  type = "0C01";
-                  priority = 290;
-                  size = "16M";
-                };
-                "Windows data" = {
-                  type = "0700";
-                  priority = 300;
-                  size = windowsSize;
+                }
+                // lib.optionalAttrs withWindows {
+                  "Microsoft reserved" = {
+                    type = "0C01";
+                    priority = 290;
+                    size = "16M";
+                  };
+                  "Windows data" = {
+                    type = "0700";
+                    priority = 300;
+                    size = windowsSize;
+                  };
                 };
               };
             };
           };
         };
-      };
 
-    mkNixosHost =
-      hostname: system:
-      inputs.nixpkgs.lib.nixosSystem {
-        inherit system;
-        specialArgs = specialArgsFor hostname;
-        modules = [
-          self.modules.nixos.${hostname}
-          # HM + agenix come from composition; factory binds the HM user only.
-          (homeManagerUsersBlock hostname)
-        ]
-        ++ baseSystemModules hostname;
-      };
-
-    # Headless variant (no HM binding).
-    mkNixosServerHost =
-      hostname: system:
-      inputs.nixpkgs.lib.nixosSystem {
-        inherit system;
-        specialArgs = specialArgsFor hostname;
-        modules = [
-          self.modules.nixos.${hostname}
-        ]
-        ++ baseSystemModules hostname;
-      };
-
-    mkDarwinHost =
-      hostname: system:
-      let
-        agenixDarwin =
-          if inputs.agenix ? darwinModules then
-            inputs.agenix.darwinModules.age
-          else
-            inputs.agenix.nixosModules.age;
-      in
-      inputs.nix-darwin.lib.darwinSystem {
-        inherit system;
-        specialArgs = specialArgsFor hostname;
-        modules = [
-          self.modules.darwin.${hostname}
-          agenixDarwin
-          inputs.home-manager.darwinModules.home-manager
-          {
-            nixpkgs.overlays = sharedOverlays;
-            networking.hostName = lib.mkDefault hostname;
-          }
-          (homeManagerUsersBlock hostname)
-        ];
-      };
-  };
+      mkDarwinHost =
+        hostname: system:
+        inputs.nix-darwin.lib.darwinSystem {
+          inherit system specialArgs;
+          # Darwin hosts compose agenix/home-manager/overlays/hostname explicitly.
+          modules = [
+            self.modules.darwin.${hostname}
+          ];
+        };
+    };
 }

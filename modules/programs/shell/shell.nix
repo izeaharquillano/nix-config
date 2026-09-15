@@ -1,7 +1,7 @@
 # bash, zsh, starship, zoxide.
 {
   flake.modules.homeManager.shell =
-    { flakeRoot, ... }:
+    { pkgs, flakeRoot, ... }:
 
     let
       shellAliases = {
@@ -13,6 +13,9 @@
       };
     in
     {
+      # `bat` backs `MANPAGER` below; keep them in the same module.
+      home.packages = [ pkgs.bat ];
+
       programs = {
         bash = {
           enable = true;

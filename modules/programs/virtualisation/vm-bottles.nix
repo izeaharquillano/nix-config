@@ -1,9 +1,9 @@
-# Bottles Wine runner.
+# Bottles Wine runner (per-user; HM-only feature).
 {
-  flake.modules.nixos.vm-bottles =
+  flake.modules.homeManager.vm-bottles =
     { pkgs, ... }:
 
     {
-      environment.systemPackages = [ (pkgs.bottles.override { removeWarningPopup = true; }) ];
+      home.packages = [ (pkgs.bottles.override { removeWarningPopup = true; }) ];
     };
 }

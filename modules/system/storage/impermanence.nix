@@ -12,7 +12,6 @@
 
     let
       persistPath = "/persist";
-      # Home directories to wipe on boot (+ files to re-touch).
       cleanDirs = [
         ".cache"
         ".local/state"
@@ -20,7 +19,6 @@
         ".thumbnails"
       ];
       cleanExcludeFiles = [
-        # Noctalia sentinel; clean-home owns the wipe.
         ".local/state/noctalia/.setup-complete"
       ];
     in
@@ -31,15 +29,15 @@
 
       options.features.impermanence.rollbackDevice = lib.mkOption {
         type = lib.types.str;
-        # Must match `name = "cryptroot"` in `mkDiskoBtrfs` (`modules/nix/lib.nix`).
-        default = "/dev/mapper/cryptroot";
+        # Derived from the shared `flake.lib.diskoCryptName` (`modules/nix/lib.nix`).
+        default = "/dev/mapper/${inputs.self.lib.diskoCryptName}";
         description = "Unlocked LUKS device containing the btrfs `/root` subvolume wiped on boot.";
       };
 
       config = {
-        # No static password; auth comes from /persist/secrets/hashed-password.
+        # Auth comes from /persist, not a static password.
         users.users.${username} = {
-          initialPassword = lib.mkForce null;
+          initialPassword = null;
           hashedPasswordFile = "${persistPath}/secrets/hashed-password";
         };
 
@@ -87,9 +85,15 @@
 
         fileSystems.${persistPath}.neededForBoot = true;
 
-        # Ephemeral root wipes /var/db/sudo/lectured every boot, so sudo
-        # would re-show its lecture after every reboot. Silence it.
-        # (Alternative: persist "/var/db/sudo/lectured" to keep lecture-once.)
+        # `/persist/secrets/` must exist for the install-time password file
+        # and agenix-persisted keys (agenix won't create parents).
+        systemd.tmpfiles.rules = [
+          "d ${persistPath}/secrets 0700 root root -"
+          # `z` tightens an existing file only — never creates an empty one.
+          "z ${persistPath}/secrets/hashed-password 0400 root root -"
+        ];
+
+        # Ephemeral root wipes sudo's lecture flag every boot; silence it.
         security.sudo.extraConfig = ''
           Defaults lecture = never
         '';
@@ -108,7 +112,7 @@
             "/etc/nix"
             {
               directory = "/etc/ssh";
-              mode = "0755";
+              mode = "0700";
             }
           ];
 
@@ -117,9 +121,7 @@
 
         environment.etc.machine-id.source = "${persistPath}/etc/machine-id";
 
-        # Seed /persist/etc/machine-id via activation (not a systemd service:
-        # WantedBy + Before the same target is an ordering cycle, and /etc
-        # setup needs the source to exist at activation time).
+        # Seed via activation: a systemd service would ordering-cycle here.
         system.activationScripts.persistMachineId = lib.stringAfter [ "var" ] ''
           mkdir -p ${persistPath}/etc
           if [ ! -f ${persistPath}/etc/machine-id ]; then
@@ -150,7 +152,7 @@
               for f in ${
                 lib.escapeShellArgs (map (f: "${config.users.users.${username}.home}/${f}") cleanExcludeFiles)
               }; do
-                ${lib.getExe' pkgs.coreutils "mkdir"} -p "$(dirname "$f")"
+                ${lib.getExe' pkgs.coreutils "mkdir"} -p "$(${lib.getExe' pkgs.coreutils "dirname"} "$f")"
                 ${lib.getExe' pkgs.coreutils "touch"} "$f"
               done
           '';

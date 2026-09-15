@@ -1,6 +1,6 @@
 # Hosts
 
-Each subdirectory is a machine (`padrick/`, `jobert/`; future macOS hosts live under `darwin/`). Each host folder is a dendritic composition root: per-aspect files declare `flake.modules.nixos.<name>-*` pieces, `configuration.nix` composes them into `flake.modules.nixos.<name>`, `home.nix` composes `flake.modules.homeManager.<name>` (desktop/headless HM; servers have no `home.nix`), and `flake-parts.nix` instantiates `nixosConfigurations.<name>` via `mkNixosHost` (or `mkNixosServerHost` / `mkDarwinHost`; see below).
+Each subdirectory is a machine (`padrick/`, `jobert/`; future macOS hosts live under `darwin/`). Each host folder is a dendritic composition root: host-local pieces (`_`-prefixed files — ignored by `import-tree` — holding plain NixOS modules), `configuration.nix` composes them into `flake.modules.nixos.<name>`, `home.nix` composes `flake.modules.homeManager.<name>` (desktop/headless HM; servers have no `home.nix`), and `flake-parts.nix` instantiates `nixosConfigurations.<name>` via the minimal `mkNixosHost` (or `mkNixosServerHost` / `mkDarwinHost`; see below).
 
 ## Current Hosts
 
@@ -24,17 +24,17 @@ All NixOS hosts use LUKS2 full-disk encryption with btrfs and [impermanence](htt
 
 **Swap:** zswap handles compressed swap in RAM. A swapfile on btrfs provides overflow. Hibernation is not configured.
 
-**Disko config files:** `modules/hosts/<name>/disko.nix`
+**Disko config files:** `modules/hosts/<name>/_disko.nix`
 
 ### padrick: Daily Use ThinkPad
 
-Imports `btrfs`, `impermanence`, `secureboot`, `zswap`, `p2p`, `containers`, `fhs`, `vm-qemu`, `vm-bottles`, `vm-dosbox` (+ HM: `vscode`, `p2p`).
+`desktop-full` core plus `niri`, `hyprland`, `docker`, `podman`, `vm-qemu` (+ HM: `niri`, `hyprland`, `vscode`, `p2p`, `podman`, `fhs`, `vm-bottles`, `vm-dosbox`).
 
 ### jobert: Gaming & Virtualization
 
-Padrick's set, plus `zerotier` (with `features.p2p.zerotier.networkId`), `gaming` (+ HM: `recording`). See each host's `configuration.nix` / `home.nix` for the exact composition.
+Padrick's set, plus `zerotier` (with `features.p2p.zerotier.networkId`), `gaming` (+ HM: `recording`, `gaming`). See each host's `configuration.nix` / `home.nix` for the exact composition.
 
-The gaming module configures Steam (with remote play + dedicated server firewall rules), Proton GE, Gamescope, Gamemode, MangoHud, and GOverlay. NVIDIA-specific hardware config is in `modules/hosts/jobert/host-settings.nix` (open driver, VA-API, Wayland env vars, 32-bit OpenGL).
+The gaming module configures Steam (with remote play + dedicated server firewall rules), Proton GE, Gamescope, Gamemode, MangoHud, and GOverlay. NVIDIA-specific hardware config is in `modules/hosts/jobert/_host-settings.nix` (open driver, VA-API, Wayland env vars, 32-bit OpenGL).
 
 ## Adding a New Desktop Host
 
@@ -48,42 +48,40 @@ mkdir -p modules/hosts/<name>/config
 ### 2. Generate hardware config
 
 ```bash
-sudo nixos-generate-config --show-hardware-config > modules/hosts/<name>/hardware-configuration.nix
+sudo nixos-generate-config --show-hardware-config > modules/hosts/<name>/_hardware-configuration.nix
 ```
+
+(`_`-prefixed files are host-local: ignored by `import-tree`, imported
+relatively from `configuration.nix`.)
 
 ### 3. Choose your disk approach
 
 **Option A: NixOS-only disk**
 
 ```bash
-cp modules/hosts/jobert/disko.nix modules/hosts/<name>/disko.nix
+cp modules/hosts/jobert/_disko.nix modules/hosts/<name>/_disko.nix
 # Edit: update device = "/dev/disk/by-id/..." and swapSize (default "8G")
 ```
 
 **Option B: Dual-boot with Windows on same disk**
 
 ```bash
-cp modules/hosts/padrick/disko.nix modules/hosts/<name>/disko.nix
+cp modules/hosts/padrick/_disko.nix modules/hosts/<name>/_disko.nix
 # Edit: update device = "/dev/disk/by-id/..."
 # The disko config already reserves space for Windows (MS reserved + data partition)
 ```
 
-For both options, wrap the disko layout as a dendritic piece of this host
-(`flake.modules.nixos.<name>-disko`) via the `mkDiskoBtrfs` factory. Every
-host file follows the same shape — a thin `flake.modules.*` declaration
-around the plain module body, which `import-tree` picks up automatically
-(no aggregator files):
+For both options, the disko layout is a plain host-local module via the
+`mkDiskoBtrfs` factory (imported relatively — NOT a `flake.modules` piece):
 
 ```nix
-# Dendritic module: flake.modules.nixos.<name>-disko
+# Host-local (`_`-prefixed = ignored by import-tree); imported relatively.
 { inputs, ... }:
-{
-  flake.modules.nixos.<name>-disko = inputs.self.lib.mkDiskoBtrfs {
-    diskName = "nixos-<name>";
-    device = "/dev/disk/by-id/<actual-disk-id>";
-    # withWindows = true; windowsSize = "122070M"; # dual-boot only
-    # swapSize = "8G";
-  };
+inputs.self.lib.mkDiskoBtrfs {
+  diskName = "nixos-<name>";
+  device = "/dev/disk/by-id/<actual-disk-id>";
+  # withWindows = true; windowsSize = "122070M"; # dual-boot only
+  # swapSize = "8G";
 }
 ```
 
@@ -91,44 +89,53 @@ Remove `fileSystems` and `swapDevices` from the generated hardware config — di
 
 ### 4. Create `modules/hosts/<name>/configuration.nix`
 
-The composition root. It pulls together the `desktop` system type,
-the reusable `user-ize` feature, this host's `*-disko`, `*-hardware`,
-`*-services`, `*-host-settings` pieces (host-specific packages stay inlined
-in `home.nix` / `host-settings.nix`; only split out a `packages.nix` if the
-list grows large), external modules,
-and exactly the feature modules this host needs (importing one IS
-enabling it) — all referenced via `inputs.self.modules.nixos`
-(never relative `../../../`):
+The composition root. It pulls together disko, the `desktop-full` core type
+(`desktop` + `user-ize` + `btrfs` + `impermanence` + `secureboot` + `zswap` +
+`p2p` + `fhs`), this host's feature deltas and `_`-local pieces
+(`_disko`, `_hardware-configuration`, `_services`, `_host-settings`;
+host-specific packages stay inlined in `home.nix` / `_host-settings.nix`;
+only split out a `_packages.nix` (underscore-prefixed, like all host-local
+files) if the list grows large), external modules.
+Dendritic modules come via `inputs.self.modules.*`;
+host-local pieces via relative `./_*.nix` (never `../../../`):
 
 ```nix
 # Dendritic composition root: flake.modules.nixos.<name>
 { inputs, ... }:
 let
   nixos = inputs.self.modules.nixos;
+  hm = inputs.self.modules.homeManager;
+  vars = inputs.self.lib.vars;
 in
 {
-  flake.modules.nixos.<name> = {
-    imports = [
-      nixos.desktop
-      nixos.user-ize
-      nixos.btrfs
-      nixos.impermanence
-      nixos.secureboot
-      nixos.zswap
-      nixos.p2p
-      # nixos.zerotier  # + features.p2p.zerotier.networkId below
-      # nixos.gaming
-      nixos.<name>-disko
-      nixos.<name>-hardware
-      nixos.<name>-services
-      nixos.<name>-host-settings
-      # inputs.nixos-hardware.nixosModules.<your-profile>
-      # Note: disko + hostname come from the `mkNixosHost` factory; do not
-      # import `inputs.disko.nixosModules.default` or set `networking.hostName` here.
-    ];
+  flake.modules.nixos.<name> =
+    { lib, ... }:
+    {
+      imports = [
+        inputs.disko.nixosModules.default
+        nixos.desktop-full
+        nixos.niri
+        nixos.hyprland
+        # nixos.zerotier  # + features.p2p.zerotier.networkId below
+        # nixos.gaming    # + hm.gaming in home.nix
+        # nixos.docker
+        # nixos.podman    # + hm.podman in home.nix
+        ./_disko.nix
+        ./_hardware-configuration.nix
+        ./_services.nix
+        ./_host-settings.nix
+        # inputs.nixos-hardware.nixosModules.<your-profile>
+      ];
 
-    system.stateVersion = "26.05";
-  };
+      nixpkgs.overlays = inputs.self.lib.sharedOverlays;
+      networking.hostName = lib.mkDefault "<name>";
+
+      home-manager.users.${vars.username} = hm.<name>;
+
+      system = {
+        inherit (vars) stateVersion;
+      };
+    };
 }
 ```
 
@@ -136,54 +143,46 @@ in
 
 ### 5. Create host-specific pieces
 
-Each file declares one `flake.modules.nixos.<name>-*` Collector piece.
-`modules/hosts/<name>/host-settings.nix`:
+Each file is a plain host-local NixOS module (`_`-prefixed so `import-tree`
+ignores it), imported relatively by `configuration.nix`.
+`modules/hosts/<name>/_host-settings.nix`:
 
 ```nix
-# Dendritic module: flake.modules.nixos.<name>-host-settings
+# Host-local (`_`-prefixed = ignored by import-tree); imported relatively.
+# (`hardware.graphics.enable`/`enable32Bit` come from `desktop-services`.)
+{ pkgs, ... }:
 {
-  flake.modules.nixos.<name>-host-settings =
-    { pkgs, ... }:
-    {
-      hardware.graphics = {
-        enable = true;
-        enable32Bit = true;
-      };
-    };
+  hardware.graphics.extraPackages = [
+    pkgs.libva
+  ];
 }
 ```
 
-`modules/hosts/<name>/services.nix` — for laptops:
+`modules/hosts/<name>/_services.nix` — for laptops:
 
 ```nix
-# Dendritic module: flake.modules.nixos.<name>-services
+# Host-local (`_`-prefixed = ignored by import-tree); imported relatively.
+{ pkgs, lib, ... }:
 {
-  flake.modules.nixos.<name>-services =
-    { pkgs, lib, ... }:
-    {
-      services.resolved.enable = true;
-      services.power-profiles-daemon.enable = false;
-      services.tlp = {
-        enable = true;
-        settings = {
-          CPU_SCALING_GOVERNOR_ON_AC = "performance";
-          CPU_SCALING_GOVERNOR_ON_BAT = "powersave";
-        };
-      };
-      services.upower = {
-        enable = true;
-        percentageLow = 20;
-        percentageCritical = 5;
-        percentageAction = 2;
-        criticalPowerAction = "PowerOff";
-      };
+  services.power-profiles-daemon.enable = false;
+  services.tlp = {
+    enable = true;
+    settings = {
+      CPU_SCALING_GOVERNOR_ON_AC = "performance";
+      CPU_SCALING_GOVERNOR_ON_BAT = "powersave";
     };
+  };
 }
+```
+(User units like mic-LED sync go in `home.nix` as HM `systemd.user.services`,
+not here.)
 
 Host-specific packages are inlined, not separate modules: Home Manager
 packages go in `home.packages` in `home.nix` (above); the rare
 host-specific system package goes in `environment.systemPackages` in
-`host-settings.nix`. Only split out a `packages.nix` collector if the list
+`_host-settings.nix`. Only split out a `_packages.nix` collector (note the
+underscore: a non-prefixed `packages.nix` under `modules/` would be
+auto-imported by import-tree as a flake-parts module) if the list
 grows large enough to deserve its own file.
 
 ### 6. Create host-specific config files (Wayland)
@@ -214,9 +213,10 @@ Optionally, create `noctalia-host-settings.toml` for Noctalia lockscreen widgets
 ### 7. Add Home Manager config
 
 `modules/hosts/<name>/home.nix` (`flake.modules.homeManager.<name>`).
-Niri/Noctalia HM modules come via the `linux-gui` collectors, so hosts
-only list the GUI type + features, with host-specific packages inlined
-(no separate `*-home-packages` module):
+Compositors (`hm.niri`/`hm.hyprland`) and single-user features are imported
+explicitly per host, with host-specific packages inlined
+(no separate `*-home-packages` module). Host Wayland files come from the
+shared `mkHostConfigFiles ./config` helper:
 
 ```nix
 { inputs, ... }:
@@ -229,17 +229,18 @@ in
     {
       imports = [
         hm.linux-gui
+        hm.niri
+        hm.hyprland
         hm.vscode
         hm.p2p
       ];
 
-      home.packages = with pkgs; [
+      home.packages = [
         # host-specific packages
+        pkgs.btop
       ];
 
-      xdg.configFile."niri/niri-host-settings.kdl".source = ./config/niri-host-settings.kdl;
-      xdg.configFile."hypr/hypr-host-settings.lua".source = ./config/hypr-host-settings.lua;
-      xdg.configFile."noctalia/host-settings.toml".source = ./config/noctalia-host-settings.toml;
+      xdg.configFile = inputs.self.lib.mkHostConfigFiles ./config;
     };
   };
 }
@@ -293,7 +294,7 @@ mkdir -p modules/hosts/<name>
 ### 2. Generate hardware config
 
 ```bash
-sudo nixos-generate-config --show-hardware-config > modules/hosts/<name>/hardware-configuration.nix
+sudo nixos-generate-config --show-hardware-config > modules/hosts/<name>/_hardware-configuration.nix
 ```
 
 ### 3. Create `modules/hosts/<name>/configuration.nix`
@@ -305,20 +306,23 @@ let
   nixos = inputs.self.modules.nixos;
 in
 {
-  flake.modules.nixos.<name> = {
-    imports = [
-      nixos.server
-      nixos.user-ize
-      nixos.<name>-hardware
-      # nixos.<name>-services  # optional (host-specific system packages stay
-      # inlined in host-settings.nix unless large enough for their own file)
-    ];
+  flake.modules.nixos.<name> =
+    { lib, ... }:
+    {
+      imports = [
+        inputs.disko.nixosModules.default
+        nixos.server
+        nixos.user-ize
+        ./_hardware-configuration.nix
+        # ./_services.nix  # optional (host-specific system packages stay
+        # inlined in _host-settings.nix unless large enough for their own file)
+      ];
 
-    # Hostname comes from the `mkNixosServerHost` factory (`mkDefault`);
-    # override here with `mkForce` only if needed without the factory.
+      nixpkgs.overlays = inputs.self.lib.sharedOverlays;
+      networking.hostName = lib.mkDefault "<name>";
 
-    system.stateVersion = "26.05";
-  };
+      system.stateVersion = inputs.self.lib.vars.stateVersion;
+    };
 }
 ```
 
@@ -331,11 +335,17 @@ in
 }
 ```
 
-No home-manager is included for servers. If you want headless HM tools, define a `flake.modules.homeManager.<name>` importing `linux-core` and extend the server factory with a home-manager block.
+(`mkNixosServerHost` is an alias of `mkNixosHost` — "headless" just means the host's `configuration.nix` binds no HM user.)
+
+No home-manager is included for servers. If you want headless HM tools, define a `flake.modules.homeManager.<name>` importing `linux-core`, import `nixos.home-manager` in `configuration.nix`, and bind the user there (`home-manager.users.<username> = hm.<name>` — same as desktop hosts, since `mkNixosServerHost` is just an alias and wires no HM itself).
 
 > **Note:** Server hosts typically skip desktop/GUI features and impermanence. The fallback `initialPassword` applies — change it after first boot with `passwd`.
 
 ## Adding a New macOS Host
+
+(Linux hosts live flat directly under `modules/hosts/<name>/`; macOS hosts
+nest one level deeper under `modules/hosts/darwin/<name>/`. `import-tree`
+handles both.)
 
 ### 1. Create the host directory
 
@@ -350,17 +360,25 @@ mkdir -p modules/hosts/darwin/<name>
 { inputs, ... }:
 let
   darwin = inputs.self.modules.darwin;
+  hm = inputs.self.modules.homeManager;
+  vars = inputs.self.lib.vars;
 in
 {
-  flake.modules.darwin.<name> = {
-    imports = [
-      darwin.nix
-      darwin.direnv
-      darwin.home-manager
-    ];
-    networking.hostName = "<name>";
-    system.stateVersion = 5;
-  };
+  flake.modules.darwin.<name> =
+    { lib, ... }:
+    {
+      imports = [
+        inputs.agenix.darwinModules.age
+        inputs.home-manager.darwinModules.home-manager
+        darwin.nix
+        darwin.direnv
+        darwin.home-manager
+      ];
+      nixpkgs.overlays = inputs.self.lib.sharedOverlays;
+      networking.hostName = lib.mkDefault "<name>";
+      home-manager.users.${vars.username} = hm.<name>;
+      system.stateVersion = 5;
+    };
 }
 ```
 
@@ -433,7 +451,7 @@ git clone https://github.com/<your-user>/nix-config.git
 cd nix-config
 
 # Update the disk ID in the disko config
-$EDITOR modules/hosts/<hostname>/disko.nix
+$EDITOR modules/hosts/<hostname>/_disko.nix
 # Set: device = "/dev/disk/by-id/<actual-disk-id>";
 ```
 
@@ -441,7 +459,7 @@ $EDITOR modules/hosts/<hostname>/disko.nix
 
 This **wipes the entire disk** and sets up LUKS + btrfs + subvolumes.
 disko reads the layout from the host's evaluated system config
-(`config.disko.devices`, wired via the `<name>-disko` dendritic piece):
+(`config.disko.devices`, wired via the host-local `./_disko.nix`):
 
 ```bash
 sudo nix --experimental-features "nix-command flakes" run \
@@ -463,7 +481,7 @@ sudo cp -a ~/nix-config /mnt/etc/nixos/nix-config  # adjust source if you cloned
 
 ```bash
 sudo nixos-generate-config --root /mnt --show-hardware-config \
-  > /mnt/etc/nixos/nix-config/modules/hosts/<hostname>/hardware-configuration.nix
+  > /mnt/etc/nixos/nix-config/modules/hosts/<hostname>/_hardware-configuration.nix
 ```
 
 Remove `fileSystems` and `swapDevices` from the generated hardware config — disko provides those.
@@ -516,6 +534,7 @@ Impermanence requires a hashed password file at `/persist/secrets/hashed-passwor
 ```bash
 mkdir -p /mnt/persist/secrets
 mkpasswd -m SHA-512 > /mnt/persist/secrets/hashed-password
+chmod 0400 /mnt/persist/secrets/hashed-password
 ```
 
 **If NOT importing `nixos.impermanence`:**
@@ -563,4 +582,4 @@ sudo bootctl install  # re-register NixOS as primary
 # Then add a Windows entry manually or via a NixOS module
 ```
 
-**Reverting to pure NixOS:** If Windows dual-boot causes issues, remove the `"Microsoft reserved"` and `"Windows data"` partitions from `disko.nix` (`withWindows = false`), then re-run `disko --mode destroy,format,mount` + `nixos-install` (a rebuild alone won't resize existing partitions). The LUKS/btrfs partitions will then fill the disk.
+**Reverting to pure NixOS:** If Windows dual-boot causes issues, remove the `"Microsoft reserved"` and `"Windows data"` partitions from `_disko.nix` (`withWindows = false`), then re-run `disko --mode destroy,format,mount` + `nixos-install` (a rebuild alone won't resize existing partitions). The LUKS/btrfs partitions will then fill the disk.

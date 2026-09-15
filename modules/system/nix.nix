@@ -5,6 +5,7 @@ let
     {
       pkgs,
       inputs,
+      username,
       ...
     }:
     let
@@ -17,6 +18,7 @@ let
       ];
     in
     {
+      # Single global unfree opt-in (perSystem pkgs stays free-only).
       nixpkgs.config.allowUnfree = true;
 
       nix = {
@@ -31,23 +33,22 @@ let
             "flakes"
           ];
           max-jobs = "auto";
-          # `warn-dirty=false` hides uncommitted changes; keep warnings on.
           warn-dirty = true;
+          # Primary user only (`root` already comes from the nixpkgs default).
           trusted-users = [
-            "root"
+            username
           ]
-          ++ (if isDarwin then [ "@admin" ] else [ "@wheel" ]);
+          ++ (if isDarwin then [ "@admin" ] else [ ]);
           substituters = [
             "https://cache.nixos.org"
           ]
           ++ extraSubstituters;
-          # Non-root users need matching `trusted-substituters`.
+          # Non-root users need the same list here.
           trusted-substituters = [
             "https://cache.nixos.org"
           ]
           ++ extraSubstituters;
-          # Assigning replaces the nixpkgs default (cache.nixos.org key),
-          # so re-include it explicitly alongside extras.
+          # Assignment replaces the default key, so re-include it.
           trusted-public-keys = [
             "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
           ]

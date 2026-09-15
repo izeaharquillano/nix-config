@@ -31,10 +31,8 @@
       '';
 
       # Empty placeholder if undecryptable so `!include` never breaks nix.
-      # Best-effort only: if `agenixInstall` itself aborts activation on a
-      # decrypt failure (fresh host not yet in `secrets.nix`), this never runs —
-      # follow the two-pass rekey workflow in the README. Covers the case where
-      # agenix warns but leaves the path missing/empty.
+      # Skipped when `agenixInstall` itself aborts (fresh host) — follow the
+      # two-pass rekey workflow in the README for that case.
       system.activationScripts.nixAccessTokensFallback = lib.stringAfter [ "agenixInstall" ] ''
         tokenPath="${config.age.secrets.nix-access-tokens.path}"
         if [ ! -s "$tokenPath" ]; then

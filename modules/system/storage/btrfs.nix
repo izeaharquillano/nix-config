@@ -1,6 +1,5 @@
-# BTRFS compression/tuning. Disko sets device-specific opts in `mkDiskoBtrfs`
-# (ESP, LUKS, /persist ssd/discard/commit); this module adds generic
-# compress/noatime to the remaining btrfs mounts (merged with disko opts).
+# Generic compress/noatime for `/`, `/home`, `/nix` (device-specific opts
+# live in disko; the two merge).
 {
   flake.modules.nixos.btrfs =
     { lib, ... }:

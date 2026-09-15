@@ -1,4 +1,4 @@
-# Niri/Noctalia HM modules come via `linux-gui`.
+# Host HM: compositors/features explicit per host (importing IS enabling).
 { inputs, ... }:
 let
   hm = inputs.self.modules.homeManager;
@@ -9,9 +9,17 @@ in
     {
       imports = [
         hm.linux-gui
+        hm.niri
+        hm.hyprland
         hm.vscode
         hm.recording
         hm.p2p
+        hm.podman
+        hm.fhs
+        hm.vm-qemu
+        hm.vm-bottles
+        hm.vm-dosbox
+        hm.gaming
       ];
 
       home.packages = [
@@ -20,10 +28,6 @@ in
         pkgs.prismlauncher
       ];
 
-      xdg.configFile = {
-        "niri/niri-host-settings.kdl".source = ./config/niri-host-settings.kdl;
-        "hypr/hypr-host-settings.lua".source = ./config/hypr-host-settings.lua;
-        "noctalia/host-settings.toml".source = ./config/noctalia-host-settings.toml;
-      };
+      xdg.configFile = inputs.self.lib.mkHostConfigFiles ./config;
     };
 }

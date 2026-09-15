@@ -1,44 +1,44 @@
 # jobert: AMD+NVIDIA gaming/work laptop.
+# `_`-prefixed pieces are host-local (ignored by import-tree).
 { inputs, ... }:
 let
   nixos = inputs.self.modules.nixos;
+  hm = inputs.self.modules.homeManager;
   vars = inputs.self.lib.vars;
 in
 {
-  flake.modules.nixos.jobert = {
-    imports = [
-      nixos.desktop
-      nixos.user-ize
-      nixos.btrfs
-      nixos.impermanence
-      nixos.secureboot
-      nixos.zswap
-      nixos.p2p
-      nixos.zerotier
-      nixos.containers
-      nixos.fhs
-      nixos.vm-qemu
-      nixos.vm-bottles
-      nixos.vm-dosbox
-      nixos.gaming
-      nixos.jobert-disko
-      nixos.jobert-hardware
-      nixos.jobert-services
-      nixos.jobert-host-settings
-      inputs.nixos-hardware.nixosModules.common-cpu-amd
-      inputs.nixos-hardware.nixosModules.common-pc-laptop
-      inputs.nixos-hardware.nixosModules.common-pc-ssd
-    ];
+  flake.modules.nixos.jobert =
+    { lib, ... }:
+    {
+      imports = [
+        inputs.disko.nixosModules.default
+        nixos.desktop-full
+        nixos.niri
+        nixos.hyprland
+        nixos.zerotier
+        nixos.docker
+        nixos.podman
+        nixos.vm-qemu
+        nixos.gaming
+        ./_disko.nix
+        ./_hardware-configuration.nix
+        ./_services.nix
+        ./_host-settings.nix
+        inputs.nixos-hardware.nixosModules.common-cpu-amd
+        inputs.nixos-hardware.nixosModules.common-pc-laptop
+        inputs.nixos-hardware.nixosModules.common-pc-ssd
+      ];
 
-    # Hostname comes from the `mkNixosHost` factory (`mkDefault`).
+      nixpkgs.overlays = inputs.self.lib.sharedOverlays;
+      networking.hostName = lib.mkDefault "jobert";
 
-    features.p2p.syncthing.devices = {
-      "${vars.syncthingServerName}".id = vars.syncthingServerId;
+      home-manager.users.${vars.username} = hm.jobert;
+
+      features.p2p.zerotier.networkId = "88c5b1f339f6593b";
+
+      # Pinned; do NOT bump (single source: `vars.stateVersion`).
+      system = {
+        inherit (vars) stateVersion;
+      };
     };
-
-    features.p2p.zerotier.networkId = "88c5b1f339f6593b";
-
-    # Pinned per NixOS manual; do NOT bump on update.
-    system.stateVersion = "26.05";
-  };
 }

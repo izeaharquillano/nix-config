@@ -7,11 +7,11 @@
       programs.vscode = {
         enable = true;
         package = pkgs.vscode;
-        profiles.default.extensions = with pkgs.vscode-extensions; [
-          vscodevim.vim
-          jdinhlife.gruvbox
-          jnoortheen.nix-ide
-          ms-dotnettools.csharp
+        profiles.default.extensions = [
+          pkgs.vscode-extensions.vscodevim.vim
+          pkgs.vscode-extensions.jdinhlife.gruvbox
+          pkgs.vscode-extensions.jnoortheen.nix-ide
+          pkgs.vscode-extensions.ms-dotnettools.csharp
         ];
       };
       xdg.configFile."Code/User/settings.json".source = flakeRoot + /config/vscode/settings.json;

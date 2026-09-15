@@ -1,4 +1,4 @@
-# Boot, networking, GC (identity via `username` specialArg, see `users/ize.nix`).
+# Boot, networking, GC.
 {
   flake.modules.nixos.system =
     {
@@ -11,8 +11,8 @@
     {
       options.features.system = {
         kernelPackage = lib.mkOption {
-          # Kernel sets are attrsets, not derivations; `unspecified` is intentional.
-          type = lib.types.unspecified;
+          # Kernel sets are attrsets, not derivations.
+          type = lib.types.attrs;
           default = pkgs.linuxPackages_latest;
           defaultText = lib.literalExpression "pkgs.linuxPackages_latest";
           example = lib.literalExpression "pkgs.linuxPackages_6_12";
@@ -25,7 +25,7 @@
           kernelPackages = config.features.system.kernelPackage;
 
           loader = {
-            # mkDefault so `secureboot` (lanzaboote) can override without mkForce.
+            # `mkDefault` so lanzaboote can override without `mkForce`.
             efi.canTouchEfiVariables = lib.mkDefault true;
             timeout = lib.mkDefault 10;
             systemd-boot.enable = lib.mkDefault true;
@@ -40,7 +40,8 @@
             automatic = true;
             persistent = true;
             dates = [ "weekly" ];
-            options = "--delete-older-than 14d";
+            # 30d keeps rollback generations around (matches `just gc`).
+            options = "--delete-older-than 30d";
           };
 
           optimise = {

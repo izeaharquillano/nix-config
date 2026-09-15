@@ -1,4 +1,4 @@
-# Full GUI home system type (Inheritance Aspect); hosts add `vscode`/`recording`/`p2p` as needed.
+# Full GUI home type. Compositors stay per-host, not collected here.
 { inputs, ... }:
 let
   hm = inputs.self.modules.homeManager;
@@ -11,8 +11,6 @@ in
       hm.linux-utils
       hm.apps
       hm.web
-      hm.hyprland
-      hm.niri
       hm.noctalia
       hm.notes
     ];

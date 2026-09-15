@@ -1,5 +1,4 @@
-# Simple Aspect: output-scale wrapper + Wayland utils
-# Dendritic module: flake.modules.homeManager.linux-utils
+# output-scale wrapper + Wayland utils.
 {
   flake.modules.homeManager.linux-utils =
     { pkgs, flakeRoot, ... }:

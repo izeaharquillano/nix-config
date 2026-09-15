@@ -1,10 +1,17 @@
-# Simple Aspect: tuigreet login manager
-# Dendritic module: flake.modules.nixos.greetd
+# tuigreet login manager.
 {
   flake.modules.nixos.greetd =
     { config, pkgs, ... }:
 
     {
+      # Sessions come from the compositors; bare `desktop` offers none.
+      assertions = [
+        {
+          assertion = (config.programs.niri.enable or false) || (config.programs.hyprland.enable or false);
+          message = "nixos.greetd needs a Wayland compositor: import nixos.niri and/or nixos.hyprland alongside it.";
+        }
+      ];
+
       services.greetd = {
         enable = true;
         settings = {

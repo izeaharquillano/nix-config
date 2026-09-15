@@ -1,6 +1,4 @@
-# Hyprland feature (dendritic feature closure): system compositor + HM config live together.
-# Was split as `nixos/desktop/hyprland.nix` (desktop-hyprland) +
-# `home/linux/gui/hyprland.nix` (home-gui-hyprland) — now one domain dir.
+# Hyprland compositor + HM config.
 {
   flake.modules.homeManager.hyprland =
     { flakeRoot, ... }:

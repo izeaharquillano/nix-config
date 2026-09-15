@@ -1,5 +1,4 @@
-# Desktop system type (Inheritance Aspect): system core + desktop + HM.
-# Disko stays per-host; drop `hyprland` for Niri-only.
+# Desktop core + HM wiring. Compositors stay per-host, not collected here.
 { inputs, ... }:
 let
   nixos = inputs.self.modules.nixos;
@@ -16,8 +15,6 @@ in
       nixos.security
       nixos.packages
       nixos.greetd
-      nixos.niri
-      nixos.hyprland
       nixos.desktop-services
       nixos.home-manager
     ];

@@ -1,4 +1,4 @@
-# Headless home system type (Inheritance Aspect); GUI pieces live in `linux-gui` only.
+# Headless home type; GUI pieces live in `linux-gui` only.
 { inputs, ... }:
 let
   hm = inputs.self.modules.homeManager;

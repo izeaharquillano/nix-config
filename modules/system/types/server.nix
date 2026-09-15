@@ -1,4 +1,4 @@
-# Headless server type (no desktop, no HM; disko stays per-host).
+# Headless server type (no desktop, no HM).
 { inputs, ... }:
 let
   nixos = inputs.self.modules.nixos;

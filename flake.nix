@@ -1,8 +1,7 @@
 # Entry point: inputs + `mkFlake(import-tree ./modules)`; config in `modules/`.
-# NOTE: no `nixConfig` here on purpose. `modules/base/nix.nix` already sets
-# the same substituters system-wide; a flake-level `nixConfig` would make
-# every `sudo nixos-rebuild` (root, ephemeral /root on impermanence hosts)
-# re-prompt for `accept-flake-config` on every boot.
+# No `nixConfig` on purpose: `modules/system/nix.nix` sets substituters
+# system-wide, and a flake-level one would re-prompt `accept-flake-config`
+# on every boot (ephemeral /root on impermanence hosts).
 {
   description = "NixOS Configuration";
 
@@ -33,6 +32,9 @@
     lanzaboote = {
       url = "github:nix-community/lanzaboote";
       inputs.nixpkgs.follows = "nixpkgs";
+      # Same upstream rev as top-level `pre-commit-hooks`; collapses a
+      # duplicate lock node. (crane/rust-overlay stay pinned: toolchain.)
+      inputs.pre-commit.follows = "pre-commit-hooks";
     };
 
     nixos-hardware = {
@@ -51,14 +53,13 @@
       inputs.home-manager.follows = "home-manager";
     };
 
-    niri = {
-      url = "github:sodiboo/niri-flake";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
     agenix = {
       url = "github:ryantm/agenix";
-      inputs.nixpkgs.follows = "nixpkgs";
+      inputs = {
+        nixpkgs.follows = "nixpkgs";
+        darwin.follows = "nix-darwin";
+        home-manager.follows = "home-manager";
+      };
     };
 
     treefmt-nix = {

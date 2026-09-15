@@ -64,12 +64,12 @@
       config =
         let
           homeDir = config.users.users.${username}.home;
-          # `or {}` so non-impermanence hosts (no persistence option) eval to false
-          # instead of throwing on missing attr.
+          # `or {}`: hosts without impermanence lack the option entirely.
           hasPersist = (config.environment.persistence or { }) ? "/persist";
         in
         {
-          # No host key at boot, so persist the decrypted key in /persist for netbird.
+          # Persisted copy bypasses agenix tmpfs (survives reboot; LUKS +
+          # `0400` mitigate). Exclude `/persist/secrets` from backups.
           age.secrets.netbird-setup-key = {
             file = flakeRoot + /secrets/netbird-setup-key.age;
             owner = "root";
@@ -81,7 +81,7 @@
             symlink = false;
           };
 
-          # HM network ordering lives in `nix/home-manager.nix`.
+          # Ordering vs HM lives in `nix/home-manager.nix`.
           services.netbird = {
             enable = true;
             clients.default = {
@@ -108,7 +108,7 @@
                 lib.optionalAttrs config.features.p2p.syncthing.obsidianEnable {
                   "Obsidian" = {
                     path = "${homeDir}/${vars.obsidianVaultRel}";
-                    devices = builtins.attrNames config.features.p2p.syncthing.devices;
+                    devices = lib.attrNames config.features.p2p.syncthing.devices;
                   };
                 }
                 // config.features.p2p.syncthing.folders;

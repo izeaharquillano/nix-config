@@ -1,9 +1,9 @@
-# DOSBox emulator.
+# DOSBox emulator (per-user; HM-only feature).
 {
-  flake.modules.nixos.vm-dosbox =
+  flake.modules.homeManager.vm-dosbox =
     { pkgs, ... }:
 
     {
-      environment.systemPackages = [ pkgs.dosbox ];
+      home.packages = [ pkgs.dosbox ];
     };
 }

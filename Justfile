@@ -40,11 +40,11 @@ fmt-check:
 repl:
     nix repl flake:
 
-# Garbage collect old generations (system-wide + user, 14-day retention)
+# Garbage collect old generations (system-wide + user, 30-day retention)
 [group('nix')]
 gc:
-    sudo nix-collect-garbage --delete-older-than 14d
-    nix-collect-garbage --delete-older-than 14d
+    sudo nix-collect-garbage --delete-older-than 30d
+    nix-collect-garbage --delete-older-than 30d
 
 # Wipe all generation history (system + home-manager)
 [group('nix')]
@@ -187,12 +187,13 @@ statix:
 ci-check:
     nix flake check --all-systems
 
-# Run dry-builds for all hosts (same as CI matrix)
+# Run dry-builds for all hosts (same JSON enumeration as the CI matrix)
 [group('ci')]
 ci-dry-build:
     #!/usr/bin/env bash
     set -euo pipefail
-    for host in $(nix eval --apply 'configs: builtins.concatStringsSep "\n" (builtins.attrNames configs)' .#nixosConfigurations --raw); do
+    mapfile -t hosts < <(nix eval --json .#nixosConfigurations --apply builtins.attrNames | jq -r '.[]')
+    for host in "${hosts[@]}"; do
       nix build ".#nixosConfigurations.${host}.config.system.build.toplevel" --dry-run
     done
 

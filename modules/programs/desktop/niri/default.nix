@@ -1,6 +1,4 @@
-# Niri feature (dendritic feature closure): system compositor + HM config live together.
-# Was split as `nixos/desktop/niri.nix` (desktop-niri) +
-# `home/linux/gui/niri.nix` (home-gui-niri) — now one domain dir.
+# Niri compositor + HM config.
 {
   flake.modules.homeManager.niri =
     { flakeRoot, ... }:

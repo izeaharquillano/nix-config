@@ -22,10 +22,10 @@
         networking.firewall.allowedUDPPorts = [ 9993 ];
         services.zerotierone = {
           enable = true;
-          # Assertion above guarantees non-null; no mkIf needed.
-          joinNetworks = [
-            config.features.p2p.zerotier.networkId
-          ];
+          # `optional` keeps this well-typed when unset so the assertion fires.
+          joinNetworks = lib.optional (
+            config.features.p2p.zerotier.networkId != null
+          ) config.features.p2p.zerotier.networkId;
         };
       };
     };

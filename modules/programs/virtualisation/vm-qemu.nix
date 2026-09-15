@@ -1,4 +1,4 @@
-# QEMU/KVM (libvirtd, virt-manager, SPICE).
+# QEMU/KVM: system daemon + per-user clients (`homeManager.vm-qemu`).
 {
   flake.modules.nixos.vm-qemu =
     {
@@ -25,15 +25,23 @@
       users.users.${username}.extraGroups = [ "libvirtd" ];
       networking.firewall.trustedInterfaces = [ "virbr0" ];
 
-      # libvirt 12.7+ 10-secret.conf sets LoadCredentialEncrypted; we don't use
-      # secrets, so reset with `LoadCredentialEncrypted=` ([""] -> attrsToSection in nixos/lib/systemd-lib.nix).
+      # libvirt 12.7 ships `LoadCredentialEncrypted` for secrets we don't use;
+      # reset it (see `attrsToSection` in nixos/lib/systemd-lib.nix).
       systemd.services.libvirtd.serviceConfig.LoadCredentialEncrypted = lib.mkForce [ "" ];
 
       environment.systemPackages = [
+        # libvirt bundles its own copy for NAT; this one is for manual use.
         pkgs.dnsmasq
+      ];
+    };
+
+  flake.modules.homeManager.vm-qemu =
+    { pkgs, ... }:
+
+    {
+      home.packages = [
         pkgs.virt-viewer
         pkgs.spice
-        pkgs.spice-vdagent
         pkgs.spice-gtk
       ];
     };
