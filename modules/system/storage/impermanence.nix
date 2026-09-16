@@ -1,7 +1,8 @@
 # Filesystem-agnostic ephemeral root with persistent /persist.
 # Btrfs hosts also import `impermanence-btrfs` (initrd rollback of the
-# `/root` subvolume); future ext4 hosts pair this module alone with a
-# tmpfs `/` instead — no changes needed here.
+# `/root` subvolume, plus `/home` when `impermanence-home` is imported);
+# future ext4 hosts pair this module alone with a tmpfs `/` instead —
+# no changes needed here.
 {
   flake.modules.nixos.impermanence =
     {

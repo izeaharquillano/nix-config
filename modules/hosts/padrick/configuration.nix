@@ -1,4 +1,4 @@
-# padrick: ThinkPad T14 AMD, Windows dual-boot, impermanence root.
+# padrick: ThinkPad T14 AMD, Windows dual-boot, impermanence root + ephemeral home.
 # `_`-prefixed pieces are host-local (ignored by import-tree).
 { inputs, ... }:
 let
@@ -11,6 +11,7 @@ in
     imports = [
       inputs.disko.nixosModules.default
       nixos.desktop-full
+      nixos.impermanence-home
       nixos.greetd
       nixos.niri
       nixos.hyprland

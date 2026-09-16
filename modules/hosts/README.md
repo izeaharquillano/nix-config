@@ -20,19 +20,21 @@ All NixOS hosts use LUKS2 full-disk encryption with btrfs and [impermanence](htt
 
 **LUKS settings:** LUKS2, AES-XTS-Plain64, SHA-512, Argon2id, TRIM enabled.
 
-**Impermanence:** Filesystem-agnostic `/persist` bind-mounts (`nixos.impermanence`) plus btrfs-only initrd rollback of the `/root` subvolume (`nixos.impermanence-btrfs`). `/home`, `/nix`, and `/persist` are separate persistent subvolumes. System state (`/var/lib/nixos`, `/etc/machine-id`, `/etc/ssh`, NetworkManager, Bluetooth) is persisted via impermanence bind mounts. Future ext4 hosts use `nixos.impermanence` alone with a tmpfs `/`.
+**Impermanence:** Filesystem-agnostic `/persist` bind-mounts (`nixos.impermanence`) plus btrfs-only initrd rollback (`nixos.impermanence-btrfs`) — always `/root`, plus `/home` when the host imports `nixos.impermanence-home` (padrick experiment; importing IS enabling). `/nix` and `/persist` are separate persistent subvolumes; `/home` is a persistent subvolume on hosts without `impermanence-home`. System state (`/var/lib/nixos`, `/etc/machine-id`, `/etc/ssh`, NetworkManager, Bluetooth) is persisted via impermanence bind mounts. Future ext4 hosts use `nixos.impermanence` alone with a tmpfs `/`.
 
 **Swap:** zswap handles compressed swap in RAM. A swapfile on btrfs provides overflow. Hibernation is not configured.
+
+**Ephemeral `/home` experiment:** padrick imports `nixos.impermanence-home`; jobert doesn't (control). To opt a host in/out, add/remove the import — no flags. When opting OUT, the old binds under `/persist/home/<user>` linger unmounted: backfill first (`sudo rsync -a /persist/home/<user>/ /home/<user>/` + `chown`), reboot, verify, and only then `sudo rm -rf /persist/home/<user>` (deleting while binds are still active deletes live data).
 
 **Disko config files:** `modules/hosts/<name>/_disko.nix`
 
 ### padrick: Daily Use ThinkPad
 
-`desktop-full` core plus `niri`, `hyprland`, `docker`, `podman`, `vm-qemu` (+ HM: `niri`, `hyprland`, `vscode`, `p2p`, `podman`, `fhs`, `vm-bottles`, `vm-dosbox`).
+`desktop-full` core plus `impermanence-home` (ephemeral `/home` experiment), `niri`, `hyprland`, `docker`, `podman`, `vm-qemu` (+ HM: `niri`, `hyprland`, `vscode`, `p2p`, `podman`, `fhs`, `vm-bottles`, `vm-dosbox`).
 
 ### jobert: Gaming & Virtualization
 
-Padrick's set, plus `zerotier` (with `features.p2p.zerotier.networkId`), `gaming` (+ HM: `recording`, `gaming`). See each host's `configuration.nix` / `home.nix` for the exact composition.
+Padrick's set, plus `zerotier` (with `features.p2p.zerotier.networkId`), `gaming` (+ HM: `recording`, `gaming`) — but root-only impermanence (no `impermanence-home`). See each host's `configuration.nix` / `home.nix` for the exact composition.
 
 The gaming module configures Steam (with remote play + dedicated server firewall rules), Proton GE, Gamescope, Gamemode, MangoHud, and GOverlay. NVIDIA-specific hardware config is in `modules/hosts/jobert/_host-settings.nix` (open driver, VA-API, Wayland env vars, 32-bit OpenGL).
 
@@ -113,6 +115,7 @@ in
     imports = [
       inputs.disko.nixosModules.default
       nixos.desktop-full
+      # nixos.impermanence-home  # optional ephemeral `/home` (padrick experiment)
       nixos.greetd
       nixos.niri
       nixos.hyprland
