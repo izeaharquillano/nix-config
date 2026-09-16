@@ -1,4 +1,3 @@
-# Ephemeral `/home` allowlist (importing IS enabling).
 # Hosts that import this get the `/home` subvolume rolled back in initrd
 # (see `impermanence-btrfs`, which derives the wipe from the declared
 # `users.${username}` persistence) plus bind mounts from `/persist`.
@@ -22,7 +21,6 @@
 
         environment.persistence."/persist".users.${username} = {
           directories = [
-            # Top-level data.
             "Desktop"
             "Documents"
             "Downloads"
@@ -34,7 +32,6 @@
             "Projects"
             "nix-config"
 
-            # Whole `.config` (zen, obsidian, nvim, syncthing, noctalia, …).
             ".config"
             ".icons"
             ".vscode"
@@ -43,13 +40,9 @@
               mode = "0700";
             }
 
-            # Whole `.local/share` (Trash included, clear manually).
             ".local/share"
-            # Proactive for the gaming host.
             ".steam"
 
-            # `.local/state` stays mostly ephemeral (old wipe list);
-            # keep only nix profile, HM state, and noctalia marker.
             ".local/state/nix"
             ".local/state/home-manager"
             ".local/state/noctalia"
