@@ -33,7 +33,7 @@
         };
 
         networking.networkmanager.enable = lib.mkDefault true;
-        hardware.enableRedistributableFirmware = lib.mkDefault true;
+        hardware.enableAllFirmware = lib.mkDefault true;
 
         # Shorten offline boot wait (upstream `nm-online` default is 30s).
         # Ordering-only `after = network-online.target` consumers (e.g. HM)
