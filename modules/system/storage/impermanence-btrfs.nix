@@ -1,10 +1,6 @@
-# Btrfs-only rollback for impermanence: always wipes `/root`, and wipes
-# `/home` when home persistence is declared (`impermanence-home`
-# imported — importing IS enabling, no flag). Requires the
-# filesystem-agnostic `impermanence` module (`/persist` bind-mounts);
-# future ext4 hosts use `impermanence` (+ `impermanence-home` for ephemeral
-# home, where tmpfs `/` provides the wipe) with a tmpfs `/` instead of
-# importing this. Toggle guide: `modules/system/storage/README.md`.
+# Btrfs-only initrd rollback: always `/root`, plus `/home` when
+# `impermanence-home` is imported (derived from `users` persistence, no flag).
+# Guide: `modules/system/storage/README.md`.
 {
   flake.modules.nixos.impermanence-btrfs =
     {
@@ -40,11 +36,8 @@
 
           boot.initrd.systemd.enable = true;
 
-          # Target of the `impermanence-home` bind mounts when home is
-          # ephemeral — must be mounted early. Moved here (not in
-          # `impermanence-home`) because a separate `/home` mount only
-          # exists on btrfs; ext4+tmpfs hosts have no `/home` filesystem
-          # and must not gain a spurious device-less entry.
+          # Separate `/home` mounts are btrfs-only — keep this out of
+          # `impermanence-home` so ext4+tmpfs gains no spurious entry.
           fileSystems."/home".neededForBoot = lib.mkIf wipeHome true;
 
           boot.initrd.systemd.services.rollback = {

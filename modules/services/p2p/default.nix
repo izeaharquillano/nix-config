@@ -1,6 +1,4 @@
-# P2P feature (dendritic feature closure): system daemon + HM tray live together.
-# Was split as `features/p2p.nix` (nixos.p2p) + `home/base/features/p2p.nix`
-# (home-features-p2p) — now one domain dir `services/p2p/`.
+# P2P feature closure: system daemons + HM tray in one domain dir.
 {
   flake.modules.homeManager.p2p = {
     services.syncthing.tray.enable = true;
@@ -66,10 +64,8 @@
           homeDir = config.users.users.${username}.home;
         in
         {
-          # Default tmpfs path (`/run/agenix/...`). Safe on impermanence now
-          # that identity points at `/persist/etc/ssh` directly: activation
-          # decrypts before services start, and `netbird` has
-          # `Restart=always` + login loops on `NeedsLogin`.
+          # Default tmpfs path is safe: identity reads straight from
+          # `/persist`, and netbird self-heals (`Restart=always` + login loop).
           age.secrets.netbird-setup-key = {
             file = flakeRoot + /secrets/netbird-setup-key.age;
             owner = "root";

@@ -16,10 +16,8 @@
 
       age = {
         # Persistent path first: on impermanence hosts `/etc/ssh` is a
-        # bind-mount that may not exist when `agenixInstall` runs on boot
-        # (ryantm/agenix#45 — switch succeeds, boot decrypt fails).
-        # `/persist` has `neededForBoot`, so it is always ready.
-        # Second entry covers non-impermanence hosts / fresh installs.
+        # bind-mount missing at boot decrypt time (agenix#45); `/persist`
+        # is always ready. Second entry covers non-impermanence/installs.
         identityPaths = [
           "/persist/etc/ssh/ssh_host_ed25519_key"
           "/etc/ssh/ssh_host_ed25519_key"
@@ -39,9 +37,8 @@
       '';
 
       # Empty placeholder if undecryptable so `!include` never breaks nix.
-      # Skipped when `agenixInstall` itself aborts (fresh host) — follow the
-      # two-pass rekey workflow in the README for that case.
-      # (`agenixInstall` is agenix's internal activation script name;
+      # Skipped when `agenixInstall` itself aborts (fresh host) — rekey
+      # via the two-pass workflow in the README. (Internal script name;
       # re-check on `nix flake update agenix`.)
       system.activationScripts.nixAccessTokensFallback = lib.stringAfter [ "agenixInstall" ] ''
         tokenPath="${config.age.secrets.nix-access-tokens.path}"
