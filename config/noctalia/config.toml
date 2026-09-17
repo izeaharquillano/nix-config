@@ -9,6 +9,11 @@ font_family = "JetBrainsMono NF"
 widget_spacing = 15
 margin_ends = 0
 radius = 0
+auto_hide = false
+smart_auto_hide = true
+reserve_space = false
+show_on_workspace_switch = false
+thickness = 28
 
 [notification]
 filter_order = [ "filter" ]
