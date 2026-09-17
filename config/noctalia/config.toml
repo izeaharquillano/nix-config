@@ -13,7 +13,7 @@ auto_hide = false
 smart_auto_hide = true
 reserve_space = false
 show_on_workspace_switch = false
-thickness = 28
+thickness = 30
 
 [notification]
 filter_order = [ "filter" ]
