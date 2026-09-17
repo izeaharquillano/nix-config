@@ -31,6 +31,7 @@
       home.packages = [
         pkgs.mangohud
         pkgs.goverlay
+        pkgs.lutris
       ];
     };
 }
