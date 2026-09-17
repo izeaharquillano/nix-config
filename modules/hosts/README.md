@@ -20,11 +20,11 @@ All NixOS hosts use LUKS2 full-disk encryption with btrfs and [impermanence](htt
 
 **LUKS settings:** LUKS2, AES-XTS-Plain64, SHA-512, Argon2id, TRIM enabled.
 
-**Impermanence:** Filesystem-agnostic `/persist` bind-mounts (`nixos.impermanence`) plus btrfs-only initrd rollback (`nixos.impermanence-btrfs`) — always `/root`, plus `/home` when the host imports `nixos.impermanence-home` (padrick experiment; importing IS enabling). `/nix` and `/persist` are separate persistent subvolumes; `/home` is a persistent subvolume on hosts without `impermanence-home`. System state (`/var/lib/nixos`, `/etc/machine-id`, `/etc/ssh`, NetworkManager, Bluetooth) is persisted via impermanence bind mounts. Future ext4 hosts use `nixos.impermanence` alone with a tmpfs `/`.
+**Impermanence:** Filesystem-agnostic `/persist` bind-mounts (`nixos.impermanence`) plus btrfs-only initrd rollback (`nixos.impermanence-btrfs`) — always `/root`, plus `/home` when the host imports `nixos.impermanence-home` (padrick experiment; importing IS enabling). `/nix` and `/persist` are separate persistent subvolumes; `/home` is a persistent subvolume on hosts without `impermanence-home`. System state (`/var/lib/nixos`, `/etc/machine-id`, `/etc/ssh`, NetworkManager, Bluetooth) is persisted via impermanence bind mounts. `nixos.impermanence-home` itself is filesystem-agnostic (portable bind-mount allowlist) — future ext4 hosts pair `nixos.impermanence` (+ `nixos.impermanence-home` for ephemeral home, where tmpfs `/` provides the wipe) with a tmpfs `/` and never import `impermanence-btrfs`.
 
 **Swap:** zswap handles compressed swap in RAM. A swapfile on btrfs provides overflow. Hibernation is not configured.
 
-**Ephemeral `/home` experiment:** padrick imports `nixos.impermanence-home`; jobert doesn't (control). To opt a host in/out, add/remove the import — no flags. When opting OUT, the old binds under `/persist/home/<user>` linger unmounted: backfill first (`sudo rsync -a /persist/home/<user>/ /home/<user>/` + `chown`), reboot, verify, and only then `sudo rm -rf /persist/home/<user>` (deleting while binds are still active deletes live data).
+**Ephemeral `/home` experiment:** padrick imports `nixos.impermanence-home`; jobert doesn't (control). To opt a host in/out, add/remove the import — no flags. Data-loss-safe procedures: [storage README](../system/storage/README.md#ephemeral-home-toggling-onoff-safely) — read the whole direction once before touching anything.
 
 **Disko config files:** `modules/hosts/<name>/_disko.nix`
 
@@ -115,7 +115,7 @@ in
     imports = [
       inputs.disko.nixosModules.default
       nixos.desktop-full
-      # nixos.impermanence-home  # optional ephemeral `/home` (padrick experiment)
+      # nixos.impermanence-home  # optional fs-agnostic ephemeral `/home` (guide: ../system/storage/README.md)
       nixos.greetd
       nixos.niri
       nixos.hyprland

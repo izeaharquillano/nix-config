@@ -27,10 +27,12 @@ explicit via `inputs.self.modules.*`.
     `secrets.nix` (agenix; `0440 root:wheel` + `!include` fallback),
     `security.nix` (neovim, firewall, polkit/rtkit)
   - `storage/` — `btrfs.nix`, `impermanence.nix` (fs-agnostic `/persist`,
-    root-only), `impermanence-home.nix` (ephemeral `/home` allowlist,
-    host-imported), `impermanence-btrfs.nix` (btrfs-only initrd rollback —
+    root-only), `impermanence-home.nix` (fs-agnostic ephemeral `/home`
+    allowlist, host-imported; works on ext4+tmpfs too),
+    `impermanence-btrfs.nix` (btrfs-only initrd rollback —
     always `/root`, plus `/home` when `impermanence-home` is imported;
-    ext4 hosts use `impermanence` alone with tmpfs `/`)
+    ext4 hosts use `impermanence` (+ `impermanence-home`) with tmpfs `/`;
+    guide: `system/storage/README.md`)
   - `boot/` — `secureboot.nix` (Lanzaboote, requires impermanence),
     `zswap.nix`
   - `types/` — `desktop.nix` (`nix` + `direnv` + `system` + `locale` +
@@ -188,7 +190,7 @@ Optional functionality lives in `services/` + `programs/` as plain composable mo
 imports = [
   inputs.disko.nixosModules.default # explicit per host (not hidden in the factory)
   nixos.desktop-full # desktop + user-ize + btrfs + impermanence + impermanence-btrfs + secureboot + zswap + p2p + fhs
-  # nixos.impermanence-home # optional ephemeral `/home` (padrick experiment)
+  # nixos.impermanence-home # optional fs-agnostic ephemeral `/home` (padrick experiment; toggle guide in system/storage/README)
   nixos.greetd # login manager (explicit per host, needs a compositor)
   nixos.niri # Niri compositor (explicit per host)
   nixos.hyprland # Hyprland compositor (explicit per host)

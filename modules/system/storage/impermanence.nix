@@ -1,8 +1,12 @@
 # Filesystem-agnostic ephemeral root with persistent /persist.
+# Audited: no btrfs-exclusive actions here — `/persist` bind-mounts,
+# `neededForBoot`, tmpfiles, sudo, and machine-id seeding apply unchanged
+# to btrfs and ext4+tmpfs.
 # Btrfs hosts also import `impermanence-btrfs` (initrd rollback of the
 # `/root` subvolume, plus `/home` when `impermanence-home` is imported);
-# future ext4 hosts pair this module alone with a tmpfs `/` instead —
-# no changes needed here.
+# future ext4 hosts pair this module (+ `impermanence-home` for ephemeral
+# home, where tmpfs `/` provides the wipe) with a tmpfs `/` instead —
+# no changes needed here. Toggle guide: `modules/system/storage/README.md`.
 {
   flake.modules.nixos.impermanence =
     {

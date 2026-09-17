@@ -267,7 +267,7 @@ The dev shell includes `just`, `deadnix`, `statix`, and `agenix` (nixfmt/shfmt c
 ## Security
 
 - **Disk Encryption:** LUKS2 full-disk encryption on all NixOS hosts (declared via disko)
-- **Impermanence:** Ephemeral root with persistent state (`nixos.impermanence`); btrfs hosts also wipe the `/root` subvolume on every boot (`nixos.impermanence-btrfs`), plus `/home` on hosts importing `nixos.impermanence-home` (padrick experiment); only explicitly persisted state survives
+- **Impermanence:** Ephemeral root with persistent state (`nixos.impermanence`); btrfs hosts also wipe the `/root` subvolume on every boot (`nixos.impermanence-btrfs`), plus `/home` on hosts importing the fs-agnostic `nixos.impermanence-home` (padrick experiment; ext4+tmpfs gets the wipe from tmpfs); only explicitly persisted state survives (toggle guide: `modules/system/storage/README.md`)
 - **Firewall:** Enabled system-wide; port allowlists live with their features (`services/zerotier.nix`, `services/p2p/`, `programs/gaming.nix`, `programs/virtualisation/vm-qemu.nix`, per-host `_services.nix`)
 - **SSH:** Key-based auth only, root login denied, login limited to the primary user (`AllowUsers`), auth throttling (`modules/services/ssh.nix`)
 - **Secrets:** agenix with age + SSH host keys (see [Secrets Management](#secrets-management))
