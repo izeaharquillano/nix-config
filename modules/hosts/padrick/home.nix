@@ -18,6 +18,7 @@ in
         hm.vm-qemu
         hm.vm-bottles
         hm.vm-dosbox
+        hm.dotnet
       ];
 
       home.packages = [

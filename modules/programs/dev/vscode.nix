@@ -11,7 +11,6 @@
           pkgs.vscode-extensions.vscodevim.vim
           pkgs.vscode-extensions.jdinhlife.gruvbox
           pkgs.vscode-extensions.jnoortheen.nix-ide
-          pkgs.vscode-extensions.ms-dotnettools.csharp
         ];
       };
       xdg.configFile."Code/User/settings.json".source = flakeRoot + /config/vscode/settings.json;

@@ -4,4 +4,7 @@
     "editor.fontSize": 16,
     "vim.vimrc.enable": true,
     "vim.vimrc.path": "~/.config/vscode/.vimrc",
+    "extensions.autoCheckUpdates": false,
+    "extensions.autoUpdate": false,
+    "update.mode": "none",
 }

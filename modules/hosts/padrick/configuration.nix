@@ -18,6 +18,8 @@ in
       nixos.docker
       nixos.podman
       nixos.vm-qemu
+      nixos.dotnet
+      nixos.java
       ./_disko.nix
       ./_hardware-configuration.nix
       ./_services.nix
