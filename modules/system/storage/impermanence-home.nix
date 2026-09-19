@@ -43,12 +43,12 @@
 
             ".local/state/nix"
             ".local/state/home-manager"
-            ".local/state/noctalia"
           ];
 
           files = [
             ".zsh_history"
             ".bash_history"
+            ".local/state/noctalia/.setup-complete"
           ];
         };
       };
