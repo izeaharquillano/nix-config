@@ -20,6 +20,7 @@ in
         hm.vm-bottles
         hm.vm-dosbox
         hm.gaming
+        hm.dotnet
       ];
 
       home.packages = [

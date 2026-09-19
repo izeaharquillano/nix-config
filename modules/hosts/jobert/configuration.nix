@@ -19,6 +19,8 @@ in
       nixos.podman
       nixos.vm-qemu
       nixos.gaming
+      nixos.dotnet
+      nixos.java
       ./_disko.nix
       ./_hardware-configuration.nix
       ./_services.nix
