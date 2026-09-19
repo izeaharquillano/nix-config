@@ -11,13 +11,14 @@
 
       # Apphosts only probe FHS locations (`/usr/share/dotnet`,
       # `/etc/dotnet/install_location*`); point them at the store.
-      environment.sessionVariables = {
-        DOTNET_ROOT = dotnetRoot;
-        DOTNET_ROOT_X64 = dotnetRoot;
+      environment = {
+        sessionVariables = {
+          DOTNET_ROOT = dotnetRoot;
+          DOTNET_ROOT_X64 = dotnetRoot;
+        };
+        etc."dotnet/install_location".text = dotnetRoot;
+        etc."dotnet/install_location_x64".text = dotnetRoot;
       };
-
-      environment.etc."dotnet/install_location".text = dotnetRoot;
-      environment.etc."dotnet/install_location_x64".text = dotnetRoot;
     };
 
   flake.modules.homeManager.dotnet =
