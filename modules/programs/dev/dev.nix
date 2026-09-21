@@ -9,21 +9,23 @@
         pkgs.opencode
       ];
 
-      programs.git = {
-        enable = true;
-        settings = {
-          user = {
-            name = vars.userfullname;
-            email = vars.useremail;
+      programs = {
+        git = {
+          enable = true;
+          settings = {
+            user = {
+              name = vars.userfullname;
+              email = vars.useremail;
+            };
           };
         };
-      };
 
-      programs.npm.enable = true;
+        npm.enable = true;
 
-      programs.devenv = {
-        enable = true;
-        enableZshIntegration = true;
+        devenv = {
+          enable = true;
+          enableZshIntegration = true;
+        };
       };
     };
 }
