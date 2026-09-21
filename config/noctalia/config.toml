@@ -9,9 +9,8 @@ font_family = "JetBrainsMono NF"
 widget_spacing = 15
 margin_ends = 0
 radius = 0
-auto_hide = false
-smart_auto_hide = true
-reserve_space = false
+smart_auto_hide = false
+reserve_space = true
 show_on_workspace_switch = false
 thickness = 30
 
