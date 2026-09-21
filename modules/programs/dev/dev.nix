@@ -20,5 +20,10 @@
       };
 
       programs.npm.enable = true;
+
+      programs.devenv = {
+        enable = true;
+        enableZshIntegration = true;
+      };
     };
 }

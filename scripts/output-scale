@@ -44,36 +44,73 @@ scale_index() {
 }
 
 adjust_scale() {
+  # NOTE: takes the current scale as an integer (scale*100), NOT a preset
+  # index, so non-preset scales (e.g. 1.2) work. `+`/`-`/`cycle` snap to the
+  # nearest preset; explicit values accept any positive number.
   local input="${1}"
-  local current_scale_index="${2}"
+  local current_int="${2}"
+  local last_index=$(( ${#SCALES[@]} - 1 ))
 
   case "${input}" in
   +)
-    local next_scale_index="$((current_scale_index + 1))"
-    ((next_scale_index >= ${#SCALES[@]})) && next_scale_index="${current_scale_index}"
-    printf '%s\n' "${SCALES[${next_scale_index}]}"
+    local scale preset_int
+    for scale in "${SCALES[@]}"; do
+      preset_int="$(scale_to_int "${scale}")"
+      if [ "${preset_int}" -gt "${current_int}" ]; then
+        printf '%s\n' "${scale}"
+        return 0
+      fi
+    done
+    # Already at/above max: clamp to max preset.
+    printf '%s\n' "${SCALES[${last_index}]}"
     ;;
 
   -)
-    local next_scale_index="$((current_scale_index - 1))"
-    ((next_scale_index < 0)) && next_scale_index=0
-    printf '%s\n' "${SCALES[${next_scale_index}]}"
+    local result="${SCALES[0]}"
+    local scale preset_int
+    for scale in "${SCALES[@]}"; do
+      preset_int="$(scale_to_int "${scale}")"
+      if [ "${preset_int}" -lt "${current_int}" ]; then
+        result="${scale}"
+      else
+        break
+      fi
+    done
+    printf '%s\n' "${result}"
     ;;
 
   cycle)
-    local next_scale_index="$(((current_scale_index + 1) % ${#SCALES[@]}))"
-    printf '%s\n' "${SCALES[${next_scale_index}]}"
+    local scale preset_int
+    for scale in "${SCALES[@]}"; do
+      preset_int="$(scale_to_int "${scale}")"
+      if [ "${preset_int}" -gt "${current_int}" ]; then
+        printf '%s\n' "${scale}"
+        return 0
+      fi
+    done
+    # Wrap around when at/above max.
+    printf '%s\n' "${SCALES[0]}"
     ;;
 
   *)
+    if [[ ! "${input}" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
+      echo "'${input}' is not valid, use a positive number, '+', '-', or leave empty to cycle (presets: ${SCALES[*]})" >&2
+      return 1
+    fi
+
     local key
     key="$(scale_to_int "${input}")"
+    if [ "${key}" -le 0 ]; then
+      echo "'${input}' is not valid, scale must be positive" >&2
+      return 1
+    fi
 
-    if local s; s="$(int_to_scale "${key}")"; then
+    local s
+    if s="$(int_to_scale "${key}")"; then
       printf '%s\n' "${s}"
     else
-      echo "'${input}' is not valid, please choose from: ${SCALES[*]}" >&2
-      return 1
+      # Accept non-preset scales (compositors support arbitrary floats).
+      printf '%s\n' "${input}"
     fi
     ;;
   esac
@@ -197,14 +234,27 @@ main() {
   local focused_output
   focused_output="$(get_focused_${compositor} "${state_before}")"
 
+  if [ -z "${focused_output}" ]; then
+    echo "Could not determine focused output, aborting!" >&2
+    exit 1
+  fi
+
+  local old_x old_y old_w old_h current_scale
   read -r old_x old_y old_w old_h current_scale <<<"$(get_output_info_${compositor} "${state_before}" "${focused_output}")"
 
-  local current_scale_int current_scale_index
+  if [ -z "${current_scale:-}" ]; then
+    echo "Could not determine current scale for '${focused_output}', aborting!" >&2
+    exit 1
+  fi
+
+  # Integer form (scale*100) so non-preset scales (e.g. 1.2) compare correctly.
+  # NOTE: must not call scale_index here — it exits 1 for non-preset scales,
+  # which aborts the script under `set -o errexit` (writeShellApplication).
+  local current_scale_int
   current_scale_int="$(scale_to_int "${current_scale}")"
-  current_scale_index="$(scale_index "${current_scale_int}")"
 
   local new_scale
-  if ! new_scale="$(adjust_scale "${1:-cycle}" "${current_scale_index}")"; then
+  if ! new_scale="$(adjust_scale "${1:-cycle}" "${current_scale_int}")"; then
     exit 1
   fi
 
