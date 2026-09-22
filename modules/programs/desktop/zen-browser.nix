@@ -1,6 +1,6 @@
 # Zen Browser; `*Force` overwrites manual changes (set false to merge).
 {
-  flake.modules.homeManager.web =
+  flake.modules.homeManager.zen-browser =
     { inputs, ... }:
 
     {

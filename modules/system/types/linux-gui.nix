@@ -10,7 +10,7 @@ in
       hm.linux-desktop
       hm.linux-utils
       hm.apps
-      hm.web
+      hm.zen-browser
       hm.noctalia
       hm.notes
     ];
