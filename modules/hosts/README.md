@@ -396,6 +396,10 @@ in
 }
 ```
 
+Also add `"aarch64-darwin"` to `systems` in `modules/nix/flake-parts.nix` —
+otherwise `formatter`/`devShells`/`checks`/`apps` won't exist on the darwin
+machine (kept minimal today; extra systems triple `perSystem` eval).
+
 ### 5. First deploy
 
 ```bash

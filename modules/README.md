@@ -35,15 +35,16 @@ explicit via `inputs.self.modules.*`.
     guide: `system/storage/README.md`)
   - `boot/` — `secureboot.nix` (Lanzaboote, requires impermanence),
     `zswap.nix`
-  - `types/` — `desktop.nix` (`nix` + `direnv` + `system` + `locale` +
-    `ssh` + `secrets` + `security` + `packages` +
+  - `types/` — `core.nix` (universal base shared by both system types:
+    `nix` + `direnv` + `system` + `locale` + `ssh` + `secrets` +
+    `security` + `packages`), `desktop.nix` (`core` +
     `desktop-services` + `home-manager`; compositors `niri`/`hyprland`
     and `greetd` are NOT collected — hosts import `nixos.greetd` +
     `nixos.niri`/`nixos.hyprland` explicitly), `server.nix`
-    (core only, no desktop, no HM), `linux-core.nix` (headless HM:
+    (`core` only, no desktop, no HM), `linux-core.nix` (headless HM:
     `user-ize` + `shell` + `cli` + `dev` + `terminal` + `nvim`),
     `linux-gui.nix` (full GUI HM: `linux-core` + `linux-desktop` +
-    `linux-utils` + `apps` + `web` + `noctalia` +
+    `linux-utils` + `apps` + `zen-browser` + `noctalia` +
     `notes`; compositors `hm.niri`/`hm.hyprland` are NOT collected —
     hosts import them explicitly). Hosts import one NixOS type (`desktop`/`server`) + one HM
     type (`linux-gui`/`linux-core`) + the features they need.
@@ -53,7 +54,7 @@ explicit via `inputs.self.modules.*`.
     list their deltas (greetd, compositors, `docker`/`podman`, `vm-qemu`, `gaming`,
     `zerotier`); plain `desktop` remains the minimal base.
 - **`services/`** — System daemons (`services.*`, `virtualisation.*`,
-  firewall). `ssh.nix` (key-only, `AllowUsers`), `greetd.nix`, `desktop.nix` (PipeWire, fonts,
+  firewall). `ssh.nix` (key-only, `AllowUsers`), `greetd.nix`, `desktop-services.nix` (PipeWire, fonts,
   bluetooth), `containers/` (`docker.nix`: rootless Docker, `podman.nix`:
   Podman + HM Distrobox), `zerotier.nix`
   (needs `features.p2p.zerotier.networkId`), and `p2p/` as a **feature
@@ -64,9 +65,9 @@ explicit via `inputs.self.modules.*`.
   `desktop/hyprland/` (`nixos.hyprland` + `homeManager.hyprland`) and
   `desktop/niri/` (`nixos.niri` + `homeManager.niri`) in one dir each.
   - `desktop/` — `hyprland/`, `niri/`, `noctalia.nix`, `apps.nix`,
-    `web.nix` (Zen), `notes.nix` (Obsidian), `linux-desktop.nix` (XDG/Nemo/GTK)
-  - `shell/` — `shell.nix` (+ `bat` for `MANPAGER`), `cli.nix` (+ `wget`/`tmux`), `terminal.nix` (kitty), `utils.nix` (`linux-utils` aspect)
-  - `dev/` — `dev.nix` (git/lazygit/npm), `nvim.nix`, `vscode.nix`, `zed.nix`
+    `zen-browser.nix` (Zen), `notes.nix` (Obsidian), `linux-desktop.nix` (XDG/Nemo/GTK)
+  - `shell/` — `shell.nix` (+ `bat` for `MANPAGER`), `cli.nix` (+ `wget`/`tmux`), `terminal.nix` (kitty), `linux-utils.nix` (`linux-utils` aspect)
+  - `dev/` — `dev.nix` (git/lazygit/npm), `nvim.nix`, `vscode.nix`
   - `media/` — `recording.nix` (OBS)
   - `gaming.nix` (`nixos.gaming`: Steam/Gamescope/Gamemode + `homeManager.gaming`: MangoHud/GOverlay),
     `virtualisation/` (`vm-qemu` system; `vm-bottles`/`vm-dosbox` HM-only),
@@ -84,9 +85,12 @@ explicit via `inputs.self.modules.*`.
 
 To add a module, create a `.nix` file declaring one
 `flake.modules.<class>.<name>` piece — `import-tree` picks it up
-automatically. Only extend a collector (`desktop`/`server`,
+automatically. Only extend a collector (`core`/`desktop`/`server`,
 `linux-core`/`linux-gui`, `desktop-full`) for universal core every host
-needs; features are host-imported directly, never collected. If a feature spans
+needs; features are host-imported directly, never collected. With few,
+similar hosts this duplicates feature delta lists across
+`hosts/<name>/configuration.nix` — prefer that copy-paste over a second
+tier of feature collectors until 3+ hosts share a set. If a feature spans
 NixOS + Home Manager, put BOTH aspects in one domain dir
 (e.g. `services/p2p/default.nix`, `programs/desktop/niri/default.nix`).
 
@@ -203,7 +207,7 @@ imports = [
 ];
 ```
 
-Home-side pieces (`vscode`, `zed`, `recording`, `p2p`, `podman`, `fhs`,
+Home-side pieces (`vscode`, `recording`, `p2p`, `podman`, `fhs`,
 `vm-qemu`, `vm-bottles`, `vm-dosbox`, `gaming`) live alongside their
 domain siblings under `programs/` + `services/` and are composed in each
 host's `home.nix` the same way (`linux-gui` + `niri` + `hyprland` +

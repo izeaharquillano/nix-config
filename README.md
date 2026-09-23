@@ -18,8 +18,8 @@ nix-config/
 ├── Justfile               # Task runner (just --list to see all commands)
 ├── modules/               # ALL config, auto-imported by import-tree (domain groups)
 │   ├── nix/               # flake-parts infra, flake.lib (vars, host factories), perSystem tools
-│   ├── system/            # OS foundation + types (desktop/server, linux-core/linux-gui)
-│   ├── services/          # System daemons (ssh, p2p+zerotier, docker/podman, greetd, desktop)
+│   ├── system/            # OS foundation + types (core/desktop/server, linux-core/linux-gui)
+│   ├── services/          # System daemons (ssh, p2p+zerotier, docker/podman, greetd, desktop-services)
 │   ├── programs/          # User-facing apps (shell/dev/desktop/gaming/vm/fhs, feature closures)
 │   ├── users/             # Primary user as a reusable feature
 │   └── hosts/             # Per-host composition roots → [modules/hosts/README.md](modules/hosts/README.md)
@@ -36,7 +36,7 @@ nix-config/
 |---|---|
 | Simple | One file = one `flake.modules.<class>.<name>` (e.g. `services/ssh.nix` → `nixos.ssh`) |
 | Multi-Context | One file populates several classes (`system/nix.nix` → `nixos.nix` + `darwin.nix`, `users/ize.nix`, `nix/home-manager.nix`) |
-| Inheritance | Layered system types: `desktop` / `server`, `linux-core` / `linux-gui` |
+| Inheritance | Layered system types: `core` → `desktop` / `server`, `linux-core` / `linux-gui` |
 | Conditional | Options only where a module needs host-specific *values* (`zerotier.networkId`); enabling is done by importing |
 | Collector | Host-local `_`-prefixed modules imported relatively; shared concerns collected by system types (`desktop-full`, `linux-gui`) |
 | Constants | `flake.lib.vars` (user identity), single source in `modules/nix/lib.nix` |
@@ -115,7 +115,7 @@ imports = [
   hm.linux-gui
   hm.niri
   hm.hyprland
-  hm.vscode # VS Code (or zed for Zed)
+  hm.vscode # VS Code
   hm.recording # OBS Studio
   hm.p2p # Syncthing tray
   hm.podman # Distrobox CLI

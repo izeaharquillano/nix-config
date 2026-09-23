@@ -30,8 +30,9 @@ let
     inputs.nix-alien.overlays.default
   ];
 
-  # Shared by every NixOS/HM eval. No `hostname` (unused); `inputs` is for
-  # external modules. Mirrored as HM `extraSpecialArgs` — keep in sync.
+  # Shared by every NixOS/HM eval (HM `extraSpecialArgs` is derived from
+  # this in `modules/nix/home-manager.nix`). No `hostname` (unused);
+  # `inputs` is for external modules.
   specialArgs = {
     inherit inputs username vars;
     flakeRoot = self;
@@ -56,7 +57,8 @@ in
             {
               nixpkgs.overlays = sharedOverlays;
               networking.hostName = lib.mkDefault hostname;
-              system.stateVersion = vars.stateVersion;
+              # `mkDefault` matches hostName; hosts rarely override this.
+              system.stateVersion = lib.mkDefault vars.stateVersion;
             }
           ];
         };

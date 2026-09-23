@@ -6,14 +6,7 @@ in
 {
   flake.modules.nixos.desktop = {
     imports = [
-      nixos.nix
-      nixos.direnv
-      nixos.system
-      nixos.locale
-      nixos.ssh
-      nixos.secrets
-      nixos.security
-      nixos.packages
+      nixos.core
       nixos.desktop-services
       nixos.home-manager
     ];

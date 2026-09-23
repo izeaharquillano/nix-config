@@ -21,6 +21,7 @@
       };
     };
 
+  # Extensions only apply when the host also imports `hm.vscode`.
   flake.modules.homeManager.dotnet =
     { pkgs, ... }:
     {

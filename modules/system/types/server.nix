@@ -6,14 +6,7 @@ in
 {
   flake.modules.nixos.server = {
     imports = [
-      nixos.nix
-      nixos.direnv
-      nixos.system
-      nixos.locale
-      nixos.ssh
-      nixos.secrets
-      nixos.security
-      nixos.packages
+      nixos.core
     ];
   };
 }
