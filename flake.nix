@@ -1,7 +1,4 @@
 # Entry point: inputs + `mkFlake(import-tree ./modules)`; config in `modules/`.
-# No `nixConfig` on purpose: `modules/system/nix.nix` sets substituters
-# system-wide, and a flake-level one would re-prompt `accept-flake-config`
-# on every boot (ephemeral /root on impermanence hosts).
 {
   description = "NixOS Configuration";
 
@@ -55,11 +52,7 @@
 
     agenix = {
       url = "github:ryantm/agenix";
-      inputs = {
-        nixpkgs.follows = "nixpkgs";
-        darwin.follows = "nix-darwin";
-        home-manager.follows = "home-manager";
-      };
+      inputs.nixpkgs.follows = "nixpkgs";
     };
 
     treefmt-nix = {
