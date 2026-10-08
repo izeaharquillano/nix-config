@@ -2,9 +2,10 @@
     "workbench.colorTheme": "Gruvbox Dark Medium",
     "editor.fontFamily": "JetbrainsMono NF",
     "editor.fontSize": 16,
+    "editor.lineNumbers": "relative",
     "vim.vimrc.enable": true,
     "vim.vimrc.path": "~/.config/vscode/.vimrc",
     "extensions.autoCheckUpdates": false,
-    "extensions.autoUpdate": false,
+    "extensions.autoUpdate": "off",
     "update.mode": "none",
 }
