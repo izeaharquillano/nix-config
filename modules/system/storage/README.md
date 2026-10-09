@@ -1,8 +1,8 @@
 # Storage
 
 Disko layouts + impermanence (ephemeral root/home, persistent `/persist`).
-All NixOS hosts: LUKS2 + btrfs + [disko](https://github.com/nix-community/disko);
-impermanence via [nix-community/impermanence](https://github.com/nix-community/impermanence).
+
+All NixOS hosts: LUKS2 + btrfs + [disko](https://github.com/nix-community/disko); impermanence via [nix-community/impermanence](https://github.com/nix-community/impermanence).
 
 ## Modules
 
@@ -11,13 +11,11 @@ Importing IS enabling — no flags:
 | Module | File | Scope |
 |---|---|---|
 | `nixos.impermanence` | `impermanence.nix` | Required base: `/persist` bind-mounts, `neededForBoot`, machine-id, sudo. Filesystem-agnostic. |
-| `nixos.impermanence-btrfs` | `impermanence-btrfs.nix` | Btrfs-only initrd wipe: always `/root`, plus `/home` when `impermanence-home` is imported. In `desktop-full`; never on ext4. |
+| `nixos.impermanence-btrfs` | `impermanence-btrfs.nix` | Btrfs-only initrd wipe: always `/root`, plus `/home` when impermanence-home is imported. In desktop-full; never on ext4. |
 | `nixos.impermanence-home` | `impermanence-home.nix` | Ephemeral-`/home` allowlist, per-host opt-in. Filesystem-agnostic (on ext4, tmpfs `/` is the wipe). |
-| `nixos.btrfs` | `btrfs.nix` | `compress=zstd:3,noatime` for `/`, `/home`, `/nix` + monthly scrub. In `desktop-full`. |
+| `nixos.btrfs` | `btrfs.nix` | `compress=zstd:3,noatime` for `/`, `/home`, `/nix` + monthly scrub. In desktop-full. |
 
-Ephemeral `/home` = only the allowlist in `impermanence-home.nix` survives
-reboot; `.cache`, `.thumbnails`, `.npm` and stray dotfiles are wiped. Live
-data sits at `/persist/home/<user>/…`, bind-mounted to `/home/<user>/…`.
+An ephemeral `/home` means only the allowlist in impermanence-home.nix survives a reboot — .cache, .thumbnails, .npm and stray dotfiles are wiped. Live data sits at `/persist/home/<user>/…`, bind-mounted to `/home/<user>/…`.
 
 ## Ephemeral `/home`: toggling on/off safely
 
@@ -33,55 +31,85 @@ Read the full direction once before touching anything.
 
 Next reboot wipes `/home`. Anything not allowlisted and not copied to `/persist` is gone.
 
-```bash
-# 1. Extend the allowlist FIRST if more must survive.
-$EDITOR modules/system/storage/impermanence-home.nix
-# 2. Safety net: full copy into /persist (btrfs: `btrfs subvolume snapshot -r
-#    /home …` instead — instant; either way it must live under /persist).
-sudo mkdir -p /persist/snapshots
-sudo rsync -a --exclude='.cache/' /home/$USER/ /persist/snapshots/home-before-ephemeral/
-# 3. Pre-seed BEFORE adding the import (after `switch`, empty binds shadow
-#    this data). One rsync; extras outside the allowlist are harmless.
-sudo mkdir -p /persist/home/$USER
-sudo rsync -a --exclude='.cache/' --exclude='.thumbnails/' --exclude='.npm/' /home/$USER/ /persist/home/$USER/
-sudo chown -R $USER:users /persist/home/$USER
-# 4. Add nixos.impermanence-home to configuration.nix, then switch (NO reboot).
-sudo nixos-rebuild switch --flake .#<host>
-# 5. Rescue stragglers NOW — non-allowlisted files vanish on reboot.
-findmnt -R /home | grep persist
-ls ~/Documents
-# 6. Reboot, then verify your data + the wipe.
-sudo reboot
-ls ~/Documents && [ -z "$(ls -A ~/.cache 2>/dev/null)" ] && echo "wipe confirmed"
-```
+1. **Extend the allowlist FIRST** if more must survive.
+
+   ```bash
+   $EDITOR modules/system/storage/impermanence-home.nix
+   ```
+
+2. **Safety net:** full copy into `/persist` (btrfs: `btrfs subvolume snapshot -r /home …` instead — instant; either way it must live under /persist).
+
+   ```bash
+   sudo mkdir -p /persist/snapshots
+   sudo rsync -a --exclude='.cache/' /home/$USER/ /persist/snapshots/home-before-ephemeral/
+   ```
+
+3. **Pre-seed BEFORE adding the import** — after `switch`, empty binds shadow this data. One rsync; extras outside the allowlist are harmless.
+
+   ```bash
+   sudo mkdir -p /persist/home/$USER
+   sudo rsync -a --exclude='.cache/' --exclude='.thumbnails/' --exclude='.npm/' /home/$USER/ /persist/home/$USER/
+   sudo chown -R $USER:users /persist/home/$USER
+   ```
+
+4. Add `nixos.impermanence-home` to configuration.nix, then switch (NO reboot).
+
+   ```bash
+   sudo nixos-rebuild switch --flake .#<host>
+   ```
+
+5. **Rescue stragglers NOW** — non-allowlisted files vanish on reboot.
+
+   ```bash
+   findmnt -R /home | grep persist
+   ls ~/Documents
+   ```
+
+6. Reboot, then verify your data + the wipe.
+
+   ```bash
+   sudo reboot
+   ls ~/Documents && [ -z "$(ls -A ~/.cache 2>/dev/null)" ] && echo "wipe confirmed"
+   ```
 
 ### Turning OFF (ephemeral → persistent)
 
 Data is safe in `/persist` throughout; the risk is deleting it early or skipping the backfill.
 
-```bash
-# 1. Safety net inside /persist (guards a premature rm of /persist/home).
-sudo mkdir -p /persist/snapshots
-sudo cp -a /persist/home/$USER /persist/snapshots/home-$USER-before-off
-# 2. Rescue anything ephemeral-only worth keeping into /persist.
-# 3. Remove nixos.impermanence-home from configuration.nix, then switch
-#    (NO reboot, NO delete — /home will look empty; that's expected).
-sudo nixos-rebuild switch --flake .#<host>
-ls /persist/home/$USER/
-findmnt | grep "/persist/home" || echo "no home binds (expected)"
-# 4. Backfill BEFORE reboot, fix ownership.
-sudo rsync -a /persist/home/$USER/ /home/$USER/
-sudo chown -R $USER:users /home/$USER
-sudo chmod 0700 /home/$USER/.ssh
-# 5. Reboot, verify, and days later remove the stale source (re-check binds).
-sudo reboot
-ls ~/Documents
-findmnt | grep "/persist/home" || sudo rm -rf /persist/home/$USER
-```
+1. **Safety net inside `/persist`** — guards a premature rm of /persist/home.
 
-Empty home after switch? Don't write — data is in `/persist/home/$USER/` (or
-the snapshot). Re-run the backfill, verify, reboot. Then delete the safety
-net (`rm -rf /persist/snapshots/…`, or `btrfs subvolume delete …`).
+   ```bash
+   sudo mkdir -p /persist/snapshots
+   sudo cp -a /persist/home/$USER /persist/snapshots/home-$USER-before-off
+   ```
+
+2. Rescue anything ephemeral-only worth keeping into `/persist`.
+
+3. Remove `nixos.impermanence-home` from configuration.nix, then switch (NO reboot, NO delete — `/home` will look empty; that's expected).
+
+   ```bash
+   sudo nixos-rebuild switch --flake .#<host>
+   ls /persist/home/$USER/
+   findmnt | grep "/persist/home" || echo "no home binds (expected)"
+   ```
+
+4. Backfill BEFORE reboot, and fix ownership.
+
+   ```bash
+   sudo rsync -a /persist/home/$USER/ /home/$USER/
+   sudo chown -R $USER:users /home/$USER
+   sudo chmod 0700 /home/$USER/.ssh
+   ```
+
+5. Reboot, verify, and days later remove the stale source (re-check binds).
+
+   ```bash
+   sudo reboot
+   ls ~/Documents
+   findmnt | grep "/persist/home" || sudo rm -rf /persist/home/$USER
+   ```
+
+Empty home after switch? Don't write — data is in `/persist/home/$USER/` (or the snapshot). Re-run the backfill, verify, reboot. Then delete the safety net (`rm -rf /persist/snapshots/…`, or `btrfs subvolume delete …`).
 
 ## Further reading
 
